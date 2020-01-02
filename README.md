@@ -43,9 +43,9 @@ Decimates (IVTC) the clip. Currently it internally uses `core.std.SelectEvery()`
 * skip_checks: The function will do some preliminary checks to make sure the video actually needs decimating, if the checks make a mistake for your source, set this to True.
 
 ### MpegHelper.debox
-Remove [Pillarboxing](https://wikipedia.org/wiki/Pillarbox), [Letterboxing](https://wikipedia.org/wiki/Letterboxing_(filming)) and [Windowboxing](https://wikipedia.org/wiki/Windowbox_(filmmaking)) from the video.
+Remove [Pillarboxing](https://wikipedia.org/wiki/Pillarbox), [Letterboxing](https://wikipedia.org/wiki/Letterboxing_(filming)) and [Windowboxing](https://wikipedia.org/wiki/Windowbox_(filmmaking)) from the video. If it's windowboxed, use this function twice, first for landscape, then for portrait.
 
 `MpegHelper.debox(aspect_ratio[, direction=0, offset=0])`
 * aspect_ratio: The Aspect Ratio you wish to crop to, for example: `4/3` to crop to 4:3, `16/9` to crop to 16:9
-* direction: The Direction you wish to crop. `0`=Landspace, `1`=Portrait. For example if the boxing is on the left and right (pillarboxing) use `0`, if the boxing is on the top and bottom (letterboxing) use `1`. If it's windowboxed, use `MpegHelper.debox` twice, first for landscape, then for portrait.
+* direction: The Direction you wish to crop. `0`=Landspace, `1`=Portrait. For example if the boxing is on the left and right (pillarboxing) use `0`, if the boxing is on the top and bottom (letterboxing) use `1`.
 * offset: If the content isnt *right* in the center of the frame, you can modify offset to move the crop area. For example, if its a pillarbox (boxing on the left and right) and the content is 2 pixels towards the right (2 pixels away from being centered), use offset=2, if the content is 2 pixels towards the left, use offset=-2.
