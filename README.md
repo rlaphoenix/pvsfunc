@@ -12,6 +12,12 @@ PHOENiX's compilation of VapourSynth Script's and Functions
 
 # Functions:
 
+### Table of Contents
+
+Function | Import
+--- | ---
+[MpegHelper](#mpeghelper-mpeghelperpy) | `from pvsfunc.mpeghelper import MpegHelper`
+
 ## MpegHelper ([mpeghelper.py](/pvsfunc/mpeghelper.py))
 `from pvsfunc.mpeghelper import MpegHelper`
 `MpegHelper(file_path[, bool rff=True, bool debug=False])`
