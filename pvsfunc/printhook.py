@@ -6,7 +6,7 @@
     Simply `import printhook` and it will redirect as necessary.
     New GUI process will only be created once data is sent to stdout
     or stderr.
-    
+
     Created by Bryan Olsen:
     https://groups.google.com/d/msg/comp.lang.python/HWPhLhXKUos/TpFeWxEE9nsJ
 
