@@ -1,5 +1,4 @@
 # std vs
-import vapoursynth as vs
 from vapoursynth import core  # this may give a linter error, ignore
 # std py
 import os
