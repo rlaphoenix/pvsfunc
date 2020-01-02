@@ -1,6 +1,8 @@
 # pvsfunc
 PHOENiX's compilation of VapourSynth Script's and Functions
 
+`pip install pvsfunc`
+
 <p align="center">
 <a href="https://python.org"><img src="https://img.shields.io/badge/python-3.6%2B-informational?style=flat-square" /></a>
 <a href="https://github.com/rlaPHOENiX/pvsfunc/blob/master/LICENSE"><img alt="GitHub license" src="https://img.shields.io/github/license/rlaPHOENiX/pvsfunc?style=flat-square"></a>
