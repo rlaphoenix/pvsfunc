@@ -19,7 +19,7 @@ Function | Import
 [MpegHelper](#mpeghelper-mpeghelperpy) | `from pvsfunc.mpeghelper import MpegHelper`
 
 ## MpegHelper ([mpeghelper.py](/pvsfunc/mpeghelper.py))
-`from pvsfunc.mpeghelper import MpegHelper`
+`from pvsfunc.mpeghelper import MpegHelper`  
 `MpegHelper(file_path[, bool rff=True, bool debug=False])`
 * file_path: Path to a file to import as a clip. For MPEG (versions 1 and 2) it's best to use a d2v file.
 * rff: Repeated Fields First. It's essentially a toggle switch for Pulldown. Only set this to false if you are sure it's entirely FILM or you don't want the non-FILM frames. In mostly FILM content, the non-FILM frames are typically post-production frames, like transition's and such.
