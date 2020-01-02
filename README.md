@@ -43,7 +43,7 @@ Decimates (IVTC) the clip. Currently it internally uses `core.std.SelectEvery()`
 * skip_checks: The function will do some preliminary checks to make sure the video actually needs decimating, if the checks make a mistake for your source, set this to True.
 
 ### MpegHelper.debox
-Remove [Pillarboxing](https://wikipedia.org/wiki/Pillarbox), [Letterboxing](https://wikipedia.org/wiki/Letterboxing_(filming)) and [Windowboxing](https://wikipedia.org/wiki/Windowbox_(filmmaking)) from the video. If it's windowboxed, use this function twice, first for landscape, then for portrait.
+Remove [Pillarboxing](https://wikipedia.org/wiki/Pillarbox), [Letterboxing](https://wikipedia.org/wiki/Letterboxing_(filming)) and [Windowboxing](https://wikipedia.org/wiki/Windowbox_(filmmaking)) from the video. If it's windowboxed, use this function twice, first for Pillarboxing, then for Letterboxing.
 
 `MpegHelper.debox(aspect_ratio[, direction=0, offset=0])`
 * aspect_ratio: The Aspect Ratio you wish to crop to, for example: `4/3` to crop to 4:3, `16/9` to crop to 16:9
