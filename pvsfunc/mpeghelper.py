@@ -135,13 +135,13 @@ class MpegHelper():
         # core.vivtc.VDecimate(self.clip, cycle=5)
         self.clip = core.std.SelectEvery(self.clip, cycle, offsets)
 
-    def depillarbox(self,
-        aspect_ratio,  # Example: 4/3 to crop to 4:3, 16/9 to crop to 16:9
-        direction=0,   # 0 = landscape, 1 = portrait
-        offset=0       # crop in x pixels more or less than evaluated area
+    def debox(self,
+        aspect_ratio,
+        direction=0,
+        offset=0
     ):
         """
-        Crop out pillarboxing by automatically evaluating the area
+        Crop out boxing by automatically evaluating the area
         based on a centered aspect ratio
         """
         area = (self.clip.width - (self.clip.height * aspect_ratio)) / 2

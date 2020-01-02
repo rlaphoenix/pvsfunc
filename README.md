@@ -40,10 +40,10 @@ Decimates (IVTC) the clip. Currently it internally uses `core.std.SelectEvery()`
 * offsets: Starting from index of 0 which is frame 1 of the cycle, this indicates which frames to KEEP from the cycle. For example, cycle of 5, and the default offsets (`[0, 1, 3, 4]`) will delete the 2nd frame every 5 frames (frames #2, #7, #12, #17 ... e.t.c)
 * skip_checks: The function will do some preliminary checks to make sure the video actually needs decimating, if the checks make a mistake for your source, set this to True.
 
-### MpegHelper.depillarbox
-Remove [pillarboxing](https://wikipedia.org/wiki/Pillarbox) from the video by specifying the aspect ratio to crop to.
+### MpegHelper.debox
+Remove [Pillarboxing](https://wikipedia.org/wiki/Pillarbox), [Letterboxing](https://wikipedia.org/wiki/Letterboxing_(filming)) and [Windowboxing](https://wikipedia.org/wiki/Windowbox_(filmmaking)) from the video.
 
-`MpegHelper.depillarbox(aspect_ratio[, direction=0, offset=0])`
+`MpegHelper.debox(aspect_ratio[, direction=0, offset=0])`
 * aspect_ratio: The Aspect Ratio you wish to crop to, for example: `4/3` to crop to 4:3, `16/9` to crop to 16:9
-* direction: The Direction you wish to crop. `0`=Landspace, `1`=Portrait. For example if the pillarboxing is on the left and right use `0`, if the pillarboxing is on the top and bottom use `1`.
-* offset: If the content isnt *right* in the center of the frame, you can modify offset to move the crop area. For example, if its a landscape pillarbox and the content is 2 pixels towards the right (2 pixels away from being centered), use offset=2, if the content is 2 pixels towards the left, use offset=-2.
+* direction: The Direction you wish to crop. `0`=Landspace, `1`=Portrait. For example if the boxing is on the left and right (pillarboxing) use `0`, if the boxing is on the top and bottom (letterboxing) use `1`. If it's windowboxed, use `MpegHelper.debox` twice, first for landscape, then for portrait.
+* offset: If the content isnt *right* in the center of the frame, you can modify offset to move the crop area. For example, if its a pillarbox (boxing on the left and right) and the content is 2 pixels towards the right (2 pixels away from being centered), use offset=2, if the content is 2 pixels towards the left, use offset=-2.
