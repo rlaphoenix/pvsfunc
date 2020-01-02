@@ -41,7 +41,7 @@ Decimates (IVTC) the clip. Currently it internally uses `core.std.SelectEvery()`
 * skip_checks: The function will do some preliminary checks to make sure the video actually needs decimating, if the checks make a mistake for your source, set this to True.
 
 ### MpegHelper.depillarbox
-Remove [pillarboxing](https://en.wikipedia.org/wiki/Pillarbox) from the video by specifying the aspect ratio to crop to.
+Remove [pillarboxing](https://wikipedia.org/wiki/Pillarbox) from the video by specifying the aspect ratio to crop to.
 
 `MpegHelper.depillarbox(aspect_ratio[, direction=0, offset=0])`
 * aspect_ratio: The Aspect Ratio you wish to crop to, for example: `4/3` to crop to 4:3, `16/9` to crop to 16:9
