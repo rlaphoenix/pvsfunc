@@ -9,3 +9,12 @@ PHOENiX's compilation of VapourSynth Script's and Functions
 <a href="https://github.com/rlaPHOENiX/pvsfunc/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/rlaPHOENiX/pvsfunc?style=flat-square"></a>
 <a href="http://makeapullrequest.com"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square"></a>
 </p>
+
+# Functions:
+
+## MpegHelper ([mpeghelper.py](/pvsfunc/mpeghelper.py))
+`from pvsfunc.mpeghelper import MpegHelper`
+`MpegHelper(file_path[, bool rff=True, bool debug=False])`
+* file_path: Path to a file to import as a clip. For MPEG (versions 1 and 2) it's best to use a d2v file.
+* rff: Repeated Fields First. It's essentially a toggle switch for Pulldown. Only set this to false if you are sure it's entirely FILM or you don't want the non-FILM frames. In mostly FILM content, the non-FILM frames are typically post-production frames, like transition's and such.
+* debug: Debug Mode. This will give you a new GUI process with a text box, this text box will write debugging information on use. It may also print data to the frame itself via `core.text.Text`.
