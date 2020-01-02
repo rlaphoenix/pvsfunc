@@ -1,23 +1,23 @@
 #Python 3
 """
-    Graphical Print Hook, allows you to redirect stdout and stderr
-    to a seperate graphical window. Particularly useful for software
-    with no logging (or printing) support.
-    Simply `import printhook` and it will redirect as necessary.
-    New GUI process will only be created once data is sent to stdout
-    or stderr.
+Graphical Print Hook, allows you to redirect stdout and stderr
+to a seperate graphical window. Particularly useful for software
+with no logging (or printing) support.
+Simply `import printhook` and it will redirect as necessary.
+New GUI process will only be created once data is sent to stdout
+or stderr.
 
-    Created by Bryan Olsen:
-    https://groups.google.com/d/msg/comp.lang.python/HWPhLhXKUos/TpFeWxEE9nsJ
+Created by Bryan Olsen:
+https://groups.google.com/d/msg/comp.lang.python/HWPhLhXKUos/TpFeWxEE9nsJ
 
-    Modifications:
-    - [Change]:   Replaced `Text` with `st.ScrolledText` [@martineau]
-    - [Change]:   Replaced `os.popen` with `subprocess.Popen` (`os.popen` is deprecated) [@martineau]
-    - [Change]:   Redirects both `stdout` and `stderr` [@martineau]
-    - [Change]:   Replaced `subprocess.Popen`'s command to a `list` instead of `string` (linux support) [@martineau]
-    - [Addition]: Inserted double quotes around paths in case they have embedded space characters [@martineau]
-    - [Addition]: Added exception to catch window canceled by user and deleting pipe [@martineau]
-    - [Cleanup]:  Cleaned up the entire codebase, removed unnecessary whitespace, fixed indentation, e.t.c [@rlaPHOENiX]
+Modifications:
+- [Change]:   Replaced `Text` with `st.ScrolledText` [@martineau]
+- [Change]:   Replaced `os.popen` with `subprocess.Popen` (`os.popen` is deprecated) [@martineau]
+- [Change]:   Redirects both `stdout` and `stderr` [@martineau]
+- [Change]:   Replaced `subprocess.Popen`'s command to a `list` instead of `string` (linux support) [@martineau]
+- [Addition]: Inserted double quotes around paths in case they have embedded space characters [@martineau]
+- [Addition]: Added exception to catch window canceled by user and deleting pipe [@martineau]
+- [Cleanup]:  Cleaned up the entire codebase, removed unnecessary whitespace, fixed indentation, e.t.c [@rlaPHOENiX]
 """
 import subprocess
 import sys
@@ -44,7 +44,7 @@ if __name__ == '__main__':
             self.master = master
             if len(sys.argv) < 2:
                 title = "Output stream from unknown source"
-            elif len(sys.argv) < 3: 
+            elif len(sys.argv) < 3:
                 title = f"Output stream from {sys.argv[1]}"
             else:  # Assume it's a least 3.
                 title = f"Output stream '{sys.argv[2]}' from {sys.argv[1]}"
@@ -57,7 +57,7 @@ if __name__ == '__main__':
             )
             # Force frame to be configured size.
             self.pack_propagate(0)
-            self.logwidget = st.ScrolledText(self, font=font) 
+            self.logwidget = st.ScrolledText(self, font=font)
             self.logwidget.pack(side=TOP, fill=BOTH, expand=YES)
             self.logwidget.configure(foreground=text_color)
             # Start polling thread.
@@ -101,12 +101,12 @@ else:
             if attr == "pipe":
                 # Attribute doesn't exist, so create it.
                 # Launch this module as a separate process to display any output it receives
-                executable = sys.executable                
+                executable = sys.executable
                 try:
                     basename = os.path.basename(executable)
                     name, _ = os.path.splitext(basename)
                     if not name.lower().startswith("python"):
-                        executable = self.get_executable()                    
+                        executable = self.get_executable()
                 except:
                     executable = self.get_executable()
                 try:

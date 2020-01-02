@@ -158,7 +158,7 @@ class MpegHelper():
     def check_plugin(attribute: str):
         if not hasattr(core, attribute):
             raise RuntimeError(f"MpegHelper: required plugin '{attribute}' is not installed.")
-    
+
     @staticmethod
     def get_metadata(file_path: str) -> tuple:
         meta = [x for x in MediaInfo.parse(file_path).tracks if x.track_type == "Video"][0]
@@ -166,7 +166,7 @@ class MpegHelper():
         if codec == "MPEG VIDEO":
             codec = f"MPEG-{meta.format_version.upper().replace('VERSION ', '')}"
         return (meta, codec)
-    
+
     @staticmethod
     def get_aspect_ratio(width: int, height: int) -> str:
         def gcd(a, b):
