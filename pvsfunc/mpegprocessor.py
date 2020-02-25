@@ -75,10 +75,10 @@ class MpegProcessor():
                         "-hide", "-exit",  # start hidden and exit when saved
                         "-o", os.path.splitext(os.path.basename(d2v_path))[0]
                     ], cwd=os.path.dirname(d2v_path))
-                    # make sure d2v's internal mpg file path is relative to mpg directory
+                    # make sure d2v's internal mpg file path is abolute path to mpg
                     with open(d2v_path, mode="r") as f:
                         _D2V = f.read().splitlines()
-                    _D2V[2] = os.path.basename(mpg_path)
+                    _D2V[2] = os.path.join(os.path.dirname(d2v_path), os.path.basename(mpg_path))
                     with open(d2v_path, mode="w") as f:
                         f.write("\n".join(_D2V))
             self.clip_cfg = {
@@ -109,6 +109,8 @@ class MpegProcessor():
             self.standard = "PAL"
         elif self.clip.fps.numerator == 30000 and self.clip.fps.denominator == 1001 and self.clip.width == 720 and self.clip.height == 480:
             self.standard = "NTSC"
+        elif self.clip.fps.numerator == 24000 and self.clip.fps.denominator == 1001:
+            self.standard = "FILM"
 
     def deinterlace(self, vfm_cfg={}, qtgmc_cfg={}, tff=None):
         if tff is None:
