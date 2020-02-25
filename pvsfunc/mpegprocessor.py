@@ -88,9 +88,10 @@ class MpegProcessor():
             self.clip_src = "d2v"
             self.clip = core.d2v.Source(**self.clip_cfg)
             if "rff" in self.clip_cfg and not self.clip_cfg["rff"]:
-                # Fix core.d2v.Source's rff=False returned FPS, though right now, it's
-                # just assuming rff=False is returning 24000/1001 (FILM~) frame rate.
-                self.clip = core.std.AssumeFPS(self.clip, fpsnum=24000, fpsden=1001)
+                if self.clip.fps.numerator == 30000 and self.clip.fps.denominator == 1001:
+                    # Fix core.d2v.Source's NTSC rff=False returned FPS, though right now, it's
+                    # just assuming rff=False is returning 24000/1001 (FILM~) frame rate because NTSC.
+                    self.clip = core.std.AssumeFPS(self.clip, fpsnum=24000, fpsden=1001)
                 if self.debug:
                     self.clip = core.text.Text(self.clip, "Untouched Frame (rff=False)", alignment=1)
         elif self.fileid in ["V_MPEG1", "V_MPEG4/ISO/AVC"]:
@@ -180,7 +181,7 @@ class MpegProcessor():
                     functools.partial(
                         lambda n, f: (
                             core.text.Text(qtgmc, f"Deinterlaced Frame (via QTGMC) [tff={tff}]", alignment=1) if self.debug else qtgmc
-                        ) if "FPSDivisor" in qtgmc_cfg and qtgmc_cfg["FPSDivisor"] != 2 or f.props["_Combed"] > 0 else (
+                        ) if self.standard == "PAL" or ("FPSDivisor" in qtgmc_cfg and qtgmc_cfg["FPSDivisor"] != 2) or f.props["_Combed"] > 0 else (
                             core.text.Text(vfm, "Matched Frame (via VFM match)", alignment=1) if self.debug else vfm
                         )
                     ),
