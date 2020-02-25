@@ -58,7 +58,7 @@ class MpegProcessor():
                 d2v_path = f"{os.path.splitext(d2v_path)[0]}.d2v"
                 if not os.path.exists(d2v_path):
                     # couldn't find d2v, generate one on-the-fly
-                    mpg_path = f"{os.path.splitext(d2v_path)[0]}.mpg"
+                    mpg_path = unidecode.unidecode(f"{os.path.splitext(d2v_path)[0]}.mpg")
                     if not os.path.exists(mpg_path):
                         # couldn't find mpg, generate one on-the-fly
                         subprocess.run([
@@ -79,8 +79,7 @@ class MpegProcessor():
                     # make sure d2v's internal mpg file path is abolute path to mpg
                     with open(d2v_path, mode="r") as f:
                         _D2V = f.read().splitlines()
-                    _D2V[2] = os.path.join(os.path.dirname(d2v_path), os.path.basename(mpg_path))
-                    _D2V[2] = unidecode.unidecode(_D2V[2])
+                    _D2V[2] = mpg_path
                     with open(d2v_path, mode="w") as f:
                         f.write("\n".join(_D2V))
             self.clip_cfg = {
