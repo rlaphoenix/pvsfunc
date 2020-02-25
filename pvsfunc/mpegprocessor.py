@@ -110,19 +110,14 @@ class MpegProcessor():
             self.standard = "NTSC"
 
     def deinterlace(self, vfm_cfg={}, qtgmc_cfg={}, tff=None):
-        # calculate tff
         if tff is None:
-            # get tff from first first frame if possible
+            # try get tff from first first frame
+            # todo ; try figure out a better way to get tff, as this may not be accurate
             first_frame = self.clip.get_frame(0).props
-            tff = True
             if "_FieldBased" in first_frame:
-                tff = first_frame["_FieldBased"] == 2
-        # currently NTSC must have Single-rate frame rate output for qtgmc
-        if self.standard == "NTSC" and "FPSDivisor" in qtgmc_cfg and qtgmc_cfg["FPSDivisor"] != 2:
-            raise ValueError("deinterlace: NTSC currently only supports Single-rate frame rate output.")
-        # if qtgmc's FPSDivisor is Double-rate frame rate output, fix format_clip
+                tff = first_frame["_FieldBased"] != 1  # if its 0=frame or 2=top, tff=True
         if "FPSDivisor" in qtgmc_cfg and qtgmc_cfg["FPSDivisor"] == 1:
-            # we need a clip with double the frame rate and double frame length to hold new frames
+            # we need a clip with double the frame rate and double frame length to hold qtgmc's Double-rate frames
             format_clip = core.std.BlankClip(
                 clip=self.clip,
                 length=len(self.clip)*2,
@@ -162,18 +157,24 @@ class MpegProcessor():
             **dict(qtgmc_cfg),
             # required
             **{
-                # vfm is Single-rate frame rate, so QTGMC cannot use it unless
-                # QTGMC will also produce Single-rate frame rate (FPSDivisor=2)
+                # If QTGMC will produce anything other than Single-rate frame rate (e.g. FPSDivisor=1)
+                # then vfm will desync from QTGMC as vfm returns Single-rate frame rate. We use VFM's
+                # clip otherwise to lower the amount of time's QTGMC needs to run as VFM will take care
+                # of the frames/fields it can first.
                 "Input": vfm if "FPSDivisor" not in qtgmc_cfg or qtgmc_cfg["FPSDivisor"] == 2 else self.clip
             }
         })
-        # calculate when VFM/QTGMC is needed, and when needed calculate which to use
+        # calculate when VFM/QTGMC is needed
+        # todo ; On the FieldBased == 0 line inside the first functools.partial, if it returns it's else, then it gets very very slow due
+        # to it using a all of the memory available in `cores` max memory cache pool. This is causing terrible slowdowns. It seems to be
+        # related to QTGMC specifically as it only occurs if the else is returning `qtgmc` or the second FrameEval. No idea why this is
+        # happening :(
         self.clip = core.std.FrameEval(
             format_clip,
             functools.partial(
                 lambda n, f, og: (
                     core.text.Text(og, "Untouched Frame (_FieldBased=0)", alignment=1) if self.debug else og
-                ) if f.props["_FieldBased"] == 0 else core.std.FrameEval(
+                ) if f.props["_FieldBased"] == 0 and ("FPSDivisor" not in qtgmc_cfg or qtgmc_cfg["FPSDivisor"] == 2) else core.std.FrameEval(
                     # calculate whether to use qtgmc or vfm
                     format_clip,
                     functools.partial(
@@ -184,7 +185,7 @@ class MpegProcessor():
                         )
                     ),
                     prop_src=vfm
-                )[n],
+                ),
                 og=self.clip
             ),
             prop_src=self.clip
