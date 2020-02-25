@@ -8,7 +8,6 @@ import subprocess
 import havsfunc
 # pypi dependencies
 from pymediainfo import MediaInfo
-import unidecode
 
 class MpegProcessor():
 
@@ -80,7 +79,6 @@ class MpegProcessor():
                     with open(d2v_path, mode="r") as f:
                         _D2V = f.read().splitlines()
                     _D2V[2] = os.path.join(os.path.dirname(d2v_path), os.path.basename(mpg_path))
-                    _D2V[2] = unidecode.unidecode(_D2V[2])
                     with open(d2v_path, mode="w") as f:
                         f.write("\n".join(_D2V))
             self.clip_cfg = {
