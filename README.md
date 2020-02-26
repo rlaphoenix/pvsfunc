@@ -18,34 +18,41 @@ PHOENiX's compilation of VapourSynth Script's and Functions
 
 Function | Import
 --- | ---
-[MpegHelper](#mpeghelper-mpeghelperpy) | `from pvsfunc.mpeghelper import MpegHelper`
+[MpegProcessor](#mpegprocessor-mpegprocessorpy) | `from pvsfunc.mpeghelper import MpegHelper`
+[decimate](#decimate) | `from pvsfunc.__init__ import decimate`
+[debox](#debox) | `from pvsfunc.__init__ import debox`
 
-## MpegHelper ([mpeghelper.py](/pvsfunc/mpeghelper.py))
-MpegHelper (class) is a convenience wrapper for loading and using MPEG videos. It's especially useful for DVD MPEG-1/2's.
+## MpegProcessor ([mpegprocessor.py](/pvsfunc/mpegprocessor.py))
+MpegProcessor (class) is a convenience wrapper for loading and using MPEG videos. It's primary function is to handle the loading and handle video fields to return a CFR (Constant frame-rate) progressive video.
 
-`from pvsfunc.mpeghelper import MpegHelper`  
-`MpegHelper(file_path[, bool rff=True, bool debug=False])`
-* file_path: Path to a file to import as a clip. For MPEG (versions 1 and 2) it's best to use a d2v file.
-* rff: Repeated Fields First. It's essentially a toggle switch for Pulldown. Only set this to false if you are sure it's entirely FILM or you don't want the non-FILM frames. In mostly FILM content, the non-FILM frames are typically post-production frames, like transition's and such.
-* debug: Debug Mode, Enable it if you want to debug what's going on. On load, it will give you information on the loaded source like it's resolution and such which is gotten from MediaInfo (pymediainfo) in a small GUI text-box window. MpegHelper's function's will also provide debug information and may also print information into the frame itself via `core.text.Text()`.
+`from pvsfunc.mpegprocessor import MpegProcessor`  
+`MpegProcessor(filepath[, dict source_cfg={}, str dgindex_path="DGIndex.exe", bool debug=False])`
+* filepath: Path to a file to import. An MKV file is recommended no matter what the video codec is.
+* source_cfg: A dictionary of key=value pairs that will be unpacked and provided to whatever clip Sourcing function get's used. You must provide a dictionary where it's key's are the source function, e.g. `{"core.d2v.Source":{//settings for core.d2v.Source},"core.ffms2.Source":{//settings for core.ffms2.Source}}`
+* dgindex_path: A filepath to DGIndex. On Windows if the exe is in your Environment Path, you may simply put "DGIndex" or "DGIndex.exe".
+* debug: Debug Mode, Enable it if you want to debug frame information.
 
-### MpegHelper.deinterlace
-Deinterlaces frames of a video only if the frame is interlaced. All information required for deinterlacing is gotten from the frame itself, which is why you don't need to specify Field Order (TFF/BFF). It deinterlaces using `vivtc.VFM` and only uses `havsfunc.QTGMC` if it could not find a field match. The entire process is much quicker and much more accurate than other deinterlacing methods and even supports working on videos with multiple scan-types and multiple scan-orders, like mixed scan DVD's which are common with Animated material.
+### MpegProcessor.deinterlace
+Deinterlaces frames of a video only if the frame is interlaced. All information required for deinterlacing is gotten from the frame itself, which is why you don't need to specify Field Order (tff=None is automated). It deinterlaces interlaced frames using `vivtc.VFM` and only uses `havsfunc.QTGMC` if it could not find a field match. The entire process is much quicker and much more accurate than other deinterlacing methods and even supports working on videos with multiple scan-types, frame-rates and scan-orders. The output will be CFR (Constant frame-rate).
 
-`MpegHelper.deinterlace()`
+`MpegHelper.deinterlace([dict vfm_cfg={}, dict qtgmc_cfg={}, bool tff=None])`
+* vfm_cfg: key=value settings to pass to core.vivtc.VFM as unpacked arguments (e.g. `{"order": 1, "mode": 5}`). It defaults to `{"order": based on tff arg, "field": 2, "mode": 0}`.
+* qtgmc_cfg: key=value settings to pass to havsfunc.QTGMC as unpacked arguments (e.g. `{"FPSDivisor": 1, "Preset": "Medium"}`). It defaults to Single-rate Placebo optimized output based on tff, See code for actual settings used, it will be very slow but great quality wise.
+* tff: Wheter to use Top-Field-First or not. None will automatically decide based on the first frame if possible, otherwise it defaults to True.
 
-### MpegHelper.decimate
-Decimates (IVTC) the clip. Currently it internally uses `core.std.SelectEvery()` as I don't trust `core.vivtc.VDecimate` to be accurate, with my test's it often delete's wrong frames. I recommend you to change offsets to `[0, 1, 2, 3, 4]` (all frames kept) and check which frame tends to be the duplicate by previewing the clip and checking frame by frame. Using incorrect offsets will result in you deleting the wrong frame by mistake. Don't be afraid to change cycle if you believe it's necessary, though 3:2 pulldown is the most common and is a cycle of 5.
+## decimate ([__init__.py](/pvsfunc/__init__.py))
+IVTC (Inverse-telecine) the clip using decimation (frame deletion). Currently it internally uses `core.std.SelectEvery()` as I don't trust `core.vivtc.VDecimate` to be accurate, with my test's it often delete's wrong frames. I recommend you to change offsets to `[0, 1, 2, 3, 4]` (all frames kept) and check which frame tends to be the duplicate by previewing the clip and checking frame by frame. Using incorrect offsets will result in you deleting the wrong frame by mistake. Don't be afraid to change cycle if you believe it's necessary, though 3:2 pulldown is the most common and is a cycle of 5.
 
-`MpegHelper.decimate([cycle=5, offsets=[0, 1, 3, 4], skip_checks=False])`
-* cycle: Decimation Cycle, Takes n frames every n frames from the clip, and uses those frames for the offsets.
-* offsets: Starting from index of 0 which is frame 1 of the cycle, this indicates which frames to KEEP from the cycle. For example, cycle of 5, and the default offsets (`[0, 1, 3, 4]`) will delete the 2nd frame every 5 frames (frames #2, #7, #12, #17 ... e.t.c)
-* skip_checks: The function will do some preliminary checks to make sure the video actually needs decimating, if the checks make a mistake for your source, set this to True.
+`decimate([int mode=0, int cycle=5, list offsets=[0, 1, 3, 4], bool debug=False])`
+* mode: 0=core.std.SelectEvery, 1=core.vivtc.VDecimate, If your source uses a constant offsets value throughout the entire source I recommend using mode=0 and ensure offsets are correct. If you need automation or the offsets tend to change throughout the source, use mode=1.
+* cycle: Chunks the clip into `n` frames, then deletes frames specified by `offsets` (if any).
+* offsets: *Only used if mode=0* Starting from index of 0 which is frame 1 of the cycle, this indicates which frames to KEEP from the cycle. For example, cycle of 5, and the default offsets (`[0, 1, 3, 4]`) will delete the 3rd frame (because index 2 isn't in the list) every 5 (cycle) frames.
+* debug: Print debugging information
 
-### MpegHelper.debox
-Remove [Pillarboxing](https://wikipedia.org/wiki/Pillarbox), [Letterboxing](https://wikipedia.org/wiki/Letterboxing_(filming)) and [Windowboxing](https://wikipedia.org/wiki/Windowbox_(filmmaking)) from the video. If it's windowboxed, use this function twice, first for Pillarboxing, then for Letterboxing.
+## debox ([__init__.py](/pvsfunc/__init__.py))
+Remove [Pillarboxing](https://wikipedia.org/wiki/Pillarbox), [Letterboxing](https://wikipedia.org/wiki/Letterboxing_(filming)) or [Windowboxing](https://wikipedia.org/wiki/Windowbox_(filmmaking)) from the video by calculating a crop area based on `aspect_ratio` calculated against clip width and height. If it's windowboxed, use this function twice, first for Pillarboxing, then for Letterboxing.
 
-`MpegHelper.debox(aspect_ratio[, direction=0, offset=0])`
-* aspect_ratio: The Aspect Ratio you wish to crop to, for example: `4/3` to crop to 4:3, `16/9` to crop to 16:9
-* direction: The Direction you wish to crop. `0`=Landspace, `1`=Portrait. For example if the boxing is on the left and right (pillarboxing) use `0`, if the boxing is on the top and bottom (letterboxing) use `1`.
-* offset: If the content isnt *right* in the center of the frame, you can modify offset to move the crop area. For example, if its a pillarbox (boxing on the left and right) and the content is 2 pixels towards the right (2 pixels away from being centered), use offset=2, if the content is 2 pixels towards the left, use offset=-2.
+`debox(str aspect_ratio[, int mode=0, int offset=0])`
+* aspect_ratio: The Aspect Ratio you wish to crop to, for example: `4:3` to crop to 4:3, `16:9` to crop to 16:9
+* mode: The Direction you wish to crop. `0`=Pillarboxing (would crop sides), `1`=Letterboxing (would crop top/bottom).
+* offset: If the content isnt *exactly* in the center of the frame, you can modify offset to move the crop area. For example, if its a mode=0 (boxing on the left and right) and the content is 2 pixels towards the right (2 pixels away from being centered), use offset=2, if the content is 2 pixels towards the left, use offset=-2
