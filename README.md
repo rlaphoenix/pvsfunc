@@ -18,7 +18,7 @@ PHOENiX's compilation of VapourSynth Script's and Functions
 
 Function | Import
 --- | ---
-[MpegProcessor](#mpegprocessor-mpegprocessorpy) | `from pvsfunc.mpeghelper import MpegHelper`
+[MpegProcessor](#mpegprocessor-mpegprocessorpy) | `from pvsfunc.mpegprocessor import MpegProcessor`
 [decimate](#decimate-initpy) | `from pvsfunc.__init__ import decimate`
 [debox](#debox-initpy) | `from pvsfunc.__init__ import debox`
 
@@ -43,6 +43,7 @@ Deinterlaces frames of a video only if the frame is interlaced. All information 
 ## decimate ([__init__.py](/pvsfunc/__init__.py))
 IVTC (Inverse-telecine) the clip using decimation (frame deletion). Currently it internally uses `core.std.SelectEvery()` as I don't trust `core.vivtc.VDecimate` to be accurate, with my test's it often delete's wrong frames. I recommend you to change offsets to `[0, 1, 2, 3, 4]` (all frames kept) and check which frame tends to be the duplicate by previewing the clip and checking frame by frame. Using incorrect offsets will result in you deleting the wrong frame by mistake. Don't be afraid to change cycle if you believe it's necessary, though 3:2 pulldown is the most common and is a cycle of 5.
 
+`from pvsfunc.__init__ import decimate`  
 `decimate([int mode=0, int cycle=5, list offsets=[0, 1, 3, 4], bool debug=False])`
 * mode: 0=core.std.SelectEvery, 1=core.vivtc.VDecimate, If your source uses a constant offsets value throughout the entire source I recommend using mode=0 and ensure offsets are correct. If you need automation or the offsets tend to change throughout the source, use mode=1.
 * cycle: Chunks the clip into `n` frames, then deletes frames specified by `offsets` (if any).
@@ -52,6 +53,7 @@ IVTC (Inverse-telecine) the clip using decimation (frame deletion). Currently it
 ## debox ([__init__.py](/pvsfunc/__init__.py))
 Remove [Pillarboxing](https://wikipedia.org/wiki/Pillarbox), [Letterboxing](https://wikipedia.org/wiki/Letterboxing_(filming)) or [Windowboxing](https://wikipedia.org/wiki/Windowbox_(filmmaking)) from the video by calculating a crop area based on `aspect_ratio` calculated against clip width and height. If it's windowboxed, use this function twice, first for Pillarboxing, then for Letterboxing.
 
+`from pvsfunc.__init__ import debox`  
 `debox(str aspect_ratio[, int mode=0, int offset=0])`
 * aspect_ratio: The Aspect Ratio you wish to crop to, for example: `4:3` to crop to 4:3, `16:9` to crop to 16:9
 * mode: The Direction you wish to crop. `0`=Pillarboxing (would crop sides), `1`=Letterboxing (would crop top/bottom).
