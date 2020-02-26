@@ -41,7 +41,7 @@ Deinterlaces frames of a video only if the frame is interlaced. All information 
 * tff: Wheter to use Top-Field-First or not. None will automatically decide based on the first frame if possible, otherwise it defaults to True.
 
 ## decimate ([__init__.py](/pvsfunc/__init__.py))
-IVTC (Inverse-telecine) the clip using decimation (frame deletion). Currently it internally uses `core.std.SelectEvery()` as I don't trust `core.vivtc.VDecimate` to be accurate, with my test's it often delete's wrong frames. I recommend you to change offsets to `[0, 1, 2, 3, 4]` (all frames kept) and check which frame tends to be the duplicate by previewing the clip and checking frame by frame. Using incorrect offsets will result in you deleting the wrong frame by mistake. Don't be afraid to change cycle if you believe it's necessary, though 3:2 pulldown is the most common and is a cycle of 5.
+IVTC (Inverse-telecine) the clip using decimation (frame deletion). This would commonly be used to revert the telecine process of FILM to NTSC but can be used for other rate changes.
 
 `from pvsfunc.__init__ import decimate`  
 `decimate([int mode=0, int cycle=5, list offsets=[0, 1, 3, 4], bool debug=False])`
