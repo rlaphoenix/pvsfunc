@@ -5,11 +5,22 @@ import functools
 
 def decimate(clip, mode=0, cycle=5, offsets=[0, 1, 3, 4], debug=False):
     """
-    Decimation is one of few kinds of pullup (reverse pulldown), this
-    one is specifically to delete unwanted frames based on a cycle.
-    :param mode: 0=SelectEvery, 1=VDecimate, use 0 if you can as it's more accurate
-    :param cycle: how many frames to evaluate offsets on
-    :param offsets: which frames to keep every `cycle` frames, zero-indexed
+    IVTC (Inverse-telecine) the clip using decimation (frame deletion).
+    This would commonly be used to revert the telecine process of FILM
+    to NTSC but can be used for other rate changes.
+    :param mode: 0=core.std.SelectEvery, 1=core.vivtc.VDecimate, If your
+    source uses a constant offsets value throughout the entire source I
+    recommend using mode=0 and ensure offsets are correct. If you need
+    automation or the offsets tend to change throughout the source, use
+    mode=1.
+    :param cycle: Chunks the clip into `n` frames, then deletes frames
+    specified by `offsets` (if any).
+    :param offsets: *Only used if mode=0* Starting from index of 0 which
+    is frame 1 of the cycle, this indicates which frames to KEEP from the
+    cycle. For example, cycle of 5, and the default offsets (`[0, 1, 3, 4]`)
+    will delete the 3rd frame (because index 2 isn't in the list) every 5
+    (cycle) frames.
+    :param debug: Print debugging information
     """
     if mode == 0:
         if debug:
@@ -33,11 +44,19 @@ def decimate(clip, mode=0, cycle=5, offsets=[0, 1, 3, 4], debug=False):
 
 def debox(clip, aspect_ratio, mode=0, offset=0):
         """
-        Crop out boxing by automatically evaluating the area
-        based on a centered aspect ratio calculation
-        mode: 0=Pillarboxing, 1=Letterboxing
-        offset: move the crop window left/right (if mode=0) or
-                up/down (if mode=1). Can be a + or - value.
+        Remove Pillarboxing, Letterboxing or Windowboxing from the video
+        by calculating a crop area based on `aspect_ratio` calculated against
+        clip width and height. If it's windowboxed, use this function twice,
+        first for Pillarboxing, then for Letterboxing.
+        :param aspect_ratio: The Aspect Ratio you wish to crop to, for example:
+        `4:3` to crop to 4:3, `16:9` to crop to 16:9
+        :param mode: The Direction you wish to crop. `0`=Pillarboxing (would crop
+        sides), `1`=Letterboxing (would crop top/bottom).
+        :param offset: If the content isnt exactly in the center of the frame,
+        you can modify offset to move the crop area. For example, if its a
+        mode=0 (boxing on the left and right) and the content is 2 pixels
+        towards the right (2 pixels away from being centered), use offset=2,
+        if the content is 2 pixels towards the left, use offset=-2
         """
         aspect_ratio = aspect_ratio.split(":")
         aspect_ratio = aspect_ratio[0] / aspect_ratio[1]
