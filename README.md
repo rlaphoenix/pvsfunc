@@ -16,11 +16,11 @@ PHOENiX's compilation of VapourSynth Script's and Functions
 
 ### Table of Contents
 
-Function | Import
---- | ---
-[MpegProcessor](#mpegprocessor-mpegprocessorpy) | `from pvsfunc.mpegprocessor import MpegProcessor`
-[decimate](#decimate-initpy) | `from pvsfunc.__init__ import decimate`
-[debox](#debox-initpy) | `from pvsfunc.__init__ import debox`
+| Function | Import |
+| --- | --- |
+| [MpegProcessor](#mpegprocessor-mpegprocessorpy) | `from pvsfunc.mpegprocessor import MpegProcessor` |
+| [decimate](#decimate-initpy) | `from pvsfunc.__init__ import decimate` |
+| [debox](#debox-initpy) | `from pvsfunc.__init__ import debox` |
 
 ## MpegProcessor ([mpegprocessor.py](/pvsfunc/mpegprocessor.py))
 MpegProcessor (class) is a convenience wrapper for loading and using MPEG videos. It's primary function is to handle the loading and handle video fields to return a CFR (Constant frame-rate) progressive video.
