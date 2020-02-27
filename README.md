@@ -28,7 +28,7 @@ MpegProcessor (class) is a convenience wrapper for loading and using MPEG videos
 `from pvsfunc.mpegprocessor import MpegProcessor`  
 `MpegProcessor(filepath[, dict source_cfg={}, str dgindex_path="DGIndex.exe", bool debug=False])`
 * filepath: Path to a file to import. An MKV file is recommended no matter what the video codec is.
-* source_cfg: A dictionary of key=value pairs that will be unpacked and provided to whatever clip Sourcing function get's used. You must provide a dictionary where it's key's are the source function, e.g. `{"core.d2v.Source":{//settings for core.d2v.Source},"core.ffms2.Source":{//settings for core.ffms2.Source}}`
+* source_cfg: A dictionary of key=value pairs that will be unpacked and provided to whatever clip Sourcing function get's used. You must provide a dictionary where it's key's are the source function, e.g. `{"core.d2v.Source": { "rff": True }, "core.ffms2.Source": { "alpha": False }}`
 * dgindex_path: A filepath to DGIndex. On Windows if the exe is in your Environment Path, you may simply put "DGIndex" or "DGIndex.exe".
 * debug: Debug Mode, Enable it if you want to debug frame information.
 
