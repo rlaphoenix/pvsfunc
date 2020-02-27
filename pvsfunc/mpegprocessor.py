@@ -10,12 +10,20 @@ import havsfunc
 from pymediainfo import MediaInfo
 
 class MpegProcessor():
-
     def __init__(self, filepath, source_cfg={}, dgindex_path="DGIndex.exe", debug=False):
-        # source_cfg are key: value pairs that will be unpacked
-        # and sent to the source used to load the clip. It will be
-        # accessed with the source name as index, e.g. for core.d2v.Source:
-        # source_cfg["core.d2v.Source"] will be used.
+        """
+        MpegProcessor is a convenience wrapper for loading and using MPEG videos.
+        It's primary function is to handle the loading and handle video fields to
+        return a CFR (Constant frame-rate) progressive video.
+        :param filepath: Path to a file to import. An MKV file is recommended no
+        matter what the video codec is.
+        :param source_cfg: A dictionary of key=value pairs that will be unpacked and
+        provided to whatever clip Sourcing function get's used e.g.
+        {"core.d2v.Source": { "rff": True }, "core.ffms2.Source": { "alpha": False }}
+        :param dgindex_path: A filepath to DGIndex. On Windows if the exe is in your
+        Environment Path, you may simply put "DGIndex" or "DGIndex.exe".
+        :param debug: Debug Mode, Enable it if you want to debug frame information.
+        """
         # exports handy to parent
         self.clip = None
         self.clip_cfg = None
