@@ -12,9 +12,7 @@ PHOENiX's compilation of VapourSynth Script's and Functions
 <a href="http://makeapullrequest.com"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square"></a>
 </p>
 
-# Functions:
-
-### Table of Contents
+## Functions
 
 | Function | Import |
 | --- | --- |
@@ -22,7 +20,7 @@ PHOENiX's compilation of VapourSynth Script's and Functions
 | [decimate](#decimate-initpy) | `from pvsfunc.__init__ import decimate` |
 | [debox](#debox-initpy) | `from pvsfunc.__init__ import debox` |
 
-## MpegProcessor ([mpegprocessor.py](/pvsfunc/mpegprocessor.py))
+### MpegProcessor ([mpegprocessor.py](/pvsfunc/mpegprocessor.py))
 MpegProcessor (class) is a convenience wrapper for loading and using MPEG videos. It's primary function is to handle the loading and handle video fields to return a CFR (Constant frame-rate) progressive video.
 
 `from pvsfunc.mpegprocessor import MpegProcessor`  
@@ -32,7 +30,7 @@ MpegProcessor (class) is a convenience wrapper for loading and using MPEG videos
 * dgindex_path: A filepath to DGIndex. On Windows if the exe is in your Environment Path, you may simply put "DGIndex" or "DGIndex.exe".
 * debug: Debug Mode, Enable it if you want to debug frame information.
 
-### MpegProcessor.deinterlace
+#### MpegProcessor.deinterlace
 Deinterlaces frames of a video only if the frame is interlaced. All information required for deinterlacing is gotten from the frame itself, which is why you don't need to specify Field Order (tff=None is automated). It deinterlaces interlaced frames using `vivtc.VFM` and only uses `havsfunc.QTGMC` if it could not find a field match. The entire process is much quicker and much more accurate than other deinterlacing methods and even supports working on videos with multiple scan-types, frame-rates and scan-orders. The output will be CFR (Constant frame-rate).
 
 `MpegHelper.deinterlace([dict vfm_cfg={}, dict qtgmc_cfg={}, bool tff=None])`
@@ -40,7 +38,7 @@ Deinterlaces frames of a video only if the frame is interlaced. All information 
 * qtgmc_cfg: key=value settings to pass to havsfunc.QTGMC as unpacked arguments (e.g. `{"FPSDivisor": 1, "Preset": "Medium"}`). It defaults to Single-rate Placebo optimized output based on tff, See code for actual settings used, it will be very slow but great quality wise.
 * tff: Wheter to use Top-Field-First or not. None will automatically decide based on the first frame if possible, otherwise it defaults to True.
 
-## decimate ([__init__.py](/pvsfunc/__init__.py))
+### decimate ([__init__.py](/pvsfunc/__init__.py))
 IVTC (Inverse-telecine) the clip using decimation (frame deletion). This would commonly be used to revert the telecine process of FILM to NTSC but can be used for other rate changes.
 
 `from pvsfunc.__init__ import decimate`  
@@ -50,7 +48,7 @@ IVTC (Inverse-telecine) the clip using decimation (frame deletion). This would c
 * offsets: *Only used if mode=0* Starting from index of 0 which is frame 1 of the cycle, this indicates which frames to KEEP from the cycle. For example, cycle of 5, and the default offsets (`[0, 1, 3, 4]`) will delete the 3rd frame (because index 2 isn't in the list) every 5 (cycle) frames.
 * debug: Print debugging information
 
-## debox ([__init__.py](/pvsfunc/__init__.py))
+### debox ([__init__.py](/pvsfunc/__init__.py))
 Remove [Pillarboxing](https://wikipedia.org/wiki/Pillarbox), [Letterboxing](https://wikipedia.org/wiki/Letterboxing_(filming)) or [Windowboxing](https://wikipedia.org/wiki/Windowbox_(filmmaking)) from the video by calculating a crop area based on `aspect_ratio` calculated against clip width and height. If it's windowboxed, use this function twice, first for Pillarboxing, then for Letterboxing.
 
 `from pvsfunc.__init__ import debox`  
