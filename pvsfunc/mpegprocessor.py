@@ -6,21 +6,23 @@ import functools
 import subprocess
 # vs func repos
 import havsfunc
-# pypi dependencies
+# pip packages
 from pymediainfo import MediaInfo
+from pyd2v import D2V
 
-class MpegProcessor():
-    def __init__(self, filepath, source_cfg={}, dgindex_path="DGIndex.exe", debug=False):
+
+class MpegProcessor:
+    def __init__(self, file_path, source_cfg=None, dgindex_path="DGIndex.exe", debug=False):
         """
         MpegProcessor is a convenience wrapper for loading and using MPEG videos.
         It's primary function is to handle the loading and handle video fields to
         return a CFR (Constant frame-rate) progressive video.
-        :param filepath: Path to a file to import. An MKV file is recommended no
+        :param file_path: Path to a file to import. An MKV file is recommended no
         matter what the video codec is.
         :param source_cfg: A dictionary of key=value pairs that will be unpacked and
         provided to whatever clip Sourcing function get's used e.g.
         {"core.d2v.Source": { "rff": True }, "core.ffms2.Source": { "alpha": False }}
-        :param dgindex_path: A filepath to DGIndex. On Windows if the exe is in your
+        :param dgindex_path: A file path to DGIndex. On Windows if the exe is in your
         Environment Path, you may simply put "DGIndex" or "DGIndex.exe".
         :param debug: Debug Mode, Enable it if you want to debug frame information.
         """
@@ -33,22 +35,19 @@ class MpegProcessor():
         self.standard = None
         # internal variables
         self.debug = debug
-        self.filepath = filepath
-        self.fileext = os.path.splitext(self.filepath)[-1].lower()[1:]
-        self.fileinternal = None
-        self.fileext = None
+        self.file_path = file_path
+        self.file_ext = os.path.splitext(self.file_path)[-1].lower()[1:]
+        self.file_internal = None
         self.dgindex_path = dgindex_path
-        # get internal filepaths if exist
-        if self.fileext == "d2v":  # DGIndex Project Files
-            with open(self.filepath, mode="r") as f:
-                # video filepath is always on line 3
-                self.fileinternal = [l for i,l in enumerate(f) if i==2][0].strip()
-            if self.fileinternal and not os.path.isabs(self.fileinternal):
+        # get internal file paths if exist
+        if self.file_ext == "d2v":  # DGIndex Project Files
+            self.file_internal = D2V(self.file_path).videos[0]
+            if self.file_internal and not os.path.isabs(self.file_internal):
                 # convert relative to absolute
-                self.fileinternal = os.path.join(os.path.dirname(self.filepath), self.fileinternal)
+                self.file_internal = os.path.join(os.path.dirname(self.file_path), self.file_internal)
         # load mediainfo from MediaInfo
         self.mediainfo = [t for t in MediaInfo.parse(
-            filename=self.fileinternal or self.filepath
+            filename=self.file_internal or self.file_path
         ).tracks if t.track_type == "Video"][0]
         # prepare a unique ID for input
         self.fileid = self.mediainfo.codec_id or self.mediainfo.commercial_name
@@ -59,9 +58,9 @@ class MpegProcessor():
         # load file into clip with a Sourcer
         if self.fileid == "V_MPEG2":
             # core.d2v.Source is the only source available for frame-accuracy
-            d2v_path = self.filepath
-            if self.fileext != "d2v":
-                # if the filepath isnt a d2v, force it to be
+            d2v_path = self.file_path
+            if self.file_ext != "d2v":
+                # if the file path isn't a d2v, force it to be
                 d2v_path = f"{os.path.splitext(d2v_path)[0]}.d2v"
                 if not os.path.exists(d2v_path):
                     # couldn't find d2v, generate one on-the-fly
@@ -69,9 +68,9 @@ class MpegProcessor():
                     if not os.path.exists(mpg_path):
                         # couldn't find mpg, generate one on-the-fly
                         subprocess.run([
-                            "mkvextract", os.path.basename(self.filepath),
+                            "mkvextract", os.path.basename(self.file_path),
                             "tracks", f"0:{os.path.basename(mpg_path)}"
-                        ], cwd=os.path.dirname(self.filepath))
+                        ], cwd=os.path.dirname(self.file_path))
                     # generate d2v from mpg
                     subprocess.run([
                         self.dgindex_path,
@@ -83,14 +82,14 @@ class MpegProcessor():
                         "-hide", "-exit",  # start hidden and exit when saved
                         "-o", os.path.splitext(os.path.basename(d2v_path))[0]
                     ], cwd=os.path.dirname(d2v_path))
-                    # make sure d2v's internal mpg file path is abolute path to mpg
+                    # make sure d2v's internal mpg file path is absolute path to mpg
                     with open(d2v_path, mode="r") as f:
                         _D2V = f.read().splitlines()
                     _D2V[2] = os.path.join(os.path.dirname(d2v_path), os.path.basename(mpg_path))
                     with open(d2v_path, mode="w") as f:
                         f.write("\n".join(_D2V))
             self.clip_cfg = {
-                **(source_cfg["core.d2v.Source"] if "core.d2v.Source" in source_cfg else {}),
+                **(source_cfg["core.d2v.Source"] if source_cfg and "core.d2v.Source" in source_cfg else {}),
                 "input": d2v_path
             }
             self.clip_src = "d2v"
@@ -104,8 +103,8 @@ class MpegProcessor():
                     self.clip = core.text.Text(self.clip, "Untouched Frame (rff=False)", alignment=1)
         elif self.fileid in ["V_MPEG1", "V_MPEG4/ISO/AVC"]:
             self.clip_cfg = {
-                **(source_cfg["core.ffms2.Source"] if "core.ffms2.Source" in source_cfg else {}),
-                "source": self.filepath,
+                **(source_cfg["core.ffms2.Source"] if source_cfg and "core.ffms2.Source" in source_cfg else {}),
+                "source": self.file_path,
                 "alpha": False
             }
             self.clip_src = "ffms2"
