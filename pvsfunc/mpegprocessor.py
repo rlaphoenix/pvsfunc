@@ -112,11 +112,12 @@ class MpegProcessor:
         else:
             raise ValueError(f"Video Codec ({self.fileid}) not currently supported")
         # detect standard
-        if self.clip.fps.numerator == 25 and self.clip.fps.denominator == 1 and self.clip.width == 720 and self.clip.height == 576:
+        if self.clip.fps.numerator == 25 and self.clip.fps.denominator == 1:
             self.standard = "PAL"
-        elif self.clip.fps.numerator == 30000 and self.clip.fps.denominator == 1001 and self.clip.width == 720 and self.clip.height == 480:
+        elif self.clip.fps.numerator == 30000 and self.clip.fps.denominator == 1001:
             self.standard = "NTSC"
-        elif self.clip.fps.numerator == 24000 and self.clip.fps.denominator == 1001:
+        elif self.clip.fps.numerator == 24000 and self.clip.fps.denominator == 1001 or \
+             self.clip.fps.numerator == 24 and self.clip.fps.denominator == 1:
             self.standard = "FILM"
 
     def deinterlace(self, vfm_cfg={}, qtgmc_cfg={}, tff=None):
