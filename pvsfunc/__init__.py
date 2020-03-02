@@ -58,7 +58,7 @@ def debox(clip, aspect_ratio, mode=0, offset=0):
         towards the right (2 pixels away from being centered), use offset=2,
         if the content is 2 pixels towards the left, use offset=-2
         """
-        aspect_ratio = aspect_ratio.split(":")
+        aspect_ratio = [int(n) for n in aspect_ratio.split(":")]
         aspect_ratio = aspect_ratio[0] / aspect_ratio[1]
         area = (clip.width - (clip.height * aspect_ratio)) / 2
         return core.std.CropRel(
