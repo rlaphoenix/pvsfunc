@@ -95,12 +95,10 @@ class MpegProcessor:
             self.clip_src = "d2v"
             self.clip = core.d2v.Source(**self.clip_cfg)
             if "rff" in self.clip_cfg and not self.clip_cfg["rff"]:
-                if self.clip.fps.numerator == 30000 and self.clip.fps.denominator == 1001:
-                    # Fix core.d2v.Source's NTSC rff=False returned FPS, though right now, it's
-                    # just assuming rff=False is returning 24000/1001 (FILM~) frame rate because NTSC.
+                d2v = D2V(d2v_path)
+                if d2v.data_type == "100.00% FILM" or d2v.data_type == "99.99% FILM":
+                    # fix rff=False's returned FPS for FILM content
                     self.clip = core.std.AssumeFPS(self.clip, fpsnum=24000, fpsden=1001)
-                if self.debug:
-                    self.clip = core.text.Text(self.clip, "Untouched Frame (rff=False)", alignment=1)
         elif self.fileid in ["V_MPEG1", "V_MPEG4/ISO/AVC"]:
             self.clip_cfg = {
                 **(source_cfg["core.ffms2.Source"] if source_cfg and "core.ffms2.Source" in source_cfg else {}),
