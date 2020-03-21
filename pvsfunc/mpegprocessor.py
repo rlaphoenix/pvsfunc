@@ -66,22 +66,37 @@ class MpegProcessor:
                     # couldn't find d2v, generate one on-the-fly
                     mpg_path = f"{os.path.splitext(d2v_path)[0]}.mpg"
                     if not os.path.exists(mpg_path):
-                        # couldn't find mpg, generate one on-the-fly
+                        try:
+                            # couldn't find mpg, generate one on-the-fly
+                            subprocess.run([
+                                "mkvextract", os.path.basename(self.file_path),
+                                "tracks", f"0:{os.path.basename(mpg_path)}"
+                            ], cwd=os.path.dirname(self.file_path))
+                        except FileNotFoundError:
+                            raise RuntimeError(
+                                "MpegProcessor: Required binary 'mkvextract' not found. "
+                                "Install MKVToolNix and make sure it's binaries are in the environment path."
+                            )
+                    try:
+                        # generate d2v from mpg
                         subprocess.run([
-                            "mkvextract", os.path.basename(self.file_path),
-                            "tracks", f"0:{os.path.basename(mpg_path)}"
-                        ], cwd=os.path.dirname(self.file_path))
-                    # generate d2v from mpg
-                    subprocess.run([
-                        self.dgindex_path,
-                        "-i", os.path.basename(mpg_path),
-                        "-ia", "5",  # iDCT Algorithm, 5=IEEE-1180 Reference
-                        "-fo", "2",  # Field Operation, 2=Ignore Pulldown Flags
-                        "-yr", "1",  # YUV->RGB, 1=PC Scale
-                        "-om", "0",  # Output Method, 0=None (just d2v)
-                        "-hide", "-exit",  # start hidden and exit when saved
-                        "-o", os.path.splitext(os.path.basename(d2v_path))[0]
-                    ], cwd=os.path.dirname(d2v_path))
+                            self.dgindex_path,
+                            "-i", os.path.basename(mpg_path),
+                            "-ia", "5",  # iDCT Algorithm, 5=IEEE-1180 Reference
+                            "-fo", "2",  # Field Operation, 2=Ignore Pulldown Flags
+                            "-yr", "1",  # YUV->RGB, 1=PC Scale
+                            "-om", "0",  # Output Method, 0=None (just d2v)
+                            "-hide", "-exit",  # start hidden and exit when saved
+                            "-o", os.path.splitext(os.path.basename(d2v_path))[0]
+                        ], cwd=os.path.dirname(d2v_path))
+                    except FileNotFoundError:
+                        raise RuntimeError(
+                            "MpegProcessor: Required binary 'DGIndex' not found.\n"
+                            "Windows: Download DGIndex and place the folder into 'C:/Program Files (x86)/DGIndex' (manually create folder). "
+                            "Once done, add that path to System Environment Variables, run a google search for instructions.\n"
+                            "Linux: Put the path to DGIndex.exe in the dgindex_path argument. Python Subprocess doesnt follow bash's PATH or alias, "
+                            "so specifying path manually will have to be done."
+                        )
                     # make sure d2v's internal mpg file path is absolute path to mpg
                     with open(d2v_path, mode="r") as f:
                         _D2V = f.read().splitlines()
@@ -108,7 +123,7 @@ class MpegProcessor:
             self.clip_src = "ffms2"
             self.clip = core.ffms2.Source(**self.clip_cfg)
         else:
-            raise ValueError(f"Video Codec ({self.fileid}) not currently supported")
+            raise ValueError(f"MpegProcessor: Video Codec ({self.fileid}) not currently supported")
         # detect standard
         if self.clip.fps.numerator == 25 and self.clip.fps.denominator == 1:
             self.standard = "PAL"
