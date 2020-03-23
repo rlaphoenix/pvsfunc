@@ -111,7 +111,7 @@ class MpegProcessor:
             self.clip = core.d2v.Source(**self.clip_cfg)
             if "rff" in self.clip_cfg and not self.clip_cfg["rff"]:
                 d2v = D2V(d2v_path)
-                if d2v.data_type == "100.00% FILM" or d2v.data_type == "99.99% FILM":
+                if d2v.data_type == "100.00% FILM":
                     # fix rff=False's returned FPS for FILM content
                     self.clip = core.std.AssumeFPS(self.clip, fpsnum=24000, fpsden=1001)
         elif self.fileid in ["V_MPEG1", "V_MPEG4/ISO/AVC"]:
@@ -129,9 +129,12 @@ class MpegProcessor:
             self.standard = "PAL"
         elif self.clip.fps.numerator == 30000 and self.clip.fps.denominator == 1001:
             self.standard = "NTSC"
-        elif self.clip.fps.numerator == 24000 and self.clip.fps.denominator == 1001 or \
-             self.clip.fps.numerator == 24 and self.clip.fps.denominator == 1:
+        elif self.clip.fps.numerator == 24000 and self.clip.fps.denominator == 1001:
+            self.standard = "NTSC-FILM"
+        elif self.clip.fps.numerator == 24 and self.clip.fps.denominator == 1:
             self.standard = "FILM"
+        else:
+            self.standard = "UNKNOWN!"
 
     def deinterlace(self, vfm_cfg={}, qtgmc_cfg={}, tff=None):
         if tff is None:
