@@ -32,11 +32,10 @@ class PDeint:
         # get file type
         self.file_type = None
         # check if file is a DGIndexProjectFile (d2v)
-        with open(self.file_path, mode="rt") as f:
-            if f.read(18) == "DGIndexProjectFile":
-                if f.read(2) != "16":
+        with open(self.file_path, mode="rb") as f:
+            if f.read(18) == bytes([0x44, 0x47, 0x49, 0x6E, 0x64, 0x65, 0x78, 0x50, 0x72, 0x6F, 0x6A, 0x65, 0x63, 0x74, 0x46, 0x69, 0x6C, 0x65]):
+                if f.read(2) != bytes([0x31, 0x36]):
                     raise ValueError("D2V was created with an unsupported indexer, please use DGIndex v1.5.8")
-                self.file_path = self.file_type
                 self.file_type = "core.d2v.Source"
         # check if file is an mp4 or mkv
         if not self.file_type:
