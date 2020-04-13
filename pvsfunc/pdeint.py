@@ -7,7 +7,6 @@ import subprocess
 # vs func repos
 import havsfunc
 # pip packages
-import magic
 from pymediainfo import MediaInfo
 from pyd2v import D2V
 
@@ -31,28 +30,30 @@ class PDeint:
                 # windows sometimes adds an extra leading /, usually when using an external drive
                 self.file_path = self.file_path.lstrip('/')
         # get file type
-        self.file_type = magic.from_file(self.file_path, mime=True)
-        if self.file_type == "text/plain":
-            with open(self.file_path, mode="rt") as f:
-                if f.read(18) == "DGIndexProjectFile":
-                    if f.read(2) != "16":
-                        raise ValueError("D2V was created with an unsupported indexer, please use DGIndex v1.5.8")
-                    self.file_path = self.file_type
-                    self.file_type = "core.d2v.Source"
-        elif self.file_type.startswith("video/"):
-            # prepare a codec ID for video
-            self.mediainfo = [t for t in MediaInfo.parse(
-                filename=self.file_path
-            ).tracks if t.track_type == "Video"][0]
-            codec_id = self.mediainfo.codec_id or self.mediainfo.commercial_name
-            if codec_id in ["MPEG-2 Video", "V_MPEG2", "MPEG-1 Video", "V_MPEG1"]:
-                # generate a d2v for this video file
-                self.file_path = self.generate_d2v(self.file_path)
+        self.file_type = None
+        # check if file is a DGIndexProjectFile (d2v)
+        with open(self.file_path, mode="rt") as f:
+            if f.read(18) == "DGIndexProjectFile":
+                if f.read(2) != "16":
+                    raise ValueError("D2V was created with an unsupported indexer, please use DGIndex v1.5.8")
+                self.file_path = self.file_type
                 self.file_type = "core.d2v.Source"
+        # check if file is an mp4 or mkv
+        if not self.file_type:
+            if os.path.splitext(self.file_path)[-1][1:].lower() in ["mp4", "mkv"]:
+                # prepare a codec ID for video
+                self.mediainfo = [t for t in MediaInfo.parse(
+                    filename=self.file_path
+                ).tracks if t.track_type == "Video"][0]
+                codec_id = self.mediainfo.codec_id or self.mediainfo.commercial_name
+                if codec_id in ["MPEG-2 Video", "V_MPEG2", "MPEG-1 Video", "V_MPEG1"]:
+                    # generate a d2v for this video file
+                    self.file_path = self.generate_d2v(self.file_path)
+                    self.file_type = "core.d2v.Source"
+                else:
+                    self.file_type = "core.ffms2.Source"
             else:
-                self.file_type = "core.ffms2.Source"
-        else:
-            raise ValueError(f"Unsupposed file type ({self.file_type})")
+                raise ValueError(f"Unsupported file type ({self.file_type}). Currently only support containers MP4 and MKV.")
         # load file as clip
         if self.file_type == "core.d2v.Source":
             self.clip = core.d2v.Source(input=self.file_path, rff=False)
