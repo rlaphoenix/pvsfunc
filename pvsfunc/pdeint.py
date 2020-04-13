@@ -160,12 +160,13 @@ class PDeint:
             # resulted in it returning with the FPS set to 30000/1001, let's revert that
             # back to whatever it should be based on its pulldown
             rff_count = [n for n,x in enumerate(flags) if not x["tff"] and not x["rff"]]
-            rff_every = (rff_count[1] - rff_count[0]) + 1
-            self.clip = core.std.AssumeFPS(
-                self.clip,
-                fpsnum=self.clip.fps.numerator - (self.clip.fps.numerator / rff_every),
-                fpsden=self.clip.fps.denominator
-            )
+            if len(rff_count) >= 2:
+                rff_every = (rff_count[1] - rff_count[0]) + 1
+                self.clip = core.std.AssumeFPS(
+                    self.clip,
+                    fpsnum=self.clip.fps.numerator - (self.clip.fps.numerator / rff_every),
+                    fpsden=self.clip.fps.denominator
+                )
         
         if debug:
             self.clip = core.text.Text(
