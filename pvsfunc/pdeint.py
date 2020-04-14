@@ -140,20 +140,51 @@ class PDeint:
             # interlaced sections fps == 30000/1001
             # progressive sections fps <= 30000/1001 (or == if they used Pulldown 1:1 for some reason)
             # we need to:
-            # 1. deinterlace whats interlaced, resulting in progressive 30000/1001
+            # 0. check if this is using QTGMC's FPSDivisor set to 1, which is double-rate bobbed output
+            #    this will return double-rate fps when deinterlacing a frame, so we need to know to accomodate this
+            double_rate = "FPSDivisor" in kernel_cfg and kernel_cfg["FPSDivisor"] == 1
+            # 1. fix the frame rate of the progressive sections by applying it's pulldown (without interlacing) to make the video CFR
+            #    if this isn't done, then the frame rate of the progressive sections will be 30000/1001 but the content itself will not be
+            pulldown_frames = [n for n in range(len(self.clip)) if flags[n]["progressive_frame"] and flags[n]["rff"] and flags[n]["tff"]]
+            if pulldown_frames:
+                self.clip = core.std.DuplicateFrames(clip=self.clip, frames=pulldown_frames)
+            # 2. also apply this frame rate fix to the flag list so that each flag can be properly accessed by index
+            pulldown_flags = []
+            for flag in flags:
+                pulldown_flags.append(flag)
+                if flag["progressive_frame"] and flag["rff"] and flag["tff"]:
+                    pulldown_flags.append({"progressive_frame": True, "rff": False, "tff": False})
+            # 3. if double-rate, let's duplicate each flag in the pulldown flag list to be properly accessable by index once again
+            if double_rate:
+                pulldown_flags = [x for t in zip(pulldown_flags, pulldown_flags) for x in t]
+            # 4. create a format clip, used for metadata of final clip
+            interlaced_frame_count = sum(1 for flag in pulldown_flags if not flag["progressive_frame"])
+            progressive_frame_count = sum(1 for flag in pulldown_flags if flag["progressive_frame"])
+            format_clip = core.std.BlankClip(
+                clip=self.clip,
+                length=(progressive_frame_count + interlaced_frame_count) * (2 if double_rate else 1),
+                fpsnum=self.clip.fps.numerator * (2 if double_rate else 1),
+                fpsden=self.clip.fps.denominator
+            )
+            # 5. deinterlace whats interlaced
+            def _d(n, f, c, d, fl):
+                if fl[n]["progressive_frame"]:
+                    # progressive frame, we don't need to do any deinterlacing to this frame
+                    # though we may need to duplicate it if double-rate fps output
+                    rc = core.std.Interleave([c, c]) if double_rate else c
+                    return core.text.Text(rc, "\n\n\n\n (Untouched Frame) ", alignment=7) if debug else rc
+                # interlaced frame, we need to use `d` (deinterlaced) frame.
+                return core.text.Text(d, "\n\n\n\n ! Deinterlaced Frame ! ", alignment=7) if debug else d
             self.clip = core.std.FrameEval(
-                self.clip,
+                format_clip,
                 functools.partial(
-                    lambda n, f, c, d: c if flags[n]["progressive_frame"] else d,
+                    _d,
                     c=self.clip,
-                    d=kernel(**kernel_cfg, **{kernel_clip_key: self.clip})
+                    d=kernel(**kernel_cfg, **{kernel_clip_key: self.clip}),
+                    fl=pulldown_flags
                 ),
                 prop_src=self.clip
             )
-            # 2. fix the frame rate of the progressive content to be 30000/1001 by applying pulldown (without interlacing)
-            rff_frames = [n for n in range(len(self.clip)) if flags[n]["progressive_frame"] and flags[n]["rff"] and flags[n]["tff"]]
-            if rff_frames:
-                self.clip = core.std.DuplicateFrames(clip=self.clip, frames=rff_frames)
         else:
             # video is entirely progressive without a hint of interlacing in sight
             # however, it needs it's FPS to be fixed. rff=False with core.d2v.Source
