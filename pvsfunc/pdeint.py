@@ -137,13 +137,11 @@ class PDeint:
         # todo ; get an mpeg2 that uses Pulldown metadata (rff flags) that ISN'T Pulldown 2:3 to test math
         #        this math seems pretty far fetched, if we can somehow obtain the Pulldown x:x:...
         #        string that mediainfo can get, then calculating it can be much easier and more efficient.
-        pulldown_cycle = [n for n,x in enumerate(flags) if not x["tff"] and not x["rff"]]
+        pulldown_cycle = [n for n,f in enumerate(flags) if not f["tff"] and not f["rff"]]
         if pulldown_cycle:
             pulldown_cycle = list(zip(pulldown_cycle[::2], pulldown_cycle[1::2]))
             pulldown_cycle = [r - l for l,r in pulldown_cycle]
-            if pulldown_cycle.count(pulldown_cycle[0]) != len(pulldown_cycle):
-                raise Exception(f"Unable to determine pulldown cycle as it is non linear. {pulldown_cycle}")
-            pulldown_cycle = pulldown_cycle[0] + 1
+            pulldown_cycle = max(set(pulldown_cycle), key=pulldown_cycle.count) + 1  # most common entry + 1
         else:
             pulldown_cycle = None
 
