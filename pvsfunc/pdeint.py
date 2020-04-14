@@ -132,6 +132,17 @@ class PDeint:
         flags = [f for l in [x["flags"] for x in self.d2v.data] for f in l]
         # Get percentage of progressive frames
         progressive_percent = (sum(1 for x in flags if x["progressive_frame"]) / len(flags))*100
+        # Get pulldown information
+        pulldown_frames = [n for n,f in enumerate(flags) if f["progressive_frame"] and f["rff"] and f["tff"]]
+        # todo ; get an mpeg2 that uses Pulldown metadata (rff flags) that ISN'T Pulldown 2:3 to test math
+        #        this math seems pretty far fetched, if we can somehow obtain the Pulldown x:x:...
+        #        string that mediainfo can get, then calculating it can be much easier and more efficient.
+        pulldown_cycle = [n for n,x in enumerate(flags) if not x["tff"] and not x["rff"]]
+        pulldown_cycle = list(zip(pulldown_cycle[::2], pulldown_cycle[1::2]))
+        pulldown_cycle = [r - l for l,r in pulldown_cycle]
+        if pulldown_cycle.count(pulldown_cycle[0]) != len(pulldown_cycle):
+            raise Exception(f"Unable to determine pulldown cycle as it is non linear. {pulldown_cycle}")
+        pulldown_cycle = pulldown_cycle[0] + 1
 
         if progressive_percent != 100.0:
             # video is not all progressive content, meaning it is either:
@@ -139,13 +150,8 @@ class PDeint:
             # - mix of progressive and interlaced sections
             # interlaced sections fps == 30000/1001
             # progressive sections fps <= 30000/1001 (or == if they used Pulldown 1:1 for some reason)
-            # we need to:
-            # 0. check if this is using QTGMC's FPSDivisor set to 1, which is double-rate bobbed output
-            #    this will return double-rate fps when deinterlacing a frame, so we need to know to accomodate this
-            double_rate = "FPSDivisor" in kernel_cfg and kernel_cfg["FPSDivisor"] == 1
             # 1. fix the frame rate of the progressive sections by applying it's pulldown (without interlacing) to make the video CFR
             #    if this isn't done, then the frame rate of the progressive sections will be 30000/1001 but the content itself will not be
-            pulldown_frames = [n for n in range(len(self.clip)) if flags[n]["progressive_frame"] and flags[n]["rff"] and flags[n]["tff"]]
             if pulldown_frames:
                 self.clip = core.std.DuplicateFrames(clip=self.clip, frames=pulldown_frames)
             # 2. also apply this frame rate fix to the flag list so that each flag can be properly accessed by index
@@ -154,34 +160,33 @@ class PDeint:
                 pulldown_flags.append(flag)
                 if flag["progressive_frame"] and flag["rff"] and flag["tff"]:
                     pulldown_flags.append({"progressive_frame": True, "rff": False, "tff": False})
-            # 3. if double-rate, let's duplicate each flag in the pulldown flag list to be properly accessable by index once again
-            if double_rate:
-                pulldown_flags = [x for t in zip(pulldown_flags, pulldown_flags) for x in t]
+            # 3. create a clip from the output of the kernel deinterlacer
+            deinterlaced_clip = kernel(**kernel_cfg, **{kernel_clip_key: self.clip})
+            double_rate = self.clip.fps.numerator * 2 == deinterlaced_clip.fps.numerator
             # 4. create a format clip, used for metadata of final clip
-            interlaced_frame_count = sum(1 for flag in pulldown_flags if not flag["progressive_frame"])
-            progressive_frame_count = sum(1 for flag in pulldown_flags if flag["progressive_frame"])
             format_clip = core.std.BlankClip(
                 clip=self.clip,
-                length=(progressive_frame_count + interlaced_frame_count) * (2 if double_rate else 1),
+                length=len(pulldown_flags) * (2 if double_rate else 1),
                 fpsnum=self.clip.fps.numerator * (2 if double_rate else 1),
                 fpsden=self.clip.fps.denominator
             )
             # 5. deinterlace whats interlaced
-            def _d(n, f, c, d, fl):
-                if fl[n]["progressive_frame"]:
+            def _d(n, f, c, d, fl, dr):
+                if fl[int(n / 2) if dr else n]["progressive_frame"]:
                     # progressive frame, we don't need to do any deinterlacing to this frame
                     # though we may need to duplicate it if double-rate fps output
-                    rc = core.std.Interleave([c, c]) if double_rate else c
-                    return core.text.Text(rc, "\n\n\n\n (Untouched Frame) ", alignment=7) if debug else rc
+                    rc = core.std.Interleave([c, c]) if dr else c
+                    return core.text.Text(rc, "\n\n\n\n\n (Untouched Frame) ", alignment=7) if debug else rc
                 # interlaced frame, we need to use `d` (deinterlaced) frame.
-                return core.text.Text(d, "\n\n\n\n ! Deinterlaced Frame ! ", alignment=7) if debug else d
+                return core.text.Text(d, "\n\n\n\n\n ! Deinterlaced Frame ! ", alignment=7) if debug else d
             self.clip = core.std.FrameEval(
                 format_clip,
                 functools.partial(
                     _d,
                     c=self.clip,
-                    d=kernel(**kernel_cfg, **{kernel_clip_key: self.clip}),
-                    fl=pulldown_flags
+                    d=deinterlaced_clip,
+                    fl=pulldown_flags,
+                    dr=double_rate
                 ),
                 prop_src=self.clip
             )
@@ -189,22 +194,24 @@ class PDeint:
             # video is entirely progressive without a hint of interlacing in sight
             # however, it needs it's FPS to be fixed. rff=False with core.d2v.Source
             # resulted in it returning with the FPS set to 30000/1001, let's revert that
-            # back to whatever it should be based on its pulldown
-            rff_count = [n for n,x in enumerate(flags) if not x["tff"] and not x["rff"]]
-            if len(rff_count) >= 2:
-                rff_every = (rff_count[1] - rff_count[0]) + 1
+            # back to whatever it should be based on its pulldown cycle
+            if pulldown_cycle:
                 self.clip = core.std.AssumeFPS(
                     self.clip,
-                    fpsnum=self.clip.fps.numerator - (self.clip.fps.numerator / rff_every),
+                    fpsnum=self.clip.fps.numerator - (self.clip.fps.numerator / pulldown_cycle),
                     fpsden=self.clip.fps.denominator
                 )
         
         if debug:
             self.clip = core.text.Text(
                 self.clip,
-                f" {os.path.basename(self.file_path)} \n"
-                f" {self.standard}, Loaded with {self.file_type} \n"
-                f" Found {len(flags)} coded pictures, {progressive_percent:.2f}% of which are Progressive ",
+                " " + (" \n ".join([
+                    f"{os.path.basename(self.file_path)}",
+                    f"{self.standard}, Loaded with {self.file_type}",
+                    f"- {len(flags)} coded pictures, which {progressive_percent:.2f}% of are Progressive",
+                    f"- {len(pulldown_frames)} frames are asking for pulldown which occurs every {pulldown_cycle} frames",
+                    f"- {len(flags) + len(pulldown_frames)} total frames after pulldown flags are honored"
+                ])) + " ",
                 alignment=7
             )
     
