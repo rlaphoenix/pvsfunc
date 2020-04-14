@@ -138,11 +138,14 @@ class PDeint:
         #        this math seems pretty far fetched, if we can somehow obtain the Pulldown x:x:...
         #        string that mediainfo can get, then calculating it can be much easier and more efficient.
         pulldown_cycle = [n for n,x in enumerate(flags) if not x["tff"] and not x["rff"]]
-        pulldown_cycle = list(zip(pulldown_cycle[::2], pulldown_cycle[1::2]))
-        pulldown_cycle = [r - l for l,r in pulldown_cycle]
-        if pulldown_cycle.count(pulldown_cycle[0]) != len(pulldown_cycle):
-            raise Exception(f"Unable to determine pulldown cycle as it is non linear. {pulldown_cycle}")
-        pulldown_cycle = pulldown_cycle[0] + 1
+        if pulldown_cycle:
+            pulldown_cycle = list(zip(pulldown_cycle[::2], pulldown_cycle[1::2]))
+            pulldown_cycle = [r - l for l,r in pulldown_cycle]
+            if pulldown_cycle.count(pulldown_cycle[0]) != len(pulldown_cycle):
+                raise Exception(f"Unable to determine pulldown cycle as it is non linear. {pulldown_cycle}")
+            pulldown_cycle = pulldown_cycle[0] + 1
+        else:
+            pulldown_cycle = None
 
         if progressive_percent != 100.0:
             # video is not all progressive content, meaning it is either:
@@ -176,9 +179,9 @@ class PDeint:
                     # progressive frame, we don't need to do any deinterlacing to this frame
                     # though we may need to duplicate it if double-rate fps output
                     rc = core.std.Interleave([c, c]) if dr else c
-                    return core.text.Text(rc, "\n\n\n\n\n (Untouched Frame) ", alignment=7) if debug else rc
+                    return core.text.Text(rc, "\n\n\n\n\n\n (Untouched Frame) ", alignment=7) if debug else rc
                 # interlaced frame, we need to use `d` (deinterlaced) frame.
-                return core.text.Text(d, "\n\n\n\n\n ! Deinterlaced Frame ! ", alignment=7) if debug else d
+                return core.text.Text(d, "\n\n\n\n\n\n ! Deinterlaced Frame ! ", alignment=7) if debug else d
             self.clip = core.std.FrameEval(
                 format_clip,
                 functools.partial(
@@ -209,7 +212,7 @@ class PDeint:
                     f"{os.path.basename(self.file_path)}",
                     f"{self.standard}, Loaded with {self.file_type}",
                     f"- {len(flags)} coded pictures, which {progressive_percent:.2f}% of are Progressive",
-                    f"- {len(pulldown_frames)} frames are asking for pulldown which occurs every {pulldown_cycle} frames",
+                    f"- {len(pulldown_frames)} frames are asking for pulldown{f' which occurs every {pulldown_cycle} frames' if pulldown_cycle else ''}",
                     f"- {len(flags) + len(pulldown_frames)} total frames after pulldown flags are honored"
                 ])) + " ",
                 alignment=7
