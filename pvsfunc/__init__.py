@@ -24,7 +24,7 @@ def decimate(clip, mode=0, cycle=5, offsets=[0, 1, 3, 4], debug=False):
     """
     if mode == 0:
         if debug:
-            clip = core.std.FrameEval(
+            return core.std.FrameEval(
                 clip,
                 functools.partial(
                     lambda n, f, c: core.text.Text(
