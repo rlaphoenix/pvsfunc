@@ -27,11 +27,6 @@ class PSourcer:
         # codecs not listed here will default to `core.ffms2.Source`
     }
 
-    SOURCER_FUNC_MAP = {
-        "core.d2v.Source": core.d2v.Source,
-        "core.ffms2.Source": core.ffms2.Source
-    }
-
     SOURCER_ARGS_MAP = {
         "core.d2v.Source": {
             # ignore rff (pulldown flags) as we do not want it to interlace
@@ -56,8 +51,10 @@ class PSourcer:
             # make sure a d2v file for this video exists
             self.file_path = self.get_d2v(self.file_path)
         # load video to clip using sourcer
-        #self.clip = self.SOURCER_FUNC_MAP[self.sourcer](self.file_path, **self.SOURCER_ARGS_MAP[self.sourcer])
-        self.clip = core.d2v.Source(self.file_path, **self.SOURCER_ARGS_MAP[self.sourcer])
+        self.clip = {
+            "core.d2v.Source": core.d2v.Source,
+            "core.ffms2.Source": core.ffms2.Source
+        }[self.sourcer](self.file_path, **self.SOURCER_ARGS_MAP[self.sourcer])
         # set various props that the user may find helpful
         for k, v in [
             ("FilePath", self.file_path),
