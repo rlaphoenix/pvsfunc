@@ -15,38 +15,43 @@ PHOENiX's compilation of VapourSynth Script's and Functions
 
 ## Functions
 
-| Function                     | Import                                  |
-| ---------------------------- | --------------------------------------- |
-| [PDeint](#pdeint-pdeintpy)   | `from pvsfunc.pdeint import PDeint`     |
-| [decimate](#decimate-initpy) | `from pvsfunc.__init__ import decimate` |
-| [debox](#debox-initpy)       | `from pvsfunc.__init__ import debox`    |
+| Function                                        | Import                                            |
+| ----------------------------------------------- | ------------------------------------------------- |
+| [PSourcer](#psourcer-psourcerpy)                | `from pvsfunc.psourcer import PSourcer`           |
+| [PDeinterlacer](#pdeinterlacer-pdeinterlacerpy) | `from pvsfunc.pdeinterlacer import PDeinterlacer` |
+| [decimate](#decimate-initpy)                    | `from pvsfunc.__init__ import decimate`           |
+| [debox](#debox-initpy)                          | `from pvsfunc.__init__ import debox`              |
 
-### PDeint ([pdeint.py](/pvsfunc/pdeint.py))
+### PSourcer ([psourcer.py](/pvsfunc/psourcer.py))
 
-PDeint (class) is a convenience wrapper for loading and using MPEG videos. Its primary function is to handle the loading and handle video fields to return a CFR (Constant frame-rate) progressive video.
+PSourcer (class) is a convenience wrapper for loading video files to clip variables. It's purpose is to load an input file path with the most optimal clip source based on the file. For example for an MPEG-2 video file (e.g. DVD file) it will load using core.d2v.Source (and generate a d2v if needed too!), whereas for an MPEG-4/AVC/H.264 video it will load using core.ffms2.Source.
 
-It's similar to a retail DVD player as it deinterlaces only if the frame is marked as interlaced, no metrics or guessing is involved.
+`from pvsfunc.psourcer import PSourcer`
+`PSourcer(str file_path)`
 
-`from pvsfunc.pdeint import PDeint`  
-`PDeint(file_path[, dict source_cfg={}, str dgindex_path="DGIndex.exe", bool debug=False])`
+- file_path: Path to a file to import. Don't worry about which type of container (if any) you use.
 
-- file_path: Path to a file to import. An MKV file is recommended no matter what the video codec is.
-- source_cfg: A dictionary of key=value pairs that will be unpacked and provided to whatever clip Sourcing function get's used. You must provide a dictionary where it's key's are the source function, e.g. `{"core.d2v.Source": { "rff": True }, "core.ffms2.Source": { "alpha": False }}`
-- dgindex_path: A filepath to DGIndex. On Windows if the exe is in your Environment Path, you may simply put "DGIndex" or "DGIndex.exe".
+The following must be installed and added to the system environment variables/PATH.
+
+- [mkvextract from MKVToolNix](https://mkvtoolnix.download)
+- [DGIndex from DGMpgDec v1.5.8](http://rationalqm.us/dgmpgdec/dgmpgdec.html) (dont worry it works with WINE on linux)
+
+\* _important: if your on linux, add DGIndex to path via `/etc/profile.d/` instead of `~/.profile`, `~/.bashrc` e.t.c as those are SHELL-exclusive PATH's, not global system-wide._
+
+### PDeinterlacer ([pdeinterlacer.py](/pvsfunc/pdeinterlacer.py))
+
+PDeinterlacer (class) is a convenience wrapper for deinterlacing clips. Its unique feature is it can handle mixed scan-type videos. It will always return a progressive and CFR (constant frame-rate) video. It's similar to a retail DVD player as it deinterlaces only if the frame is marked as interlaced, no metrics or guessing is involved.
+
+Just to clarify this is a deinterlacer wrapper, not a full-fledged deinterlacer, by default it interally uses QTGMC but you can change the kernel.
+
+`from pvsfunc.pdeinterlacer import PDeinterlacer`  
+`PDeinterlacer(clip[, bool tff=True, func kernel=None, dict kernel_args=None, bool debug=False])`
+
+- clip: Clip to deinterlace, this must be a clip loaded with PSourcer as it requires some of the props that PSourcer applies to clips
+- tff: Top-Field-First
+- kernel: Deinterlacer Kernel Function to use for deinterlacing. It defaults to `havsfunc.QTGMC`.
+- kernel_args: Arguments to pass to the Kernel Function when deinterlacing.
 - debug: Debug Mode, Enable it if you want to debug frame information.
-
-#### PDeint.deinterlace
-
-By default it does not start the deinterlace process as PDeint can also be used as a general video sourcer. Run this function to start the deinterlacing.
-Deinterlaces frames of a video only if the frame is interlaced. All information required for deinterlacing is gotten from the frame itself, which is why you don't need to specify Field Order (tff=None is automated). If a frame needs deinterlacing it will use whatever kernel and kernel arguments you supply, which will be havsfunc's QTGMC by default. This supports working on videos with mixed scan-types and frame-rates (as long as the only frames with Pulldown metadata differ in frame-rate). The output will be always be CFR (Constant frame-rate).
-
-`PDeint.deinterlace([bool tff=True, func kernel=None, string kernel_clip_key=None, dict kernel_cfg=None, bool debug=False])`
-
-- tff: Deinterlace the Top-Field-First.
-- kernel: The function to use as a Deinterlacer. This will default to `havsfunc.QTGMC`.
-- kernel_clip_key: The argument name that asks for the input clip, e.g. `havsfunc.QTGMC` asks for `Input` to be the input clip.
-- kernel_cfg: The arguments for `kernel` as a Key-Value dictionary.
-- debug: Debug mode, this will display various information allowing you to better understand what the script is doing.
 
 ### decimate ([**init**.py](/pvsfunc/__init__.py))
 

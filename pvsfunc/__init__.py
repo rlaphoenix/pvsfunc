@@ -1,5 +1,6 @@
 # std vs
-from vapoursynth import core  # this may give a linter error, ignore
+from vapoursynth import core
+import vapoursynth as vs
 # std py
 import functools
 
