@@ -13,14 +13,12 @@ PHOENiX's compilation of VapourSynth Script's and Functions
 <a href="http://makeapullrequest.com"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square"></a>
 </p>
 
-## Functions
+## Classes
 
-| Function                                        | Import                                            |
+| Class                                           | Import                                            |
 | ----------------------------------------------- | ------------------------------------------------- |
 | [PSourcer](#psourcer-psourcerpy)                | `from pvsfunc.psourcer import PSourcer`           |
 | [PDeinterlacer](#pdeinterlacer-pdeinterlacerpy) | `from pvsfunc.pdeinterlacer import PDeinterlacer` |
-| [decimate](#decimate-initpy)                    | `from pvsfunc.__init__ import decimate`           |
-| [debox](#debox-initpy)                          | `from pvsfunc.__init__ import debox`              |
 
 ### PSourcer ([psourcer.py](/pvsfunc/psourcer.py))
 
@@ -52,6 +50,13 @@ Just to clarify this is a deinterlacer wrapper, not a full-fledged deinterlacer,
 - kernel: Deinterlacer Kernel Function to use for deinterlacing. It defaults to `havsfunc.QTGMC`.
 - kernel_args: Arguments to pass to the Kernel Function when deinterlacing.
 - debug: Debug Mode, Enable it if you want to debug frame information.
+
+## Functions
+
+| Function                                        | Import                                            |
+| ----------------------------------------------- | ------------------------------------------------- |
+| [decimate](#decimate-initpy)                    | `from pvsfunc.__init__ import decimate`           |
+| [debox](#debox-initpy)                          | `from pvsfunc.__init__ import debox`              |
 
 ### decimate ([**init**.py](/pvsfunc/__init__.py))
 
