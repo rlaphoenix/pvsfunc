@@ -1,14 +1,22 @@
 <component name="ProjectDictionaryState">
   <dictionary name="pragma">
     <words>
+      <w>debox</w>
       <w>deinterlaced</w>
       <w>dgindex</w>
+      <w>ivtc</w>
+      <w>letterboxing</w>
       <w>mediainfo</w>
       <w>mkvextract</w>
       <w>mpeg</w>
       <w>ntsc</w>
+      <w>pillarboxing</w>
       <w>pulldown</w>
+      <w>pvsfunc</w>
       <w>qtgmc</w>
+      <w>synth</w>
+      <w>telecine</w>
+      <w>windowboxing</w>
     </words>
   </dictionary>
 </component>
