@@ -8,6 +8,7 @@ import havsfunc
 # pip packages
 from pyd2v import D2V
 
+
 class PDeinterlacer:
     """
     PDeinterlacer (PHOENiX Deinterlacer)
@@ -21,6 +22,9 @@ class PDeinterlacer:
         self.kernel = kernel
         self.kernel_args = kernel_args
         self.debug = debug
+        # validate arguments
+        if not isinstance(self.clip, vs.VideoNode):
+            raise TypeError("pvsfunc.PDeinterlacer: This is not a clip")
         # set default kernel to QTGMC
         if not self.kernel:
             self.kernel = havsfunc.QTGMC
@@ -47,7 +51,7 @@ class PDeinterlacer:
                 **dict(self.kernel_args or {})
             }
         self.props = self.clip.get_frame(0).props
-        self.props = {k: v.decode("utf-8") if type(v) == bytes else v for k,v in self.props.items()}
+        self.props = {k: v.decode("utf-8") if type(v) == bytes else v for k, v in self.props.items()}
         if self.props["PVSSourcer"] == "core.d2v.Source":
             self._d2v()
         elif self.props["PVSSourcer"] == "core.ffms2.Source":
@@ -105,10 +109,8 @@ class PDeinterlacer:
             double_rate = self.clip.fps.numerator * 2 == deinterlaced_clip.fps.numerator
             # 4. create a format clip, used for metadata of final clip
             format_clip = core.std.BlankClip(
-                clip=self.clip,
-                length=len(pulldown_flags) * (2 if double_rate else 1),
-                fpsnum=self.clip.fps.numerator * (2 if double_rate else 1),
-                fpsden=self.clip.fps.denominator
+                clip=deinterlaced_clip,
+                length=len(pulldown_flags) * (2 if double_rate else 1)
             )
             # 5. deinterlace whats interlaced
             def _d(n, f, c, d, fl, dr):
@@ -116,9 +118,9 @@ class PDeinterlacer:
                     # progressive frame, we don't need to do any deinterlacing to this frame
                     # though we may need to duplicate it if double-rate fps output
                     rc = core.std.Interleave([c, c]) if dr else c
-                    return core.text.Text(rc, "\n\n\n\n\n\n (Untouched Frame) ", alignment=7) if self.debug else rc
+                    return core.text.Text(rc, f"\n\n\n\n\n\n Frame #{n} - Untouched ", alignment=7) if self.debug else rc
                 # interlaced frame, we need to use `d` (deinterlaced) frame.
-                return core.text.Text(d, "\n\n\n\n\n\n ! Deinterlaced Frame ! ", alignment=7) if self.debug else d
+                return core.text.Text(d, f"\n\n\n\n\n\n Frame #{n} - Deinterlaced! ", alignment=7) if self.debug else d
             self.clip = core.std.FrameEval(
                 format_clip,
                 functools.partial(

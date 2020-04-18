@@ -2,10 +2,20 @@
   <dictionary name="pragma">
     <words>
       <w>debox</w>
+      <w>deinterlace</w>
       <w>deinterlaced</w>
+      <w>deinterlacer</w>
+      <w>deinterlaces</w>
+      <w>deinterlacing</w>
+      <w>demux</w>
+      <w>demuxed</w>
+      <w>demuxing</w>
       <w>dgindex</w>
+      <w>ffmpeg</w>
+      <w>ieee</w>
       <w>ivtc</w>
       <w>letterboxing</w>
+      <w>lossless</w>
       <w>mediainfo</w>
       <w>mkvextract</w>
       <w>mpeg</w>
@@ -14,6 +24,7 @@
       <w>pulldown</w>
       <w>pvsfunc</w>
       <w>qtgmc</w>
+      <w>sourcer</w>
       <w>synth</w>
       <w>telecine</w>
       <w>windowboxing</w>

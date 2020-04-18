@@ -77,12 +77,3 @@ def debox(clip, aspect_ratio, mode=0, offset=0):
         right=area - offset if mode == 0 else 0,
         bottom=0 if mode == 0 else area - offset
     )
-
-
-def calculate_aspect_ratio(width: int, height: int) -> str:
-    """Calculate the aspect-ratio gcd string from resolution"""
-    def gcd(a, b):
-        """The GCD (greatest common divisor) is the highest number that evenly divides both width and height."""
-        return a if b == 0 else gcd(b, a % b)
-    r = gcd(width, height)
-    return f"{int(width / r)}:{int(height / r)}"
