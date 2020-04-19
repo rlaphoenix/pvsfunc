@@ -4,7 +4,14 @@ import vapoursynth as vs
 import os
 import functools
 # vs func repos
-import havsfunc
+try:
+    import havsfunc
+except ImportError:
+    raise RuntimeError(
+        "pvsfunc.PDeinterlacer: Required script havsfunc not found. "
+        "https://github.com/HomeOfVapourSynthEvolution/havsfunc"
+    )
+
 # pip packages
 from pyd2v import D2V
 

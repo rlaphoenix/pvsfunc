@@ -38,6 +38,16 @@ class PSourcer:
     """
 
     def __init__(self, file_path):
+        if not hasattr(core, "d2v"):
+            raise RuntimeError(
+                "pvsfunc.PSourcer: Required plugin d2vsource for namespace 'd2v' not found. "
+                "https://github.com/dwbuiten/d2vsource"
+            )
+        if not hasattr(core, "ffms2"):
+            raise RuntimeError(
+                "pvsfunc.PSourcer: Required plugin ffms2 for namespace 'ffms2' not found. "
+                "https://github.com/FFMS/ffms2"
+            )
         self.clip = None
         self.file_path = anti_file_prefix(file_path)
         self.file_type = get_mime_type(self.file_path)
