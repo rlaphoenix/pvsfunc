@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="pvsfunc",
-    version="3.1.4",
+    version="3.1.5",
     author="PHOENiX",
     author_email="pragma.exe@gmail.com",
     description="PHOENiX's compilation of VapourSynth Script's and Functions",

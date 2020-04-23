@@ -87,7 +87,7 @@ class PDeinterlacer:
         # todo ; get an mpeg2 that uses Pulldown metadata (rff flags) that ISN'T Pulldown 2:3 to test math
         #        this math seems pretty far fetched, if we can somehow obtain the Pulldown x:x:...
         #        string that mediainfo can get, then calculating it can be much easier and more efficient.
-        pulldown_cycle = [n for n,f in enumerate(flags) if not f["tff"] and not f["rff"]]
+        pulldown_cycle = [n for n,f in enumerate(flags) if f["tff"] and f["rff"]]
         if pulldown_cycle:
             pulldown_cycle = list(zip(pulldown_cycle[::2], pulldown_cycle[1::2]))
             pulldown_cycle = [r - l for l,r in pulldown_cycle]
