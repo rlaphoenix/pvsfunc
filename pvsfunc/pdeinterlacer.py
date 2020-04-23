@@ -99,13 +99,10 @@ class PDeinterlacer:
             # video is not all progressive content, meaning it is either:
             # - entirely interlaced
             # - mix of progressive and interlaced sections
-            # interlaced sections fps == 30000/1001
-            # progressive sections fps <= 30000/1001 (or == if they used Pulldown 1:1 for some reason)
-            # 1. fix the frame rate of the progressive sections by applying it's pulldown (without interlacing) to make the video CFR
-            #    if this isn't done, then the frame rate of the progressive sections will be 30000/1001 but the content itself will not be
+            # 1. fix the frame rate of the progressive sections by applying it's pulldown (without interlacing)
             if pulldown_frames:
                 self.clip = core.std.DuplicateFrames(clip=self.clip, frames=pulldown_frames)
-            # 2. also apply this frame rate fix to the flag list so that each flag can be properly accessed by index
+            # 2. also fix the frame rate of the flag list to match the fixed clip
             pulldown_flags = []
             for flag in flags:
                 pulldown_flags.append(flag)
@@ -113,18 +110,24 @@ class PDeinterlacer:
                     pulldown_flags.append({"progressive_frame": True, "rff": False, "tff": False})
             # 3. create a clip from the output of the kernel deinterlacer
             deinterlaced_clip = self.kernel(self.clip, **self.kernel_args)
-            double_rate = self.clip.fps.numerator * 2 == deinterlaced_clip.fps.numerator
+            fps_factor = (deinterlaced_clip.fps.numerator / deinterlaced_clip.fps.denominator)
+            fps_factor = fps_factor / (self.clip.fps.numerator / self.clip.fps.denominator)
+            if fps_factor != 1.0 and fps_factor != 2.0:
+                raise ValueError(
+                    f"pvsfunc.PDeinterlacer: The deinterlacer kernel returned an unsupported frame-rate ({deinterlaced_clip.fps}). "
+                    "Only single-rate and double-rate is supported with PDeinterlacer at the moment."
+                )
             # 4. create a format clip, used for metadata of final clip
             format_clip = core.std.BlankClip(
                 clip=deinterlaced_clip,
-                length=len(pulldown_flags) * (2 if double_rate else 1)
+                length=len(pulldown_flags) * fps_factor
             )
             # 5. deinterlace whats interlaced
-            def _d(n, f, c, d, fl, dr):
-                if fl[int(n / 2) if dr else n]["progressive_frame"]:
+            def _d(n, f, c, d, fl, ff):
+                if fl[int(n / ff)]["progressive_frame"]:
                     # progressive frame, we don't need to do any deinterlacing to this frame
                     # though we may need to duplicate it if double-rate fps output
-                    rc = core.std.Interleave([c, c]) if dr else c
+                    rc = core.std.Interleave([c] * ff) if ff > 1 else c
                     return core.text.Text(rc, f"\n\n\n\n\n\n Frame #{n} - Untouched ", alignment=7) if self.debug else rc
                 # interlaced frame, we need to use `d` (deinterlaced) frame.
                 return core.text.Text(d, f"\n\n\n\n\n\n Frame #{n} - Deinterlaced! ", alignment=7) if self.debug else d
@@ -135,7 +138,7 @@ class PDeinterlacer:
                     c=self.clip,
                     d=deinterlaced_clip,
                     fl=pulldown_flags,
-                    dr=double_rate
+                    ff=fps_factor
                 ),
                 prop_src=self.clip
             )
