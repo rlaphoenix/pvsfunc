@@ -136,13 +136,13 @@ class PDeinterlacer:
                     rc = core.std.Interleave([c] * ff) if ff > 1 else c
                     return core.text.Text(
                         rc,
-                        f"\n\n\n\n\n\n VOB: {flag['vob']}/{flag['cell']} - Frame #{n} - Untouched ",
+                        f"\n\n\n\n\n\n VOB: {flag['vob']}:{flag['cell']} - Frame #{n} - Untouched ",
                         alignment=7
                     ) if self.debug else rc
                 # interlaced frame, we need to use `d` (deinterlaced) frame.
                 return core.text.Text(
                     d,
-                    f"\n\n\n\n\n\n VOB: {flag['vob']}/{flag['cell']} - Frame #{n} - Deinterlaced! ",
+                    f"\n\n\n\n\n\n VOB: {flag['vob']}:{flag['cell']} - Frame #{n} - Deinterlaced! ",
                     alignment=7
                 ) if self.debug else d
             self.clip = core.std.FrameEval(
@@ -166,6 +166,20 @@ class PDeinterlacer:
                     self.clip,
                     fpsnum=self.clip.fps.numerator - (self.clip.fps.numerator / pulldown_cycle),
                     fpsden=self.clip.fps.denominator
+                )
+            if self.debug:
+                self.clip = core.std.FrameEval(
+                    self.clip,
+                    functools.partial(
+                        lambda n, f, c, fl: core.text.Text(
+                            c,
+                            f"\n\n\n\n\n\n VOB: {fl[n]['vob']}:{fl[n]['cell']} - Frame #{n} - Untouched ",
+                            alignment=7
+                        ),
+                        c=self.clip,
+                        fl=flags
+                    ),
+                    prop_src=self.clip
                 )
         
         if self.debug:

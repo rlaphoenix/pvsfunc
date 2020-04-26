@@ -34,6 +34,8 @@ def get_mime_type(file_path: str) -> str:
                         (" It works perfectly fine under Wine." if os.name != "nt" else "")
                     )
                 return "video/d2v"
+        if file_ext.lower() == ".vob":
+            return "video/vob"
         raise ValueError(f"pvsfunc.get_file_type: Unrecognised file extension ({file_ext})")
     mime_type = mimetypes.types_map[file_ext] if file_ext in mimetypes.types_map else None
     # ensure that the mime is a video or image file
@@ -70,22 +72,24 @@ def get_d2v(file_path: str) -> str:
     if os.path.exists(d2v_path):
         print("Skipping generation as a D2V file already exists")
         return d2v_path
-    # demux the mpeg stream
-    mpg_path = f"{os.path.splitext(file_path)[0]}.mpg"
-    if os.path.exists(mpg_path):
-        print("Skipping demuxing of raw mpeg stream as it already exists")
-    else:
-        mkvextract_path = shutil.which("mkvextract")
-        if not mkvextract_path:
-            raise RuntimeError(
-                "pvsfunc.PSourcer: Required binary 'mkvextract' not found. "
-                "Install MKVToolNix and make sure it's binaries are in the environment path."
-            )
-        subprocess.run([
-            mkvextract_path, os.path.basename(file_path),
-            # todo ; this assumes the track with track-id of 0 is the video, not ideal
-            "tracks", f"0:{os.path.basename(mpg_path)}"
-        ], cwd=os.path.dirname(file_path))
+    # demux the mpeg stream if needed
+    vid_path = file_path
+    if os.path.splitext(file_path)[-1].lower() != ".vob":
+        vid_path = f"{os.path.splitext(file_path)[0]}.mpg"
+        if os.path.exists(vid_path):
+            print("Skipping demuxing of raw mpeg stream as it already exists")
+        else:
+            mkvextract_path = shutil.which("mkvextract")
+            if not mkvextract_path:
+                raise RuntimeError(
+                    "pvsfunc.PSourcer: Required binary 'mkvextract' not found. "
+                    "Install MKVToolNix and make sure it's binaries are in the environment path."
+                )
+            subprocess.run([
+                mkvextract_path, os.path.basename(file_path),
+                # todo ; this assumes the track with track-id of 0 is the video, not ideal
+                "tracks", f"0:{os.path.basename(vid_path)}"
+            ], cwd=os.path.dirname(file_path))
     # use dgindex to create a d2v file for the demuxed track
     dgindex_path = shutil.which("DGIndex.exe") or shutil.which("dgindex.exe")
     if not dgindex_path:
@@ -97,7 +101,7 @@ def get_d2v(file_path: str) -> str:
         )
     subprocess.run([
         dgindex_path,
-        "-i", os.path.basename(mpg_path),
+        "-ai", os.path.basename(vid_path),
         "-ia", "5",  # iDCT Algorithm, 5=IEEE-1180 Reference
         "-fo", "2",  # Field Operation, 2=Ignore Pulldown Flags
         "-yr", "1",  # YUV->RGB, 1=PC Scale
