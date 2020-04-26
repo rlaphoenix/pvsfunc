@@ -67,6 +67,7 @@ def get_video_codec(file_path: str) -> str:
 
 def get_d2v(file_path: str) -> str:
     """Demux video track and generate a D2V file for it if needed"""
+    IS_VOB = os.path.splitext(file_path)[-1].lower() == ".vob"
     # create file_path location of the d2v path
     d2v_path = f"{os.path.splitext(file_path)[0]}.d2v"
     if os.path.exists(d2v_path):
@@ -74,7 +75,7 @@ def get_d2v(file_path: str) -> str:
         return d2v_path
     # demux the mpeg stream if needed
     vid_path = file_path
-    if os.path.splitext(file_path)[-1].lower() != ".vob":
+    if not IS_VOB:
         vid_path = f"{os.path.splitext(file_path)[0]}.mpg"
         if os.path.exists(vid_path):
             print("Skipping demuxing of raw mpeg stream as it already exists")
@@ -101,7 +102,7 @@ def get_d2v(file_path: str) -> str:
         )
     subprocess.run([
         dgindex_path,
-        "-ai", os.path.basename(vid_path),
+        "-ai" if IS_VOB else "-i", os.path.basename(vid_path),
         "-ia", "5",  # iDCT Algorithm, 5=IEEE-1180 Reference
         "-fo", "2",  # Field Operation, 2=Ignore Pulldown Flags
         "-yr", "1",  # YUV->RGB, 1=PC Scale
