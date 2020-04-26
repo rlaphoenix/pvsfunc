@@ -6,12 +6,18 @@ from pvsfunc.helpers import anti_file_prefix, get_mime_type, get_video_codec, ge
 
 
 CODEC_SOURCER_MAP = {
+    "IMAGE": "core.imwri.Read",
     "V_MPEG1": "core.d2v.Source",
     "V_MPEG2": "core.d2v.Source",
     # codecs not listed here will default to `core.ffms2.Source`
 }
 
 SOURCER_ARGS_MAP = {
+    "core.imwri.Read": {
+        # disable the alpha channel as it often causes an incompatibility
+        # with some functions due to the extra channel
+        "alpha": False
+    },
     "core.d2v.Source": {
         # ignore rff (pulldown flags) as we do not want it to interlace
         # the pulldown frames and end up giving us more work...
@@ -52,6 +58,8 @@ class PSourcer:
         self.file_path = anti_file_prefix(file_path)
         self.file_type = get_mime_type(self.file_path)
         self.video_codec = get_video_codec(self.file_path)
+        if self.file_type.startswith("image/"):
+            self.video_codec = "IMAGE"
         self.sourcer = self.get_sourcer(self.video_codec)
         # sourcer preparations
         if self.sourcer == "core.d2v.Source":

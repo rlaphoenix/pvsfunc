@@ -65,6 +65,8 @@ class PDeinterlacer:
             if kernel == havsfunc.QTGMC:
                 kernel_args["FPSDivisor"] = 2  # only supporting same-rate fps atm
             self._ffms2()
+        elif self.props["PVSSourcer"] == "core.imwri.Read":
+            print("pvsfunc.PDeinterlacer: Warning: This source is a clip of images and cannot be deinterlaced.")
         else:
             raise ValueError(f"Unimplemented deinterlacer for Sourcer {self.props['PVSSourcer']}")
     

@@ -23,27 +23,30 @@ def get_mime_type(file_path: str) -> str:
     mimetypes.init()
     # get the file extension
     file_ext = os.path.splitext(file_path)[-1]
-    # check if the file is a D2V/DGIndexProjectFile
-    with open(file_path, mode="rb") as f:
-        if f.read(18) == "DGIndexProjectFile".encode("utf-8"):
-            if f.read(2) != bytes([0x31, 0x36]):
-                raise ValueError(
-                    "pvsfunc.get_file_type: D2V was created with an unsupported indexer, please use DGIndex v1.5.8." +
-                    (" It works perfectly fine under Wine." if os.name != "nt" else "")
-                )
-            return "video/d2v"
-    # check if the file extension is recognized
+    # check for special file types if theres no mime type
     if file_ext not in mimetypes.types_map:
+        # check if the file is a D2V/DGIndexProjectFile
+        with open(file_path, mode="rb") as f:
+            if f.read(18) == "DGIndexProjectFile".encode("utf-8"):
+                if f.read(2) != bytes([0x31, 0x36]):
+                    raise ValueError(
+                        "pvsfunc.get_file_type: D2V was created with an unsupported indexer, please use DGIndex v1.5.8." +
+                        (" It works perfectly fine under Wine." if os.name != "nt" else "")
+                    )
+                return "video/d2v"
         raise ValueError(f"pvsfunc.get_file_type: Unrecognised file extension ({file_ext})")
-    # ensure that the mime is a video file
-    if not mimetypes.types_map[file_ext].startswith("video/"):
-        raise ValueError(f"pvsfunc.get_file_type: Non-video file type ({mimetypes.types_map[file_ext]})")
+    mime_type = mimetypes.types_map[file_ext] if file_ext in mimetypes.types_map else None
+    # ensure that the mime is a video or image file
+    if not mime_type.startswith("video/") and not mime_type.startswith("image/"):
+        raise ValueError(f"pvsfunc.get_file_type: Only Video or Image files are supported. ({mime_type})")
     # return the mime
-    return mimetypes.types_map[file_ext]
+    return mime_type
 
 
 def get_video_codec(file_path: str) -> str:
     """Get video codec using MediaInfo"""
+    if not os.path.exists(file_path) or not os.path.isfile(file_path):
+        return "?"
     video_track = [t for t in MediaInfo.parse(
         filename=file_path
     ).tracks if t.track_type == "Video"]
