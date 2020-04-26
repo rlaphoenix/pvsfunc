@@ -47,14 +47,14 @@ def get_video_codec(file_path: str) -> str:
     """Get video codec using MediaInfo"""
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
         return "?"
-    video_track = [t for t in MediaInfo.parse(
+    track = [t for t in MediaInfo.parse(
         filename=file_path
-    ).tracks if t.track_type == "Video"]
-    if not video_track:
-        raise ValueError("No video track in file...")
-    video_track = video_track[0]
+    ).tracks if t.track_type in ["Video", "Image"]]
+    if not track:
+        raise ValueError("No video/image track in file...")
+    track = track[0]
     # we try both as in some cases codec_id isn't set
-    codec = video_track.codec_id or video_track.commercial_name
+    codec = track.codec_id or track.commercial_name
     # do some squashing to reduce amount of code repetition
     if codec == "MPEG-1 Video":
         return "V_MPEG1"
