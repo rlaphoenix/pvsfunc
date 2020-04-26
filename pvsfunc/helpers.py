@@ -76,7 +76,8 @@ def get_d2v(file_path: str) -> str:
     # demux the mpeg stream if needed
     vid_path = file_path
     if not IS_VOB:
-        vid_path = f"{os.path.splitext(file_path)[0]}.mpg"
+        if os.path.splitext(file_path)[-1].lower() != ".mpeg":
+            vid_path = f"{os.path.splitext(file_path)[0]}.mpg"
         if os.path.exists(vid_path):
             print("Skipping demuxing of raw mpeg stream as it already exists")
         else:
