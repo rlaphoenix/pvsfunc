@@ -195,9 +195,9 @@ class PDeinterlacer:
                 " " + (" \n ".join([
                     f"{os.path.basename(self.props['PVSFilePath'])}",
                     f"{fps}, Loaded with {self.props['PVSSourcer']}",
-                    f"- {len(flags)} coded pictures, which {progressive_percent:.2f}% of are Progressive",
-                    f"- {len(pulldown_frames)} frames are asking for pulldown{f' which occurs every {pulldown_cycle} frames' if pulldown_cycle else ''}",
-                    f"- {len(flags) + len(pulldown_frames)} total frames after pulldown flags are honored"
+                    f"- {len(flags):,} coded pictures, which {progressive_percent:.2f}% of are Progressive",
+                    f"- {len(pulldown_frames):,} frames are asking for pulldown{f' which occurs every {pulldown_cycle} frames' if pulldown_cycle else ''}",
+                    f"- {len(flags) + len(pulldown_frames):,} total frames after pulldown flags are honored"
                 ])) + " ",
                 alignment=7
             )
