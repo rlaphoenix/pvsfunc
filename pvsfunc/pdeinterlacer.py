@@ -81,7 +81,8 @@ class PDeinterlacer:
         # Get D2V object
         self.d2v = D2V(self.props["PVSFilePath"])
         # Get every frames' flag data, this contains information on displaying frames
-        flags = [f for l in [x["flags"] for x in self.d2v.data] for f in l]
+        flags = [[dict(**y, vob=x["vob"], cell=x["cell"]) for y in x["flags"]] for x in self.d2v.data]
+        flags = [f for l in flags for f in l]
         # Get percentage of progressive frames
         progressive_percent = (sum(1 for x in flags if x["progressive_frame"]) / len(flags))*100
         # Get pulldown information
@@ -109,7 +110,9 @@ class PDeinterlacer:
             for flag in flags:
                 pulldown_flags.append(flag)
                 if flag["progressive_frame"] and flag["rff"] and flag["tff"]:
-                    pulldown_flags.append({"progressive_frame": True, "rff": False, "tff": False})
+                    pulldown_flags.append(
+                        dict(**{**flag, **{"progressive_frame": True, "rff": False, "tff": False}})
+                    )
             # 3. create a clip from the output of the kernel deinterlacer
             deinterlaced_clip = self.kernel(self.clip, **self.kernel_args)
             fps_factor = (deinterlaced_clip.fps.numerator / deinterlaced_clip.fps.denominator)
@@ -126,13 +129,22 @@ class PDeinterlacer:
             )
             # 5. deinterlace whats interlaced
             def _d(n, f, c, d, fl, ff):
-                if fl[int(n / ff)]["progressive_frame"]:
+                flag = fl[int(n / ff)]
+                if flag["progressive_frame"]:
                     # progressive frame, we don't need to do any deinterlacing to this frame
                     # though we may need to duplicate it if double-rate fps output
                     rc = core.std.Interleave([c] * ff) if ff > 1 else c
-                    return core.text.Text(rc, f"\n\n\n\n\n\n Frame #{n} - Untouched ", alignment=7) if self.debug else rc
+                    return core.text.Text(
+                        rc,
+                        f"\n\n\n\n\n\n VOB: {flag['vob']}/{flag['cell']} - Frame #{n} - Untouched ",
+                        alignment=7
+                    ) if self.debug else rc
                 # interlaced frame, we need to use `d` (deinterlaced) frame.
-                return core.text.Text(d, f"\n\n\n\n\n\n Frame #{n} - Deinterlaced! ", alignment=7) if self.debug else d
+                return core.text.Text(
+                    d,
+                    f"\n\n\n\n\n\n VOB: {flag['vob']}/{flag['cell']} - Frame #{n} - Deinterlaced! ",
+                    alignment=7
+                ) if self.debug else d
             self.clip = core.std.FrameEval(
                 format_clip,
                 functools.partial(
