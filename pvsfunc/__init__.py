@@ -28,7 +28,7 @@ def decimate(clip, mode=0, cycle=5, offsets=[0, 1, 3, 4], debug=False):
                     lambda n, f, c: core.text.Text(
                         c,
                         f" mode={mode} cycle={cycle} offsets={offsets} \n"
-                        f"decimated_frame={(n % cycle) not in offsets}\n",
+                        f" decimated_frame={(n % cycle) not in offsets} \n",
                         alignment=1
                     ),
                     c=clip
@@ -44,8 +44,8 @@ def decimate(clip, mode=0, cycle=5, offsets=[0, 1, 3, 4], debug=False):
                     lambda n, f, c: core.text.Text(
                         c,
                         f" mode={mode} cycle={cycle} \n"
-                        "Important: Please consider another mode. More information: git.io/avoid-tdecimate.\n"
-                        f"decimated_frame={f.props['VDecimateDrop'] == 1}\n",
+                        " Important: Please consider another mode. More information: git.io/avoid-tdecimate. \n"
+                        f" decimated_frame={f.props['VDecimateDrop'] == 1} \n",
                         alignment=1
                     ),
                     c=clip

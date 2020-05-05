@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="pvsfunc",
-    version="3.2.1",
+    version="3.3.0",
     author="PHOENiX",
     author_email="pragma.exe@gmail.com",
     description="PHOENiX's compilation of VapourSynth Script's and Functions",
@@ -17,7 +17,7 @@ setup(
     install_requires=[
         "vapoursynth",
         "pymediainfo",
-        "pyd2v>=1.0.3"
+        "pyd2v>=1.0.4"
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
