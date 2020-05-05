@@ -162,6 +162,9 @@ class PSourcer:
                 ),
                 prop_src=self.clip
             )
+            vob_indexes = [index for _, index in {f["vob"]: n for n, f in enumerate(flags)}.items()]
+            vob_indexes = [f"{(0 if n == 0 else (vob_indexes[n-1] + 1))}-{i}" for n,i in enumerate(vob_indexes)]
+            self.clip = core.std.SetFrameProp(self.clip, prop="PVSVobIdIndexes", data=" ".join(vob_indexes))
             if self.debug:
                 fps = self.clip.fps
                 if self.clip.fps.numerator == 25:
