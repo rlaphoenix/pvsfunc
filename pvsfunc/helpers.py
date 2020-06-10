@@ -114,11 +114,20 @@ def get_d2v(file_path: str) -> str:
     # return file path of the new d2v file
     return d2v_path
 
+def gcd(a, b):
+    """The GCD (greatest common divisor) is the highest number that evenly divides both width and height."""
+    return a if b == 0 else gcd(b, a % b)
 
 def calculate_aspect_ratio(width: int, height: int) -> str:
     """Calculate the aspect-ratio gcd string from resolution"""
-    def gcd(a, b):
-        """The GCD (greatest common divisor) is the highest number that evenly divides both width and height."""
-        return a if b == 0 else gcd(b, a % b)
     r = gcd(width, height)
     return f"{int(width / r)}:{int(height / r)}"
+
+def calculate_par(width: int, height: int, aspect_ratio_w: int, aspect_ratio_h: int) -> str:
+    """Calculate the pixel-aspect-ratio string from resolution"""
+    par_w = height * aspect_ratio_w
+    par_h = width * aspect_ratio_h
+    par_gcd = gcd(par_w, par_h)
+    par_w = int(par_w / par_gcd)
+    par_h = int(par_h / par_gcd)
+    return f"{par_w}:{par_h}"

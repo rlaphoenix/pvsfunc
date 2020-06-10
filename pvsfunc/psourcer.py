@@ -6,7 +6,7 @@ import functools
 # pip packages
 from pyd2v import D2V
 # pvsfunc
-from pvsfunc.helpers import anti_file_prefix, get_mime_type, get_video_codec, get_d2v
+from pvsfunc.helpers import anti_file_prefix, get_mime_type, get_video_codec, get_d2v, calculate_par, calculate_aspect_ratio
 
 
 CODEC_SOURCER_MAP = {
@@ -166,6 +166,7 @@ class PSourcer:
             vob_indexes = [f"{(0 if n == 0 else (vob_indexes[n-1] + 1))}-{i}" for n,i in enumerate(vob_indexes)]
             self.clip = core.std.SetFrameProp(self.clip, prop="PVSVobIdIndexes", data=" ".join(vob_indexes))
             if self.debug:
+                # fps
                 fps = self.clip.fps
                 if self.clip.fps.numerator == 25:
                     fps = "PAL"
@@ -173,6 +174,11 @@ class PSourcer:
                     fps = "NTSC"
                 elif self.clip.fps.numerator == 24:
                     fps = "FILM"
+                # aspect ratio
+                ar = d2v.settings['Aspect_Ratio']
+                ar_n = [int(x) for x in ar.split(':')]
+                par = calculate_par(self.clip.width, self.clip.height, *ar_n)
+                sar = calculate_aspect_ratio(self.clip.width, self.clip.height)
                 self.clip = core.text.Text(
                     self.clip,
                     " " + (" \n ".join([
@@ -180,7 +186,8 @@ class PSourcer:
                         f"{fps}, Loaded with {str(self.sourcer)}",
                         f"- {coded_pictures:,} coded pictures, which {progressive_percent:.2f}% of are Progressive",
                         f"- {pulldown_count:,} frames are asking for pulldown{f' which occurs every {pulldown_cycle} frames' if pulldown_cycle else ''}",
-                        f"- {coded_pictures + pulldown_count:,} total frames after pulldown flags are honored"
+                        f"- {coded_pictures + pulldown_count:,} total frames after pulldown flags are honored",
+                        f"DAR: {ar}  SAR: {sar}  PAR: {par}"
                     ])) + " ",
                     alignment=7
                 )
