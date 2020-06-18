@@ -13,7 +13,7 @@ CODEC_SOURCER_MAP = {
     "IMAGE": "core.imwri.Read",
     "V_MPEG1": "core.d2v.Source",
     "V_MPEG2": "core.d2v.Source",
-    # codecs not listed here will default to `core.ffms2.Source`
+    # codecs not listed here will default to `core.lsmas.LWLibavSource`
 }
 
 SOURCER_ARGS_MAP = {
@@ -27,10 +27,9 @@ SOURCER_ARGS_MAP = {
         # the pulldown frames and end up giving us more work...
         "rff": False
     },
-    "core.ffms2.Source": {
-        # disable the alpha channel as it often causes an incompatibility
-        # with some functions due to the extra channel
-        "alpha": False
+    "core.lsmas.LWLibavSource": {
+        "stream_index": -1,  # get best stream in terms of res
+        "dr": False  # enabling this seemed to cause issues on Linux for me
     }
 }
 
@@ -43,7 +42,7 @@ class PSourcer:
     The sourcer (and it's arguments) are based on my own personal opinions.
     -
     core.d2v.Source is used on videos that are supported by DGIndex v1.5.8
-    core.ffms2.Source is used on everything else
+    core.lsmas.LWLibavSource is used on everything else
     if DGDecNV ever gets linux support I will test it out and add support. Until then its dead to me.
     """
 
@@ -53,10 +52,10 @@ class PSourcer:
                 "pvsfunc.PSourcer: Required plugin d2vsource for namespace 'd2v' not found. "
                 "https://github.com/dwbuiten/d2vsource"
             )
-        if not hasattr(core, "ffms2"):
+        if not hasattr(core, "lsmas"):
             raise RuntimeError(
-                "pvsfunc.PSourcer: Required plugin ffms2 for namespace 'ffms2' not found. "
-                "https://github.com/FFMS/ffms2"
+                "pvsfunc.PSourcer: Required plugin lsmas for namespace 'lsmas' not found. "
+                "https://github.com/VFR-maniac/L-SMASH-Works"
             )
         self.debug = debug
         self.clip = None
@@ -206,5 +205,5 @@ class PSourcer:
         """Get clip sourcer function based on video codec"""
         if video_codec not in CODEC_SOURCER_MAP:
             # default to FFMPEG-based sourcer for wide compatibility
-            return "core.ffms2.Source"
+            return "core.lsmas.LWLibavSource"
         return CODEC_SOURCER_MAP[video_codec]

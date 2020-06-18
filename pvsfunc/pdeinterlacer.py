@@ -65,6 +65,10 @@ class PDeinterlacer:
             if kernel == havsfunc.QTGMC:
                 kernel_args["FPSDivisor"] = 2  # only supporting same-rate fps atm
             self._ffms2()
+        elif self.props["PVSSourcer"] == "core.lsmas.LWLibavSource":
+            if kernel == havsfunc.QTGMC:
+                kernel_args["FPSDivisor"] = 2  # only supporting same-rate fps atm
+            self._lsmash()
         elif self.props["PVSSourcer"] == "core.imwri.Read":
             print("pvsfunc.PDeinterlacer: Warning: This source is a clip of images and cannot be deinterlaced.")
         else:
@@ -132,3 +136,9 @@ class PDeinterlacer:
             ),
             prop_src=self.clip
         )
+    
+    def _lsmash(self):
+        """
+        Deinterlace using lsmas (lsmash) using a basic FieldBased!=0 => QTGMC method
+        """
+        self._ffms2()  # same method as ffms2
