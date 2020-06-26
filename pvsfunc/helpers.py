@@ -34,8 +34,12 @@ def get_mime_type(file_path: str) -> str:
                         (" It works perfectly fine under Wine." if os.name != "nt" else "")
                     )
                 return "video/d2v"
+        # DVD-Video Object File
         if file_ext.lower() == ".vob":
             return "video/vob"
+        # PSP UMD-VIDEO file
+        if file_ext.lower() == ".mps":
+            return "video/umd"
         raise ValueError(f"pvsfunc.get_file_type: Unrecognised file extension ({file_ext})")
     mime_type = mimetypes.types_map[file_ext] if file_ext in mimetypes.types_map else None
     # ensure that the mime is a video or image file
