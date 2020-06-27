@@ -59,7 +59,7 @@ def decimate(clip, per_vob_id=True, mode=0, cycle=5, offsets=[0, 1, 3, 4], debug
                 )
             return core.vivtc.VDecimate(clip, cycle=cycle)
     
-    if per_vob_id and clip.get_frame(0).props["Sourcer"].decode("utf-8") == "core.d2v.Source":
+    if per_vob_id and clip.get_frame(0).props["PVSSourcer"].decode("utf-8") == "core.d2v.Source":
         # decimate each vob id seperately by splitting the clips apart before decimation
         # this allows you to specify different cycle+offsets match for each vob id
         vob_indexes = clip.get_frame(0).props["PVSVobIdIndexes"].decode("utf-8").split(" ")
