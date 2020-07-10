@@ -71,6 +71,7 @@ class PDeinterlacer:
             self.handler = self._lsmash
         elif sourcer == "core.imwri.Read":
             print("pvsfunc.PDeinterlacer: Warning: This source is a clip of images and cannot be deinterlaced.")
+            self.handler = lambda c: c  # do nothing
         else:
             raise ValueError(f"Unimplemented deinterlacer for Sourcer {sourcer}")
         self.clip = self.handler(self.clip)
