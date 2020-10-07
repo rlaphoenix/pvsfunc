@@ -203,7 +203,5 @@ class PSourcer:
     @staticmethod
     def get_sourcer(video_codec):
         """Get clip sourcer function based on video codec"""
-        if video_codec not in CODEC_SOURCER_MAP:
-            # default to FFMPEG-based sourcer for wide compatibility
-            return "core.lsmas.LWLibavSource"
-        return CODEC_SOURCER_MAP[video_codec]
+        # default to FFMPEG-based sourcer for wide compatibility
+        return CODEC_SOURCER_MAP.get(video_codec, "core.lsmas.LWLibavSource")
