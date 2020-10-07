@@ -105,8 +105,10 @@ def get_d2v(file_path: str) -> str:
             "Windows: Start Menu -> Environment Variables, Add DGIndex's folder to `PATH` variable.\n"
             "Linux: append to $PATH in /etc/profile, I recommend using `nano /etc/profile.d/env.sh`. Must reboot."
         )
-    subprocess.run([
-        dgindex_path,
+    args = []
+    if dgindex_path.startswith("/"):
+        args.extend(["wine", "start", "/wait", "Z:" + dgindex_path])
+    args.extend([
         "-ai" if IS_VOB else "-i", os.path.basename(vid_path),
         "-ia", "5",  # iDCT Algorithm, 5=IEEE-1180 Reference
         "-fo", "2",  # Field Operation, 2=Ignore Pulldown Flags
@@ -114,7 +116,8 @@ def get_d2v(file_path: str) -> str:
         "-om", "0",  # Output Method, 0=None (just d2v)
         "-hide", "-exit",  # start hidden and exit when saved
         "-o", os.path.splitext(os.path.basename(file_path))[0]
-    ], cwd=os.path.dirname(file_path))
+    ])
+    subprocess.run(args, cwd=os.path.dirname(file_path))
     # return file path of the new d2v file
     return d2v_path
 
