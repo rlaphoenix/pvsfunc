@@ -108,6 +108,8 @@ def get_d2v(file_path: str) -> str:
     args = []
     if dgindex_path.startswith("/"):
         args.extend(["wine", "start", "/wait", "Z:" + dgindex_path])
+    else:
+        args.extend([dgindex_path])
     args.extend([
         "-ai" if IS_VOB else "-i", os.path.basename(vid_path),
         "-ia", "5",  # iDCT Algorithm, 5=IEEE-1180 Reference
