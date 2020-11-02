@@ -20,7 +20,8 @@ SOURCER_ARGS_MAP = {
     "core.imwri.Read": {
         # disable the alpha channel as it often causes an incompatibility
         # with some functions due to the extra channel
-        "alpha": False
+        "alpha": False,
+        "firstnum": 0
     },
     "core.d2v.Source": {
         # ignore rff (pulldown flags) as we do not want it to interlace
@@ -70,7 +71,17 @@ class PSourcer:
             # make sure a d2v file for this video exists
             self.file_path = get_d2v(self.file_path)
         # load video to clip using sourcer
-        self.clip = eval(self.sourcer)(self.file_path, **SOURCER_ARGS_MAP[self.sourcer])
+        while True:
+            try:
+                self.clip = eval(self.sourcer)(self.file_path, **SOURCER_ARGS_MAP[self.sourcer])
+                break
+            except vs.Error as e:
+                if self.sourcer == "core.imwri.Read" and "Read: No files matching the given pattern exist" in str(e):
+                    if SOURCER_ARGS_MAP[self.sourcer]["firstnum"] == 1:
+                        raise
+                    SOURCER_ARGS_MAP[self.sourcer]["firstnum"] = 1
+                else:
+                    raise
         # post sourcing preparations
         if self.sourcer == "core.d2v.Source":
             # ========================================================================= #
