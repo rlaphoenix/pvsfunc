@@ -52,7 +52,8 @@ class PDecimate:
                     debug=debug
                 ))
             self.clip = core.std.Splice(clips)
-        self.clip = self._decimate(self.clip, mode, cycle, offsets, debug)
+        else:
+            self.clip = self._decimate(self.clip, mode, cycle, offsets, debug)
 
     @staticmethod
     def _decimate(clip, mode, cycle, offsets, debug):
@@ -63,13 +64,14 @@ class PDecimate:
                 cycle = cycle[0]
             if isinstance(offsets[0], list):
                 offsets = offsets[0]
+            res = core.std.SelectEvery(clip, cycle=cycle, offsets=offsets)
             if debug:
                 return core.std.FrameEval(
                     clip,
                     functools.partial(
                         lambda n, f, c: core.text.Text(
                             c,
-                            f" mode={mode} cycle={cycle} offsets={offsets} \n"
+                            f" mode={mode} cycle={cycle} offsets={offsets} fps={res.fps.numerator}/{res.fps.denominator} \n"
                             f" decimated_frame={(n % cycle) not in offsets} \n",
                             alignment=1
                         ),
@@ -77,7 +79,7 @@ class PDecimate:
                     ),
                     prop_src=clip
                 )
-            return core.std.SelectEvery(clip, cycle=cycle, offsets=offsets)
+            return res
         if mode == 1:
             if debug:
                 return core.std.FrameEval(
