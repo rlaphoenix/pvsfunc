@@ -29,7 +29,7 @@ class PDecimate:
         self.mode = mode
         self.debug = debug
 
-        if per_vob_id and self.clip.get_frame(0).props["PVSSourcer"].decode("utf-8") == "core.d2v.Source":
+        if self.clip.get_frame(0).props["PVSSourcer"].decode("utf-8") == "core.d2v.Source" and per_vob_id and mode == 0:
             # decimate each vob id separately by splitting the clips apart before decimation
             # this allows you to specify different cycle+offsets match for each vob id
             vob_indexes = self.clip.get_frame(0).props["PVSVobIdIndexes"].decode("utf-8").split(" ")
@@ -72,7 +72,7 @@ class PDecimate:
                         lambda n, f, c: core.text.Text(
                             c,
                             f" mode={mode} cycle={cycle} offsets={offsets} fps={res.fps.numerator}/{res.fps.denominator} \n"
-                            f" decimated_frame={(n % cycle) not in offsets} \n",
+                            f" offset={n % cycle} decimate={(n % cycle) not in offsets} \n",
                             alignment=1
                         ),
                         c=clip
