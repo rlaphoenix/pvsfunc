@@ -131,7 +131,7 @@ def remove_container_fps(file_path: str) -> str:
         return file_path
     mi = mi[0]
 
-    if not hasattr(mi, "original_frame_rate"):
+    if mi.original_frame_rate is None:
         # does not have a container fps
         return file_path
     
