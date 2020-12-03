@@ -6,7 +6,7 @@ import functools
 # pip packages
 from pyd2v import D2V
 # pvsfunc
-from pvsfunc.helpers import anti_file_prefix, get_mime_type, get_video_codec, get_d2v, calculate_par, calculate_aspect_ratio
+from pvsfunc.helpers import anti_file_prefix, get_mime_type, get_video_codec, get_d2v, remove_container_fps, calculate_par, calculate_aspect_ratio
 
 
 CODEC_SOURCER_MAP = {
@@ -70,6 +70,9 @@ class PSourcer:
         if self.sourcer == "core.d2v.Source":
             # make sure a d2v file for this video exists
             self.file_path = get_d2v(self.file_path)
+        elif self.sourcer == "core.lsmas.LWLibavSource":
+            # destroy the container-set fps
+            self.file_path = remove_container_fps(self.file_path)
         # load video to clip using sourcer
         while True:
             try:
