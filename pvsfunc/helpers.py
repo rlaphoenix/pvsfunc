@@ -121,10 +121,10 @@ def get_d2v(file_path: str) -> str:
     subprocess.run(args, cwd=os.path.dirname(file_path))
     # edit the video path of the d2v file if on linux
     if dgindex_path.startswith("/"):
-        d2v_content = None
+        d2v_content = []
         with open(d2v_path, "rt", encoding="utf-8") as f:
             d2v_content = f.read().splitlines()
-        d2v_content[2] = d2v_content[2][2:].replace("\\", "/")
+        d2v_content = [(x[2:].replace("\\", "/") if x.startswith("Z:\\") else x) for x in d2v_content]
         with open(d2v_path, "wt", encoding="utf-8") as f:
             f.write("\n".join(d2v_content))
     # return file path of the new d2v file
