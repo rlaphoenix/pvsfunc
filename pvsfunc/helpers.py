@@ -22,7 +22,7 @@ def get_mime_type(file_path: str) -> str:
     # initialise mime-types, let it load all mimes
     mimetypes.init()
     # get the file extension
-    file_ext = os.path.splitext(file_path)[-1]
+    file_ext = os.path.splitext(file_path)[-1].lower()
     # check for special file types if theres no mime type
     if file_ext not in mimetypes.types_map:
         # check if the file is a D2V/DGIndexProjectFile
@@ -35,13 +35,13 @@ def get_mime_type(file_path: str) -> str:
                     )
                 return "video/d2v"
         # DVD-Video Object File
-        if file_ext.lower() == ".vob":
+        if file_ext == ".vob":
             return "video/vob"
         # PSP UMD-VIDEO file
-        if file_ext.lower() == ".mps":
+        if file_ext == ".mps":
             return "video/umd"
         raise ValueError(f"pvsfunc.get_file_type: Unrecognised file extension ({file_ext})")
-    mime_type = mimetypes.types_map[file_ext] if file_ext in mimetypes.types_map else None
+    mime_type = mimetypes.types_map[file_ext]
     # ensure that the mime is a video or image file
     if not mime_type.startswith("video/") and not mime_type.startswith("image/"):
         raise ValueError(f"pvsfunc.get_file_type: Only Video or Image files are supported. ({mime_type})")
@@ -62,11 +62,10 @@ def get_video_codec(file_path: str) -> str:
     # we try both as in some cases codec_id isn't set
     codec = track.codec_id or track.commercial_name
     # do some squashing to reduce amount of code repetition
-    if codec == "MPEG-1 Video":
-        return "V_MPEG1"
-    if codec == "MPEG-2 Video":
-        return "V_MPEG2"
-    return codec
+    return {
+        "MPEG-1 Video": "V_MPEG1",
+        "MPEG-2 Video": "V_MPEG2"
+    }.get(codec, codec)
 
 
 def get_d2v(file_path: str) -> str:
@@ -120,6 +119,14 @@ def get_d2v(file_path: str) -> str:
         "-o", os.path.splitext(os.path.basename(file_path))[0]
     ])
     subprocess.run(args, cwd=os.path.dirname(file_path))
+    # edit the video path of the d2v file if on linux
+    if dgindex_path.startswith("/"):
+        d2v_content = None
+        with open(d2v_path, "rt", encoding="utf-8") as f:
+            d2v_content = f.read().splitlines()
+        d2v_content[2] = d2v_content[2][2:].replace("\\", "/")
+        with open(d2v_path, "wt", encoding="utf-8") as f:
+            f.write("\n".join(d2v_content))
     # return file path of the new d2v file
     return d2v_path
 
