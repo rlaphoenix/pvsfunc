@@ -1,7 +1,7 @@
 import functools
 
-import vapoursynth as vs
-from vapoursynth import core
+import mvsfunc
+from vapoursynth import core, VideoNode, ColorFamily
 
 try:
     import havsfunc
@@ -25,7 +25,7 @@ class PDeinterlacer:
         self.kernel_args = kernel_args or {}
         self.debug = debug
         # validate arguments
-        if not isinstance(self.clip, vs.VideoNode):
+        if not isinstance(self.clip, VideoNode):
             raise TypeError("pvsfunc.PDeinterlacer: This is not a clip")
         # set default kernel to QTGMC
         if not self.kernel:
@@ -50,20 +50,26 @@ class PDeinterlacer:
             raise ValueError(f"Unimplemented deinterlacer for Sourcer {sourcer}")
         self.clip = self.handler(self.clip)
 
-    def _get_kernel(self, clip):
+    def _get_kernel(self, clip) -> tuple:
         """
         Apply the deinterlacing kernel to the provided clip for both
         TFF and BFF output. The Kernel function will be provided a 
-        True/False value to the "TFF" argument.
+        True/False value to the "TFF" argument if any.
+
+        Expecting a TFF argument (case-insensitive), it must be present.
+        If the function truly doesn't need it (what??) then wrap it in a lambda, e.g.
+        lambda clip, TFF: yourWeirdFunc(clip)
+
+        Returns 2 clips, one for TFF operations, and one for BFF operations
         """
-        # todo ; "TFF": True/False argument is specifically for QTGMC
-        # both TFF and BFF deinterlaced output is necessary, so it needs
-        # a way to supply which argument is used for the kernel to specify
-        # BFF or TFF, which may not even ask for a bool but an integer.
-        return (
-            self.kernel(clip, **{**self.kernel_args, "TFF": True}),
-            self.kernel(clip, **{**self.kernel_args, "TFF": False})
-        )
+        field_order_arg = [x for x in self.kernel.__code__.co_varnames if x.lower() == "tff"]
+        if field_order_arg:
+            return (
+                self.kernel(clip, **{**self.kernel_args, field_order_arg[0]: True}),
+                self.kernel(clip, **{**self.kernel_args, field_order_arg[0]: False})
+            )
+        clip = self.kernel(clip, **self.kernel_args)
+        return clip, clip
 
     def _d2v(self, clip):
         """
@@ -141,3 +147,40 @@ class PDeinterlacer:
         Deinterlace using lsmas (lsmash) using a basic FieldBased!=0 => QTGMC method
         """
         return self._ffms2(clip)  # same method as ffms2
+
+    @classmethod
+    def VoidWeave(cls, clip, tff, bob=False) -> VideoNode:
+        """
+        Weaves a 255(rgb) #00ff00(hex) green as the 2nd field of every field.
+        The purpose of this would be for machine learning in-painting over
+        the green rows with interpreted pixel data for machine learning
+        deinterlacing.
+
+        This function will convert clip's color-space to RGB24. It needs to
+        for creating a clip with linear 255 RGB green. Otherwise the machine
+        learning code may not pick up the rows green as the correct green
+        and fail. The color space has to match the void green clip and the
+        actual field clip to be able to weave them together.
+        """
+        # fill in the needed rows with void (255 green) for in-painting
+        if clip.format.color_family != ColorFamily.RGB:
+            # need to use RGB for the BlankClip for the correct green to be used
+            # if in-painting, RGB color-space will most likely be needed anyway
+            clip = mvsfunc.ToRGB(clip, depth=clip.format.bits_per_sample)
+        clip = core.std.SeparateFields(clip, tff=tff)
+        clip = core.std.Interleave([
+            clip,
+            core.std.BlankClip(clip, format=clip.format.id, color=[0, 255, 0], keep=0)
+        ])
+        clip = core.std.DoubleWeave(clip, tff=tff)
+        clip = core.std.SelectEvery(clip, cycle=2, offsets=0)
+        # handle bobbing, keep every deinterlaced "field" if true
+        if bob:
+            # vertically align every even (2nd) field with every odd (1st) field
+            # by adding a 1px row of black pixels on the top, and removing from the bottom
+            odd = core.std.SelectEvery(clip, cycle=2, offsets=0)
+            even = core.std.SelectEvery(clip, cycle=2, offsets=1)
+            even = core.std.AddBorders(even, top=1)
+            even = core.std.Crop(even, bottom=1)
+            return core.std.Interleave([odd, even])
+        return core.std.SelectEvery(clip, cycle=2, offsets=0)

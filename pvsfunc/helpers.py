@@ -1,9 +1,8 @@
-# std
-import os
-import subprocess
-import shutil
 import mimetypes
-# pip packages
+import os
+import shutil
+import subprocess
+
 from pymediainfo import MediaInfo
 
 
@@ -130,6 +129,7 @@ def get_d2v(file_path: str) -> str:
     # return file path of the new d2v file
     return d2v_path
 
+
 def remove_container_fps(file_path: str) -> str:
     """Remove container-set FPS to only have the encoded FPS"""
     mi = [x for x in MediaInfo.parse(file_path).tracks if x.track_type == "Video"]
@@ -141,33 +141,36 @@ def remove_container_fps(file_path: str) -> str:
     if mi.original_frame_rate is None:
         # does not have a container fps
         return file_path
-    
+
     fps_fix_path = f"{file_path}.fpsfix.mkv"
     if os.path.exists(fps_fix_path):
         # an fps fix was already run on this file, re-use
         return fps_fix_path
-    
+
     if mi.framerate_original_num and mi.framerate_original_den:
         original_fps = f"{mi.framerate_original_num}/{mi.framerate_original_den}"
     else:
         original_fps = mi.original_frame_rate
-    
+
     subprocess.check_output([
         "mkvmerge", "--output", fps_fix_path,
-        "--default-duration", f"{mi.track_id-1}:{original_fps}fps",
+        "--default-duration", f"{mi.track_id - 1}:{original_fps}fps",
         file_path
     ], cwd=os.path.dirname(file_path))
 
     return fps_fix_path
 
+
 def gcd(a, b):
     """The GCD (greatest common divisor) is the highest number that evenly divides both width and height."""
     return a if b == 0 else gcd(b, a % b)
+
 
 def calculate_aspect_ratio(width: int, height: int) -> str:
     """Calculate the aspect-ratio gcd string from resolution"""
     r = gcd(width, height)
     return f"{int(width / r)}:{int(height / r)}"
+
 
 def calculate_par(width: int, height: int, aspect_ratio_w: int, aspect_ratio_h: int) -> str:
     """Calculate the pixel-aspect-ratio string from resolution"""
