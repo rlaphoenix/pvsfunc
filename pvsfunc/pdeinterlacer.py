@@ -22,7 +22,7 @@ class PDeinterlacer:
     def __init__(self, clip, kernel=None, kernel_args=None, debug=False):
         self.clip = clip
         self.kernel = kernel
-        self.kernel_args = kernel_args
+        self.kernel_args = kernel_args or {}
         self.debug = debug
         # validate arguments
         if not isinstance(self.clip, vs.VideoNode):
@@ -30,28 +30,6 @@ class PDeinterlacer:
         # set default kernel to QTGMC
         if not self.kernel:
             self.kernel = havsfunc.QTGMC
-        # if kernel is QTGMC, set it's defaults
-        if self.kernel == havsfunc.QTGMC:
-            self.kernel_args = {
-                # defaults
-                **{
-                    "FPSDivisor": 2,
-                    "Preset": "Placebo",
-                    "MatchPreset": "Placebo",
-                    "MatchPreset2": "Placebo",
-                    "TFF": True,  # handle this automatically
-                    "InputType": 0,
-                    "SourceMatch": 3,
-                    "Lossless": 2,
-                    "Sharpness": 0.2,
-                    "ShutterBlur": 0,
-                    "ShutterAngleSrc": 0,
-                    "ShutterAngleOut": 0,
-                    "SBlurLimit": 0
-                },
-                # user configuration
-                **dict(self.kernel_args or {})
-            }
         # set handler func based on Sourcer
         self.handler = None
         sourcer = self.clip.get_frame(0).props["PVSSourcer"].decode("utf-8")
