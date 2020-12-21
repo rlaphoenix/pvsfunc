@@ -107,21 +107,21 @@ class PDeinterlacer:
 
         # 2. deinterlace whats interlaced
         def _d(n, f, c, d_tff, d_bff, ff):
+            # compile debug information to print if requested
+            debug_info = None
+            if self.debug:
+                debug_info = f"VOB: {f.props['PVSFlagVob']}:{f.props['PVSFlagCell']} - Frame #{n:,}"
+            # progressive frame, simply skip deinterlacing
             if f.props["PVSFlagProgressiveFrame"]:
-                # progressive frame, we don't need to do any deinterlacing to this frame
-                # though we may need to duplicate it if double-rate fps output
-                rc = core.std.Interleave([c] * ff) if ff > 1 else c
-                return core.text.Text(
-                    rc,
-                    f" VOB: {f.props['PVSFlagVob']}:{f.props['PVSFlagCell']} - Frame #{n:,} - Untouched ",
-                    alignment=1
-                ) if self.debug else rc
-            # interlaced frame, we need to use `d_tff`/`d_bff` (deinterlaced) frame.
-            return core.text.Text(
-                d_tff if f.props["_FieldBased"] == 2 else d_bff,
-                f" VOB: {f.props['PVSFlagVob']}:{f.props['PVSFlagCell']} - Frame #{n:,} - Deinterlaced! ",
-                alignment=1
-            ) if self.debug else (d_tff if f.props["_FieldBased"] == 2 else d_bff)
+                rc = core.std.Interleave([c] * ff) if ff > 1 else c  # duplicate if not a single-rate fps output
+                return core.text.Text(rc, f" {debug_info} - Progressive ", alignment=1) if self.debug else rc
+            # interlaced frame, use deinterlaced clip, d_tff if TFF (2) or d_bff if BFF (1)
+            rc = {0: c, 1: d_bff, 2: d_tff}[f.props["_FieldBased"]]
+            if self.debug:
+                field_order = {0: "Progressive", 1: "BFF", 2: "TFF"}[f.props["_FieldBased"]]
+                return core.text.Text(rc, f" {debug_info} - Deinterlaced ({field_order}) ", alignment=1)
+            return rc
+
         return core.std.FrameEval(
             deinterlaced_tff,
             functools.partial(
