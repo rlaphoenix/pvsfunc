@@ -1,9 +1,8 @@
-# std vs
-from vapoursynth import core
-import vapoursynth as vs
-import os
 import functools
-# vs func repos
+
+import vapoursynth as vs
+from vapoursynth import core
+
 try:
     import havsfunc
 except ImportError:
@@ -11,9 +10,6 @@ except ImportError:
         "pvsfunc.PDeinterlacer: Required script havsfunc not found. "
         "https://github.com/HomeOfVapourSynthEvolution/havsfunc"
     )
-
-# pip packages
-from pyd2v import D2V
 
 
 class PDeinterlacer:
@@ -75,13 +71,17 @@ class PDeinterlacer:
         else:
             raise ValueError(f"Unimplemented deinterlacer for Sourcer {sourcer}")
         self.clip = self.handler(self.clip)
-    
+
     def _get_kernel(self, clip):
         """
         Apply the deinterlacing kernel to the provided clip for both
         TFF and BFF output. The Kernel function will be provided a 
         True/False value to the "TFF" argument.
         """
+        # todo ; "TFF": True/False argument is specifically for QTGMC
+        # both TFF and BFF deinterlaced output is necessary, so it needs
+        # a way to supply which argument is used for the kernel to specify
+        # BFF or TFF, which may not even ask for a bool but an integer.
         return (
             self.kernel(clip, **{**self.kernel_args, "TFF": True}),
             self.kernel(clip, **{**self.kernel_args, "TFF": False})
@@ -104,6 +104,7 @@ class PDeinterlacer:
                 f"pvsfunc.PDeinterlacer: The deinterlacer kernel returned an unsupported frame-rate ({deinterlaced_tff.fps}). "
                 "Only single-rate and double-rate is supported with PDeinterlacer at the moment."
             )
+
         # 2. deinterlace whats interlaced
         def _d(n, f, c, d_tff, d_bff, ff):
             if f.props["PVSFlagProgressiveFrame"]:
@@ -132,7 +133,7 @@ class PDeinterlacer:
             ),
             prop_src=clip
         )
-    
+
     def _ffms2(self, clip):
         """
         Deinterlace using ffms2 (ffmpeg) using a basic FieldBased!=0 => QTGMC method
@@ -156,7 +157,7 @@ class PDeinterlacer:
             ),
             prop_src=clip
         )
-    
+
     def _lsmash(self, clip):
         """
         Deinterlace using lsmas (lsmash) using a basic FieldBased!=0 => QTGMC method
