@@ -1,7 +1,7 @@
 import functools
 
 import mvsfunc
-from vapoursynth import core, VideoNode, ColorFamily
+from vapoursynth import core, VideoNode, ColorFamily, RGB24
 
 try:
     import havsfunc
@@ -108,12 +108,9 @@ class PDeinterlacer:
                 return core.text.Text(rc, f" {debug_info} - Progressive ", alignment=1) if self.debug else rc
             # interlaced frame, use deinterlaced clip, d_tff if TFF (2) or d_bff if BFF (1)
             rc = {0: c, 1: d_bff, 2: d_tff}[f.props["_FieldBased"]]
-            color_differs = c.format.id != rc.format.id
+            color_differs = rc.format.id != c.format.id
             if color_differs:
-                rc_args = {}
-                if c.format.color_family.name == "YUV":
-                    rc_args["css"] = f"{1 << c.format.subsampling_w}{1 << c.format.subsampling_h}"
-                rc = getattr(mvsfunc, f"To{c.format.color_family.name}")(rc, **rc_args)
+                rc = core.resize.Point(rc, format=c.format.id)
             if self.debug:
                 field_order = {0: "Progressive", 1: "BFF", 2: "TFF"}[f.props["_FieldBased"]]
                 return core.text.Text(rc, f" {debug_info} - Deinterlaced ({field_order}, Had to color match? {color_differs}) ", alignment=1)
@@ -160,9 +157,23 @@ class PDeinterlacer:
         Deinterlace using lsmas (lsmash) using a basic FieldBased!=0 => QTGMC method
         """
         return self._ffms2(clip)  # same method as ffms2
+    
+    @classmethod
+    def RGBtoYUV(cls, R, G, B):
+
+        def RGBtoY(R, G, B):
+            return ((0.257 * R) + (0.504 * G) + (0.098 * B) + 16)
+        
+        def RGBtoU(R, G, B):
+            return (-(0.148 * R) - (0.291 * G) + (0.439 * B) + 128)
+        
+        def RGBtoV(R, G, B):
+            return ((0.439 * R) - (0.368 * G) - (0.071 * B) + 128)
+        
+        return [RGBtoY(R, G, B), RGBtoU(R, G, B), RGBtoV(R, G, B)]
 
     @classmethod
-    def VoidWeave(cls, clip, tff, bob=False) -> VideoNode:
+    def VoidWeave(cls, clip, tff, color, bob=False) -> VideoNode:
         """
         Weaves a 255(rgb) #00ff00(hex) green as the 2nd field of every field.
         The purpose of this would be for machine learning in-painting over
@@ -175,16 +186,18 @@ class PDeinterlacer:
         and fail. The color space has to match the void green clip and the
         actual field clip to be able to weave them together.
         """
-        green = [0, 255, 0]
-        # fill in the needed rows with void (255 green) for in-painting
-        if clip.format.color_family != ColorFamily.RGB:
-            # need to use RGB for the BlankClip for the correct green to be used
-            # if in-painting, RGB color-space will most likely be needed anyway
-            clip = mvsfunc.ToRGB(clip, depth=clip.format.bits_per_sample)
+        # colors
+        # help needed ; figure out a way to get this working without having to convert colorspace at all
+        # the if color family == YUV RGBtoYUV call is always NOP until then
+        if clip.format.name != "RGB24":
+            clip = core.resize.Point(clip, format=RGB24)
+        if clip.format.color_family.name == "YUV":
+            color = cls.RGBtoYUV(*color)
+        # weave
         clip = core.std.SeparateFields(clip, tff=tff)
         clip = core.std.Interleave([
             clip,
-            core.std.BlankClip(clip, format=clip.format.id, color=green, keep=0)
+            core.std.BlankClip(clip, color=color, keep=0)
         ])
         clip = core.std.DoubleWeave(clip, tff=tff)
         clip = core.std.SelectEvery(clip, cycle=2, offsets=0)
@@ -194,7 +207,7 @@ class PDeinterlacer:
             # by adding a 1px row of black pixels on the top, and removing from the bottom
             odd = core.std.SelectEvery(clip, cycle=2, offsets=0)
             even = core.std.SelectEvery(clip, cycle=2, offsets=1)
-            even = core.std.AddBorders(even, top=1, color=green)
+            even = core.std.AddBorders(even, top=1, color=color)
             even = core.std.Crop(even, bottom=1)
             return core.std.Interleave([odd, even])
         return core.std.SelectEvery(clip, cycle=2, offsets=0)
