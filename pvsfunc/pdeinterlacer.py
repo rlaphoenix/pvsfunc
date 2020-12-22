@@ -105,19 +105,19 @@ class PDeinterlacer:
             # progressive frame, simply skip deinterlacing
             if f.props["PVSFlagProgressiveFrame"]:
                 rc = core.std.Interleave([c] * ff) if ff > 1 else c  # duplicate if not a single-rate fps output
+                color_differs = rc.format.id != d_tff.format.id
+                if color_differs:
+                    rc = core.resize.Point(rc, format=d_tff.format.id)
                 return core.text.Text(rc, f" {debug_info} - Progressive ", alignment=1) if self.debug else rc
             # interlaced frame, use deinterlaced clip, d_tff if TFF (2) or d_bff if BFF (1)
             rc = {0: c, 1: d_bff, 2: d_tff}[f.props["_FieldBased"]]
-            color_differs = rc.format.id != c.format.id
-            if color_differs:
-                rc = core.resize.Point(rc, format=c.format.id)
             if self.debug:
                 field_order = {0: "Progressive", 1: "BFF", 2: "TFF"}[f.props["_FieldBased"]]
                 return core.text.Text(rc, f" {debug_info} - Deinterlaced ({field_order}, Had to color match? {color_differs}) ", alignment=1)
             return rc
         
         return core.std.FrameEval(
-            core.std.BlankClip(deinterlaced_tff, format=clip.format.id),
+            deinterlaced_tff,
             functools.partial(
                 _d,
                 c=clip,
