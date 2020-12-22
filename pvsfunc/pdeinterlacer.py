@@ -88,14 +88,13 @@ class PDeinterlacer:
                 f"pvsfunc.PDeinterlacer: The deinterlacer kernel returned an unsupported frame-rate ({deinterlaced_tff.fps}). "
                 "Only single-rate and double-rate is supported with PDeinterlacer at the moment."
             )
-        
-        # 2. Verify color families to match deinterlaced kernel's output
+        fps_factor = int(fps_factor)
+
+        # 2. ensure the color families between tff and bff kernel uses match
         if deinterlaced_tff.format.id != deinterlaced_bff.format.id:
             raise ValueError(
                 f"pvsfunc.PDeinterlacer: The kernel used supplied different color space outputs between TFF and BFF usage."
             )
-        if clip.format.id != deinterlaced_tff.format.id:
-            clip = getattr(mvsfunc, f"To{deinterlaced_tff.format.color_family.name}")(clip)
 
         # 3. deinterlace whats interlaced
         def _d(n, f, c, d_tff, d_bff, ff):
@@ -109,13 +108,19 @@ class PDeinterlacer:
                 return core.text.Text(rc, f" {debug_info} - Progressive ", alignment=1) if self.debug else rc
             # interlaced frame, use deinterlaced clip, d_tff if TFF (2) or d_bff if BFF (1)
             rc = {0: c, 1: d_bff, 2: d_tff}[f.props["_FieldBased"]]
+            color_differs = c.format.id != rc.format.id
+            if color_differs:
+                rc_args = {}
+                if c.format.color_family.name == "YUV":
+                    rc_args["css"] = f"{1 << c.format.subsampling_w}{1 << c.format.subsampling_h}"
+                rc = getattr(mvsfunc, f"To{c.format.color_family.name}")(rc, **rc_args)
             if self.debug:
                 field_order = {0: "Progressive", 1: "BFF", 2: "TFF"}[f.props["_FieldBased"]]
-                return core.text.Text(rc, f" {debug_info} - Deinterlaced ({field_order}) ", alignment=1)
+                return core.text.Text(rc, f" {debug_info} - Deinterlaced ({field_order}, Had to color match? {color_differs}) ", alignment=1)
             return rc
-
+        
         return core.std.FrameEval(
-            deinterlaced_tff,
+            core.std.BlankClip(deinterlaced_tff, format=clip.format.id),
             functools.partial(
                 _d,
                 c=clip,
