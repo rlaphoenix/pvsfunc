@@ -162,6 +162,7 @@ class PDeinterlacer:
         and fail. The color space has to match the void green clip and the
         actual field clip to be able to weave them together.
         """
+        green = [0, 255, 0]
         # fill in the needed rows with void (255 green) for in-painting
         if clip.format.color_family != ColorFamily.RGB:
             # need to use RGB for the BlankClip for the correct green to be used
@@ -170,7 +171,7 @@ class PDeinterlacer:
         clip = core.std.SeparateFields(clip, tff=tff)
         clip = core.std.Interleave([
             clip,
-            core.std.BlankClip(clip, format=clip.format.id, color=[0, 255, 0], keep=0)
+            core.std.BlankClip(clip, format=clip.format.id, color=green, keep=0)
         ])
         clip = core.std.DoubleWeave(clip, tff=tff)
         clip = core.std.SelectEvery(clip, cycle=2, offsets=0)
@@ -180,7 +181,7 @@ class PDeinterlacer:
             # by adding a 1px row of black pixels on the top, and removing from the bottom
             odd = core.std.SelectEvery(clip, cycle=2, offsets=0)
             even = core.std.SelectEvery(clip, cycle=2, offsets=1)
-            even = core.std.AddBorders(even, top=1)
+            even = core.std.AddBorders(even, top=1, color=green)
             even = core.std.Crop(even, bottom=1)
             return core.std.Interleave([odd, even])
         return core.std.SelectEvery(clip, cycle=2, offsets=0)

@@ -16,10 +16,9 @@ class PDebox:
         :param mode: The Direction you wish to crop. `0`=Pillarboxing, `1`=Letterboxing.
         :param offset: If the content isn't exactly in the center of the frame
         """
-        self.clip = clip
         aspect_ratio = [int(n) for n in aspect_ratio.split(":")]
         aspect_ratio = aspect_ratio[0] / aspect_ratio[1]
-        area = (self.clip.width - (self.clip.height * aspect_ratio)) / 2
+        area = (clip.width - (clip.height * aspect_ratio)) / 2
         self.clip = core.std.CropRel(
             clip,
             left=area + offset if mode == 0 else 0,
