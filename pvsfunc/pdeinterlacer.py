@@ -88,8 +88,16 @@ class PDeinterlacer:
                 f"pvsfunc.PDeinterlacer: The deinterlacer kernel returned an unsupported frame-rate ({deinterlaced_tff.fps}). "
                 "Only single-rate and double-rate is supported with PDeinterlacer at the moment."
             )
+        
+        # 2. Verify color families to match deinterlaced kernel's output
+        if deinterlaced_tff.format.id != deinterlaced_bff.format.id:
+            raise ValueError(
+                f"pvsfunc.PDeinterlacer: The kernel used supplied different color space outputs between TFF and BFF usage."
+            )
+        if clip.format.id != deinterlaced_tff.format.id:
+            clip = getattr(mvsfunc, f"To{deinterlaced_tff.format.color_family.name}")(clip)
 
-        # 2. deinterlace whats interlaced
+        # 3. deinterlace whats interlaced
         def _d(n, f, c, d_tff, d_bff, ff):
             # compile debug information to print if requested
             debug_info = None
