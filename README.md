@@ -40,14 +40,6 @@ Information for Linux users:
 
 **†3** Will only be used if the container has a manual frame rate set that differs to the encoded frame rate. For L-SMASH-WORKS to index the file with the correct source frame rate. PSourcer uses mkvmerge to re-mux the file, with the container-set FPS removed.
 
-[dg]: http://rationalqm.us/dgmpgdec/dgmpgdec.html
-
-[mkvnix]: https://mkvtoolnix.download
-
-[lsmash]: https://github.com/VFR-maniac/L-SMASH-Works
-
-[d2vs]: https://github.com/dwbuiten/d2vsource
-
 ## Documentation
 
 | Class                                           | Import                                            |
@@ -104,3 +96,11 @@ PDebox (class) is a convenience wrapper for Deboxing operations. Ever encounter 
 -   aspect_ratio: Aspect Ratio you wish to crop to, in string form, e.g. `"4:3"`.
 -   mode: Mode of operation, 0=Pillarboxing, 1=Letterboxing.
 -   offset: If the boxing is slightly more on one side than the other, than you can set this offset appropriately to move the area that PDebox returns. e.g. mode=0, and there's 1px more of a pillar on the right than on the left, the offset should be -1.
+
+[dg]: http://rationalqm.us/dgmpgdec/dgmpgdec.html
+
+[mkvnix]: https://mkvtoolnix.download
+
+[lsmash]: https://github.com/VFR-maniac/L-SMASH-Works
+
+[d2vs]: https://github.com/dwbuiten/d2vsource
