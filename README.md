@@ -11,10 +11,10 @@ pvsfunc (PHOENiX's VapourSynth Functions) is my compilation of VapourSynth Scrip
 
 ## Installation
 
-1. Install VapourSynth first! (this is different to the pypi/pip `vapoursynth` package!)
-2. `pip install pvsfunc`
-3. Make sure you have all the dependencies listed below installed.
-4. It's as simple as that!
+1.  Install VapourSynth first! (this is different to the pypi/pip `vapoursynth` package!)
+2.  `pip install pvsfunc`
+3.  Make sure you have all the dependencies listed below installed.
+4.  It's as simple as that!
 
 ### Dependencies
 
@@ -25,14 +25,14 @@ pvsfunc (PHOENiX's VapourSynth Functions) is my compilation of VapourSynth Scrip
 
 Installation of the sourcer cores:
 
-- Windows: `vsrepo install package_name` - You can get package names by searching for it on https://vsdb.top
-- Linux: You probably know the drill. Check your package repo's or compile it.
-- Mac: No idea how the python/vapoursynth eco-system works, sorry.
+-   Windows: `vsrepo install package_name` - You can get package names by searching for it on <https://vsdb.top>
+-   Linux: You probably know the drill. Check your package repo's or compile it.
+-   Mac: No idea how the python/vapoursynth eco-system works, sorry.
 
 Information for Linux users:
 
-- If any windows-only program is a dependency, then it is supported by wine and confirmed to be safe to use with full compatability.
-- Add DGIndex to path via `/etc/profile.d/` instead of `~/.profile`, `~/.bashrc` e.t.c as those are SHELL-exclusive PATH's, not global system-wide.\_
+-   If any windows-only program is a dependency, then it is supported by wine and confirmed to be safe to use with full compatability.
+-   Add DGIndex to path via `/etc/profile.d/` instead of `~/.profile`, `~/.bashrc` e.t.c as those are SHELL-exclusive PATH's, not global system-wide.
 
 **†1** Only used if the file path is not to a .d2v file, or there's no corresponding .d2v file next to the input file. Please note that this script uses this to make specifically configured .d2v files with specific settings. Supplying you're own .d2v files is unsafe.
 
@@ -41,8 +41,11 @@ Information for Linux users:
 **†3** Will only be used if the container has a manual frame rate set that differs to the encoded frame rate. For L-SMASH-WORKS to index the file with the correct source frame rate. PSourcer uses mkvmerge to re-mux the file, with the container-set FPS removed.
 
 [dg]: http://rationalqm.us/dgmpgdec/dgmpgdec.html
+
 [mkvnix]: https://mkvtoolnix.download
+
 [lsmash]: https://github.com/VFR-maniac/L-SMASH-Works
+
 [d2vs]: https://github.com/dwbuiten/d2vsource
 
 ## Documentation
@@ -59,8 +62,8 @@ PSourcer (class) is a convenience wrapper for loading video files to clip variab
 `from pvsfunc.psourcer import PSourcer`  
 `PSourcer(str file_path[, bool debug=False])`
 
-- file_path: Path to a file to import. Don't worry about which type of container (if any) you use.
-- debug: Use core.text to print verbose information about the file and how it has been loaded.
+-   file_path: Path to a file to import. Don't worry about which type of container (if any) you use.
+-   debug: Use core.text to print verbose information about the file and how it has been loaded.
 
 ### PDeinterlacer ([pdeinterlacer.py](/pvsfunc/pdeinterlacer.py))
 
@@ -71,24 +74,24 @@ Just to clarify this is a deinterlacer wrapper, not it's own deinterlacer kernel
 `from pvsfunc.pdeinterlacer import PDeinterlacer`  
 `PDeinterlacer(clip, func kernel[, dict kernel_args=None, bool debug=False])`
 
-- clip: Clip to deinterlace, this must be a clip loaded with PSourcer as it requires some of the props that PSourcer applies to clips.
-- kernel: Deinterlacer Kernel Function to use for deinterlacing. If you don't know which kernel to use, [QTGMC](http://avisynth.nl/index.php/QTGMC) is a good bet but may not be the answer for your specific source. For example, QTGMC isn't the best for Animated sources, or sources that have consistent amount of duplicate frames (e.g. animation).
-- kernel_args: Arguments to pass to the Kernel Function when deinterlacing.
-- debug: Debug Mode, Enable it if you want to debug frame information.
+-   clip: Clip to deinterlace, this must be a clip loaded with PSourcer as it requires some of the props that PSourcer applies to clips.
+-   kernel: Deinterlacer Kernel Function to use for deinterlacing. If you don't know which kernel to use, [QTGMC](http://avisynth.nl/index.php/QTGMC) is a good bet but may not be the answer for your specific source. For example, QTGMC isn't the best for Animated sources, or sources that have consistent amount of duplicate frames (e.g. animation).
+-   kernel_args: Arguments to pass to the Kernel Function when deinterlacing.
+-   debug: Debug Mode, Enable it if you want to debug frame information.
 
 ### PDecimate ([pdecimate.py](/pvsfunc/pdecimate.py))
 
-PDecimate (class) is a convenience wrapper for Decimating operations. It can be used to delete frames in a variable or constant pattern, either by manual definition or by automated means (via VDecimate however, https://git.io/avoid-tdecimate). Decimation is often used for IVTC purposes to remove constant pattern pulldown frames (duplicate frames for changing frame rate).
+PDecimate (class) is a convenience wrapper for Decimating operations. It can be used to delete frames in a variable or constant pattern, either by manual definition or by automated means (via VDecimate however, <https://git.io/avoid-tdecimate>). Decimation is often used for IVTC purposes to remove constant pattern pulldown frames (duplicate frames for changing frame rate).
 
 `from pvsfunc.pdecimate import PDecimate`  
 `PDecimate(clip, int cycle, list<int> offsets[, per_vob_id=True, mode=0, debug=False])`
 
-- clip: Clip to decimate, this must be a clip loaded with PSourcer as it requires some of the props that PSourcer applies to clips.
-- cycle: Defines the amount of frames to calculate offsets on at a time.
-- offset: Mode 0's offsets are a zero-indexed list. This indicates which frames to KEEP from the cycle. Set to `None` when using mode=1.
-- per_vob_id: When Clip is a DVD-Video Object (.VOB): Reset the cycle every time the VOB Cell changes.
-- mode: 0=core.std.SelectEvery (recommended), 1=core.vivtc.VDecimate (be warned; its inaccurate!)
-- debug: Skip decimation and print debugging information. Useful to check if the frames that the cycle and offset settings you have provided are correct and actually decimate the right frames.
+-   clip: Clip to decimate, this must be a clip loaded with PSourcer as it requires some of the props that PSourcer applies to clips.
+-   cycle: Defines the amount of frames to calculate offsets on at a time.
+-   offset: Mode 0's offsets are a zero-indexed list. This indicates which frames to KEEP from the cycle. Set to `None` when using mode=1.
+-   per_vob_id: When Clip is a DVD-Video Object (.VOB): Reset the cycle every time the VOB Cell changes.
+-   mode: 0=core.std.SelectEvery (recommended), 1=core.vivtc.VDecimate (be warned; its inaccurate!)
+-   debug: Skip decimation and print debugging information. Useful to check if the frames that the cycle and offset settings you have provided are correct and actually decimate the right frames.
 
 ### PDebox ([pdebox.py](/pvsfunc/pdebox.py))
 
@@ -97,7 +100,7 @@ PDebox (class) is a convenience wrapper for Deboxing operations. Ever encounter 
 `from pvsfunc.pdebox import PDebox`  
 `PDebox(clip, str aspect_ratio, [int mode=0, offset=0])`
 
-- clip: Clip to debox.
-- aspect_ratio: Aspect Ratio you wish to crop to, in string form, e.g. `"4:3"`.
-- mode: Mode of operation, 0=Pillarboxing, 1=Letterboxing.
-- offset: If the boxing is slightly more on one side than the other, than you can set this offset appropriately to move the area that PDebox returns. e.g. mode=0, and there's 1px more of a pillar on the right than on the left, the offset should be -1.
+-   clip: Clip to debox.
+-   aspect_ratio: Aspect Ratio you wish to crop to, in string form, e.g. `"4:3"`.
+-   mode: Mode of operation, 0=Pillarboxing, 1=Letterboxing.
+-   offset: If the boxing is slightly more on one side than the other, than you can set this offset appropriately to move the area that PDebox returns. e.g. mode=0, and there's 1px more of a pillar on the right than on the left, the offset should be -1.
