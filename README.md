@@ -20,7 +20,7 @@ pvsfunc (PHOENiX's VapourSynth Functions) is my compilation of VapourSynth Scrip
 
 | Input File Codec | Sourcer Used                    | Dependencies                                             |
 | ---------------- | ------------------------------- | -------------------------------------------------------- |
-| MPEG-1, MPEG-2   | [d2vsource][d2vs] (d2v)         | [DGIndex v1.5.8][dg] **†1**, [mkvextract][mkvnix] **†2** |
+| MPEG-1, MPEG-2   | [d2vsource][d2vs] (d2v)         | [DGIndex >=v1.5.8][dg] **†1**, [mkvextract][mkvnix] **†2** |
 | Any other codec  | [L-SMASH-WORKS][lsmash] (lsmas) | [mkvmerge][mkvnix] **†3**                                |
 
 Installation of the sourcer cores:
