@@ -1,4 +1,5 @@
 import functools
+import itertools
 import os
 
 import vapoursynth as vs
@@ -104,25 +105,27 @@ class PSourcer:
             d2v = D2V(self.file_path)
             # get every frames' flag data, this contains information on displaying frames
             # add vob and cell number to each frames flag data as well
-            flags = [f for l in [
-                [dict(**y, vob=x["vob"], cell=x["cell"]) for y in x["flags"]] for x in d2v.data
-            ] for f in l]
+            flags = [[dict(**y, vob=d["vob"], cell=d["cell"]) for y in d["flags"]] for d in d2v.data]
+            flags = list(itertools.chain.from_iterable(flags))  # flatten list of lists
             # Get pulldown cycle
             # todo ; get an mpeg2 that uses Pulldown metadata (rff flags) that ISN'T Pulldown 2:3 to test math
             #        this math seems pretty far fetched, if we can somehow obtain the Pulldown x:x:...
             #        string that mediainfo can get, then calculating it can be much easier and more efficient.
             pulldown_cycle = [n for n, f in enumerate(flags) if f["tff"] and f["rff"]]
             if not pulldown_cycle or pulldown_cycle == [0]:
-                pulldown_cycle = 0  # a 0 would be better than an empty list
+                pulldown_cycle = 0  # a 0 would be better than an empty list/list with only a 0
             else:
                 # pair every 2 frame indexes together
                 pulldown_cycle = list(zip(pulldown_cycle[::2], pulldown_cycle[1::2]))
                 # subtract the right index with the left index to calculate the cycle
-                pulldown_cycle = [r - l for l, r in pulldown_cycle]
+                pulldown_cycle = [right - left for left, right in pulldown_cycle]
                 # get the most common cycle (+1), interlaced sections in variable scan-type content messes up the
                 # results, so the only way around it is to get the most common entry.
                 pulldown_cycle = max(set(pulldown_cycle), key=pulldown_cycle.count) + 1
             # set various data used for debugging (if debug enabled)
+            coded_pictures = None
+            progressive_percent = None
+            pulldown_count = None
             if self.debug:
                 coded_pictures = len(flags)
                 progressive_percent = (sum(1 for f in flags if f["progressive_frame"]) / len(flags)) * 100
@@ -163,21 +166,10 @@ class PSourcer:
             # list of the props available at any time with core.text.FrameProps().      #
             # All props will be either an int, int-style bool, or string.               #
             # ========================================================================= #
-            def set_flag_props(n, f, c, fl):
-                for k, v in fl[n].items():
-                    if isinstance(v, bool):
-                        v = 1 if v else 0
-                    if isinstance(v, bytes):
-                        v = v.decode("utf-8")
-                    c = core.std.SetFrameProp(c, **{
-                        ("intval" if isinstance(v, int) else "data"): v
-                    }, prop=f"PVSFlag{k.title().replace('_', '')}")
-                return c[n]
-
             self.clip = core.std.FrameEval(
                 self.clip,
                 functools.partial(
-                    set_flag_props,
+                    self._set_flag_props,
                     c=self.clip,
                     fl=flags
                 ),
@@ -189,26 +181,25 @@ class PSourcer:
             if self.debug:
                 # fps
                 fps = self.clip.fps
-                if self.clip.fps.numerator == 25:
+                if self.clip.fps.numerator == 25 and self.clip.fps.denominator == 1:
                     fps = "PAL"
-                elif self.clip.fps.numerator == 30000:
+                elif self.clip.fps.numerator == 30000 and self.clip.fps.denominator == 1001:
                     fps = "NTSC"
-                elif self.clip.fps.numerator == 24:
+                elif self.clip.fps.numerator == 24 and self.clip.fps.denominator == 1:
                     fps = "FILM"
                 # aspect ratio
-                ar = d2v.settings['Aspect_Ratio']
-                ar_n = [int(x) for x in ar.split(':')]
-                par = calculate_par(self.clip.width, self.clip.height, *ar_n)
+                dar = d2v.settings["Aspect_Ratio"]
+                par = calculate_par(self.clip.width, self.clip.height, *[int(x) for x in dar.split(":")])
                 sar = calculate_aspect_ratio(self.clip.width, self.clip.height)
                 self.clip = core.text.Text(
                     self.clip,
                     " " + (" \n ".join([
                         f"{os.path.basename(self.file_path)}",
-                        f"{fps}, Loaded with {str(self.sourcer)}",
+                        f"Loaded with {str(self.sourcer)}",
                         f"- {coded_pictures:,} coded pictures, which {progressive_percent:.2f}% of are Progressive",
                         f"- {pulldown_count:,} frames are asking for pulldown{f' which occurs every {pulldown_cycle} frames' if pulldown_cycle else ''}",
                         f"- {coded_pictures + pulldown_count:,} total frames after pulldown flags are honored",
-                        f"DAR: {ar}  SAR: {sar}  PAR: {par}"
+                        f"DAR: {dar}  SAR: {sar}  PAR: {par}  FPS: {fps}"
                     ])) + " ",
                     alignment=7
                 )
@@ -221,3 +212,15 @@ class PSourcer:
             # why the fuck is there no SetFrameProps, come on...
             # +1: https://github.com/vapoursynth/vapoursynth/issues/559
             self.clip = core.std.SetFrameProp(self.clip, prop=f"PVS{k}", data=v)
+
+    @staticmethod
+    def _set_flag_props(n, f, c, fl):
+        for key, value in fl[n].items():
+            if isinstance(value, bool):
+                value = 1 if value else 0
+            if isinstance(value, bytes):
+                value = value.decode("utf-8")
+            c = core.std.SetFrameProp(c, **{
+                ("intval" if isinstance(value, int) else "data"): value
+            }, prop=f"PVSFlag{key.title().replace('_', '')}")
+        return c[n]
