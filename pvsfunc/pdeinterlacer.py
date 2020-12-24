@@ -1,7 +1,7 @@
 import functools
 
-import mvsfunc
-from vapoursynth import core, VideoNode, ColorFamily, RGB24
+import vapoursynth as vs
+from vapoursynth import core
 
 try:
     import havsfunc
@@ -25,7 +25,7 @@ class PDeinterlacer:
         self.kernel_args = kernel_args or {}
         self.debug = debug
         # validate arguments
-        if not isinstance(self.clip, VideoNode):
+        if not isinstance(self.clip, vs.VideoNode):
             raise TypeError("pvsfunc.PDeinterlacer: This is not a clip")
         # set default kernel to QTGMC
         if not self.kernel:
@@ -114,7 +114,7 @@ class PDeinterlacer:
                 field_order = {0: "Progressive", 1: "BFF", 2: "TFF"}[f.props["_FieldBased"]]
                 return core.text.Text(rc, f" {debug_info} - Deinterlaced ({field_order} ", alignment=1)
             return rc
-        
+
         return core.std.FrameEval(
             deinterlaced_tff,
             functools.partial(
@@ -156,23 +156,23 @@ class PDeinterlacer:
         Deinterlace using lsmas (lsmash) using a basic FieldBased!=0 => QTGMC method
         """
         return self._ffms2(clip)  # same method as ffms2
-    
+
     @classmethod
     def RGBtoYUV(cls, R, G, B):
 
         def RGBtoY(R, G, B):
             return ((0.257 * R) + (0.504 * G) + (0.098 * B) + 16)
-        
+
         def RGBtoU(R, G, B):
             return (-(0.148 * R) - (0.291 * G) + (0.439 * B) + 128)
-        
+
         def RGBtoV(R, G, B):
             return ((0.439 * R) - (0.368 * G) - (0.071 * B) + 128)
-        
+
         return [RGBtoY(R, G, B), RGBtoU(R, G, B), RGBtoV(R, G, B)]
 
     @classmethod
-    def VoidWeave(cls, clip, tff, color, bob=False) -> VideoNode:
+    def VoidWeave(cls, clip, tff, color, bob=False) -> vs.VideoNode:
         """
         Weaves a 255(rgb) #00ff00(hex) green as the 2nd field of every field.
         The purpose of this would be for machine learning in-painting over
@@ -189,7 +189,7 @@ class PDeinterlacer:
         # help needed ; figure out a way to get this working without having to convert colorspace at all
         # the if color family == YUV RGBtoYUV call is always NOP until then
         if clip.format.name != "RGB24":
-            clip = core.resize.Point(clip, format=RGB24)
+            clip = core.resize.Point(clip, format=vs.RGB24)
         if clip.format.color_family.name == "YUV":
             color = cls.RGBtoYUV(*color)
         # weave
