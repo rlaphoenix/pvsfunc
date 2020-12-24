@@ -3,14 +3,6 @@ import functools
 import vapoursynth as vs
 from vapoursynth import core
 
-try:
-    import havsfunc
-except ImportError:
-    raise RuntimeError(
-        "pvsfunc.PDeinterlacer: Required script havsfunc not found. "
-        "https://github.com/HomeOfVapourSynthEvolution/havsfunc"
-    )
-
 
 class PDeinterlacer:
     """
@@ -29,25 +21,26 @@ class PDeinterlacer:
             raise TypeError("pvsfunc.PDeinterlacer: This is not a clip")
         # set default kernel to QTGMC
         if not self.kernel:
-            self.kernel = havsfunc.QTGMC
+            raise ValueError("pvsfunc.PDeinterlacer: A deinterlacing kernel is required")
         # set handler func based on Sourcer
-        self.handler = None
         sourcer = self.clip.get_frame(0).props["PVSSourcer"].decode("utf-8")
-        if sourcer == "core.d2v.Source":
-            self.handler = self._d2v
-        elif sourcer == "core.ffms2.Source":
-            if self.kernel == havsfunc.QTGMC:
-                kernel_args["FPSDivisor"] = 2  # only supporting same-rate fps atm
-            self.handler = self._ffms2
-        elif sourcer == "core.lsmas.LWLibavSource":
-            if self.kernel == havsfunc.QTGMC:
-                kernel_args["FPSDivisor"] = 2  # only supporting same-rate fps atm
-            self.handler = self._lsmash
-        elif sourcer == "core.imwri.Read":
-            print("pvsfunc.PDeinterlacer: Warning: This source is a clip of images and cannot be deinterlaced.")
-            self.handler = lambda c: c  # do nothing
-        else:
-            raise ValueError(f"Unimplemented deinterlacer for Sourcer {sourcer}")
+        if sourcer == "core.imwri.Read":
+            # todo ; add support for deinterlacing image data (somehow)
+            print("pvsfunc.PDeinterlacer: Warning: This source is a clip of images and cannot be deinterlaced")
+        elif sourcer in ["core.ffms2.Source", "core.lsmas.LWLibavSource"]:
+            if "FPSDivisor" in kernel_args and kernel_args["FPSDivisor"] != 2:
+                # todo ; ideally make this unnecessary
+                raise ValueError(
+                    f"pvsfunc.PDeinterlacer: {sourcer} only supports QTGMC single-rate output (FPSDivisor=2)"
+                )
+        self.handler = {
+            "core.d2v.Source": self._d2v,
+            "core.lsmas.LWLibavSource": self._lsmash,
+            "core.ffms2.Source": self._ffms2,
+            "core.imwri.Read": lambda c: c  # NOP
+        }.get(sourcer, None)
+        if self.handler is None:
+            raise NotImplementedError(f"pvsfunc.PDeinterlacer: No sourcer is defined for the given media stream")
         self.clip = self.handler(self.clip)
 
     def _get_kernel(self, clip) -> tuple:
