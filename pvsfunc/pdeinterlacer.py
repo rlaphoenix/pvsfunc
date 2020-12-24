@@ -1,4 +1,5 @@
 import functools
+from typing import List, Union
 
 import vapoursynth as vs
 from vapoursynth import core
@@ -164,7 +165,8 @@ class PDeinterlacer:
         return [RGBtoY(R, G, B), RGBtoU(R, G, B), RGBtoV(R, G, B)]
 
     @classmethod
-    def VoidWeave(cls, clip, tff, color, bob=False) -> vs.VideoNode:
+    def VoidWeave(cls, clip: vs.VideoNode, tff: bool, color: List[Union[int, float]],
+                  bob: bool = False) -> vs.VideoNode:
         """
         Weaves a 255(rgb) #00ff00(hex) green as the 2nd field of every field.
         The purpose of this would be for machine learning in-painting over
