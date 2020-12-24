@@ -8,7 +8,7 @@ with open("requirements.txt", "rt") as f:
 
 setup(
     name="pvsfunc",
-    version="3.12.0",
+    version="3.12.1",
     author="PHOENiX",
     author_email="pragma.exe@gmail.com",
     description="PHOENiX's compilation of VapourSynth Script's and Functions",
