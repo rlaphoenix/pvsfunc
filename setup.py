@@ -3,6 +3,11 @@ from setuptools import setup, find_packages
 with open("README.md", "r") as f:
     readme = f.read()
 
+requirements = []
+with open("requirements.txt", "rt") as f:
+    for line in f:
+        requirements.append(line)
+
 setup(
     name="pvsfunc",
     version="3.10.1",
@@ -14,11 +19,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/rlaPHOENiX/pvsfunc",
     packages=find_packages(),
-    install_requires=[
-        "vapoursynth",
-        "pymediainfo>=5.0.3",
-        "pyd2v>=1.0.4"
-    ],
+    install_requires=requirements,
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
