@@ -1,3 +1,5 @@
+#!/bin/bash
+
 rm -r build
 rm -r dist
 rm -r "pvsfunc.egg-info"
