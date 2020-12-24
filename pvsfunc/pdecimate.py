@@ -15,8 +15,9 @@ class PDecimate:
 
         :param clip: VapourSynth Clip (VideoNode) to decimate
         :param cycle: Defines the amount of frames to calculate offsets on at a time.
-        :param offsets: Mode 0's offsets zero-indexed list. This indicates which frames to KEEP from the cycle.
-        :param per_vob_id: When Clip is a .VOB: Reset the cycle every time the VOB ID changes.
+        :param offsets: Mode 0's offsets are a zero-indexed list. This indicates which frames to KEEP from the cycle.
+                        Set to `None` when using mode=1.
+        :param per_vob_id: When Clip is a DVD-Video Object (.VOB): Reset the cycle every time the VOB Cell changes.
         :param mode: 0=core.std.SelectEvery (recommended), 1=core.vivtc.VDecimate (be warned; its inaccurate!)
         :param debug: Skip decimation and print debugging information. Useful to check if the frames that the cycle
         and offset settings you have provided are correct and actually decimate the right frames.

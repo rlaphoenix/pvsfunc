@@ -11,7 +11,9 @@ class PDeinterlacer:
     The clip will need to be loaded from PSourcer to work as it needs it's Props.
     """
 
-    def __init__(self, clip, kernel=None, kernel_args=None, debug=False):
+    def __init__(self, clip, kernel, kernel_args=None, debug=False):
+        if not kernel:
+            raise ValueError("pvsfunc.PDeinterlacer: A deinterlacing kernel is required")
         self.clip = clip
         self.kernel = kernel
         self.kernel_args = kernel_args or {}
@@ -19,9 +21,6 @@ class PDeinterlacer:
         # validate arguments
         if not isinstance(self.clip, vs.VideoNode):
             raise TypeError("pvsfunc.PDeinterlacer: This is not a clip")
-        # set default kernel to QTGMC
-        if not self.kernel:
-            raise ValueError("pvsfunc.PDeinterlacer: A deinterlacing kernel is required")
         # set handler func based on Sourcer
         sourcer = self.clip.get_frame(0).props["PVSSourcer"].decode("utf-8")
         if sourcer == "core.imwri.Read":
