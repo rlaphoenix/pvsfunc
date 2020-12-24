@@ -81,7 +81,10 @@ class PSourcer:
         # load video to clip using sourcer
         while True:
             try:
-                self.clip = eval(self.sourcer)(self.file_path, **SOURCER_ARGS_MAP[self.sourcer])
+                func = core
+                for split in self.sourcer.replace("core.", "").split("."):
+                    func = getattr(func, split)
+                self.clip = func(self.file_path, **SOURCER_ARGS_MAP[self.sourcer])
                 break
             except vs.Error as e:
                 if self.sourcer == "core.imwri.Read" and "Read: No files matching the given pattern exist" in str(e):
