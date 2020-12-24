@@ -62,6 +62,8 @@ class PSourcer:
         self.file_path = anti_file_prefix(file_path)
         self.mime_type = get_mime_type(self.file_path)
         self.video_codec = get_video_codec(self.file_path)
+        # core.d2v.Source specific
+        self.d2v = None
         if self.video_codec == -1:
             raise ValueError("pvsfunc.PSourcer: File path supplied does not exist")
         elif self.video_codec == -2:
@@ -105,10 +107,10 @@ class PSourcer:
             # as well.                                                                  #
             # ========================================================================= #
             # parse d2v file with pyd2v
-            d2v = D2V(self.file_path)
+            self.d2v = D2V(self.file_path)
             # get every frames' flag data, this contains information on displaying frames
             # add vob and cell number to each frames flag data as well
-            flags = [[dict(**y, vob=d["vob"], cell=d["cell"]) for y in d["flags"]] for d in d2v.data]
+            flags = [[dict(**y, vob=d["vob"], cell=d["cell"]) for y in d["flags"]] for d in self.d2v.data]
             flags = list(itertools.chain.from_iterable(flags))  # flatten list of lists
             # Get pulldown cycle
             # todo ; get an mpeg2 that uses Pulldown metadata (rff flags) that ISN'T Pulldown 2:3 to test math
@@ -191,7 +193,7 @@ class PSourcer:
                 elif self.clip.fps.numerator == 24 and self.clip.fps.denominator == 1:
                     fps = "FILM"
                 # aspect ratio
-                dar = d2v.settings["Aspect_Ratio"]
+                dar = self.d2v.settings["Aspect_Ratio"]
                 par = calculate_par(self.clip.width, self.clip.height, *[int(x) for x in dar.split(":")])
                 sar = calculate_aspect_ratio(self.clip.width, self.clip.height)
                 self.clip = core.text.Text(
