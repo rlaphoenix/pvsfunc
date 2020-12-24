@@ -3,10 +3,8 @@ from setuptools import setup, find_packages
 with open("README.md", "r") as f:
     readme = f.read()
 
-requirements = []
 with open("requirements.txt", "rt") as f:
-    for line in f:
-        requirements.append(line)
+    requirements = [x.rstrip() for x in f.readlines()]
 
 setup(
     name="pvsfunc",
