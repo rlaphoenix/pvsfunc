@@ -1,19 +1,17 @@
-# std vs
-from vapoursynth import core
-import vapoursynth as vs
-import os
 import functools
-# pip packages
-from pyd2v import D2V
-# pvsfunc
-from pvsfunc.helpers import anti_file_prefix, get_mime_type, get_video_codec, get_d2v, remove_container_fps, calculate_par, calculate_aspect_ratio
+import os
 
+import vapoursynth as vs
+from pyd2v import D2V
+from vapoursynth import core
+
+from pvsfunc.helpers import anti_file_prefix, get_mime_type, get_video_codec, get_d2v, remove_container_fps, \
+    calculate_par, calculate_aspect_ratio
 
 CODEC_SOURCER_MAP = {
     "IMAGE": "core.imwri.Read",
     "V_MPEG1": "core.d2v.Source",
     "V_MPEG2": "core.d2v.Source",
-    # codecs not listed here will default to `core.lsmas.LWLibavSource`
 }
 
 SOURCER_ARGS_MAP = {
@@ -61,11 +59,17 @@ class PSourcer:
         self.debug = debug
         self.clip = None
         self.file_path = anti_file_prefix(file_path)
-        self.file_type = get_mime_type(self.file_path)
+        self.mime_type = get_mime_type(self.file_path)
         self.video_codec = get_video_codec(self.file_path)
-        if self.file_type.startswith("image/"):
+        if self.video_codec == -1:
+            raise ValueError("pvsfunc.PSourcer: File path supplied does not exist")
+        elif self.video_codec == -2:
+            raise ValueError("pvsfunc.PSourcer: File supplied does not have a Video or Image track")
+        if self.mime_type.startswith("image/"):
+            # we do this after get_video_codec so it checks if an image
+            # track actually exists, and not just an empty image container
             self.video_codec = "IMAGE"
-        self.sourcer = self.get_sourcer(self.video_codec)
+        self.sourcer = CODEC_SOURCER_MAP.get(self.video_codec, "core.lsmas.LWLibavSource")
         # sourcer preparations
         if self.sourcer == "core.d2v.Source":
             # make sure a d2v file for this video exists
@@ -80,6 +84,8 @@ class PSourcer:
                 break
             except vs.Error as e:
                 if self.sourcer == "core.imwri.Read" and "Read: No files matching the given pattern exist" in str(e):
+                    # default uses first num of 0, maybe the user's first image is 1, let's not annoy them
+                    # and just dynamically handle that
                     if SOURCER_ARGS_MAP[self.sourcer]["firstnum"] == 1:
                         raise
                     SOURCER_ARGS_MAP[self.sourcer]["firstnum"] = 1
@@ -105,14 +111,14 @@ class PSourcer:
             # todo ; get an mpeg2 that uses Pulldown metadata (rff flags) that ISN'T Pulldown 2:3 to test math
             #        this math seems pretty far fetched, if we can somehow obtain the Pulldown x:x:...
             #        string that mediainfo can get, then calculating it can be much easier and more efficient.
-            pulldown_cycle = [n for n,f in enumerate(flags) if f["tff"] and f["rff"]]
+            pulldown_cycle = [n for n, f in enumerate(flags) if f["tff"] and f["rff"]]
             if not pulldown_cycle or pulldown_cycle == [0]:
                 pulldown_cycle = 0  # a 0 would be better than an empty list
             else:
                 # pair every 2 frame indexes together
                 pulldown_cycle = list(zip(pulldown_cycle[::2], pulldown_cycle[1::2]))
                 # subtract the right index with the left index to calculate the cycle
-                pulldown_cycle = [r - l for l,r in pulldown_cycle]
+                pulldown_cycle = [r - l for l, r in pulldown_cycle]
                 # get the most common cycle (+1), interlaced sections in variable scan-type content messes up the
                 # results, so the only way around it is to get the most common entry.
                 pulldown_cycle = max(set(pulldown_cycle), key=pulldown_cycle.count) + 1
@@ -128,12 +134,12 @@ class PSourcer:
                 # - mix of progressive and interlaced sections
                 # 1. fix the frame rate of the progressive sections by applying it's pulldown
                 #    we fix it by duplicating the pulldown specified frames rather than as fields
-                pulldown_indexes = [n for n,f in enumerate(flags) if f["progressive_frame"] and f["rff"] and f["tff"]]
+                pulldown_indexes = [n for n, f in enumerate(flags) if f["progressive_frame"] and f["rff"] and f["tff"]]
                 if pulldown_indexes:
                     self.clip = core.std.DuplicateFrames(clip=self.clip, frames=pulldown_indexes)
                 # 2. apply the changes above to the flag list to match the fixed clip
                 flags = [f for sl in [(
-                    [f,dict(**{**f, **{"progressive_frame": True, "rff": False, "tff": False}})]
+                    [f, dict(**{**f, **{"progressive_frame": True, "rff": False, "tff": False}})]
                     if f["progressive_frame"] and f["rff"] and f["tff"] else [f]
                 ) for f in flags] for f in sl]
             else:
@@ -148,6 +154,7 @@ class PSourcer:
                         fpsnum=self.clip.fps.numerator - (self.clip.fps.numerator / pulldown_cycle),
                         fpsden=self.clip.fps.denominator
                     )
+
             # ========================================================================= #
             #  Store flags in each frame's props                                        #
             # ------------------------------------------------------------------------- #
@@ -166,6 +173,7 @@ class PSourcer:
                         ("intval" if isinstance(v, int) else "data"): v
                     }, prop=f"PVSFlag{k.title().replace('_', '')}")
                 return c[n]
+
             self.clip = core.std.FrameEval(
                 self.clip,
                 functools.partial(
@@ -176,7 +184,7 @@ class PSourcer:
                 prop_src=self.clip
             )
             vob_indexes = [index for _, index in {f["vob"]: n for n, f in enumerate(flags)}.items()]
-            vob_indexes = [f"{(0 if n == 0 else (vob_indexes[n-1] + 1))}-{i}" for n,i in enumerate(vob_indexes)]
+            vob_indexes = [f"{(0 if n == 0 else (vob_indexes[n - 1] + 1))}-{i}" for n, i in enumerate(vob_indexes)]
             self.clip = core.std.SetFrameProp(self.clip, prop="PVSVobIdIndexes", data=" ".join(vob_indexes))
             if self.debug:
                 # fps
@@ -213,9 +221,3 @@ class PSourcer:
             # why the fuck is there no SetFrameProps, come on...
             # +1: https://github.com/vapoursynth/vapoursynth/issues/559
             self.clip = core.std.SetFrameProp(self.clip, prop=f"PVS{k}", data=v)
-
-    @staticmethod
-    def get_sourcer(video_codec):
-        """Get clip sourcer function based on video codec"""
-        # default to FFMPEG-based sourcer for wide compatibility
-        return CODEC_SOURCER_MAP.get(video_codec, "core.lsmas.LWLibavSource")
