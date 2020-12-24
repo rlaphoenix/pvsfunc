@@ -151,18 +151,12 @@ class PDeinterlacer:
         return self._ffms2(clip)  # same method as ffms2
 
     @classmethod
-    def RGBtoYUV(cls, R, G, B):
-
-        def RGBtoY(R, G, B):
-            return ((0.257 * R) + (0.504 * G) + (0.098 * B) + 16)
-
-        def RGBtoU(R, G, B):
-            return (-(0.148 * R) - (0.291 * G) + (0.439 * B) + 128)
-
-        def RGBtoV(R, G, B):
-            return ((0.439 * R) - (0.368 * G) - (0.071 * B) + 128)
-
-        return [RGBtoY(R, G, B), RGBtoU(R, G, B), RGBtoV(R, G, B)]
+    def RGBtoYUV(cls, r, g, b):
+        return [
+            (0.257 * r) + (0.504 * g) + (0.098 * b) + 16,
+            -(0.148 * r) - (0.291 * g) + (0.439 * b) + 128,
+            (0.439 * r) - (0.368 * g) - (0.071 * b) + 128
+        ]
 
     @classmethod
     def VoidWeave(cls, clip: vs.VideoNode, tff: bool, color: List[Union[int, float]],
