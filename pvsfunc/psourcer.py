@@ -5,7 +5,7 @@ import vapoursynth as vs
 from pyd2v import D2V
 from vapoursynth import core
 
-from pvsfunc.helpers import anti_file_prefix, get_mime_type, get_video_codec, get_d2v, remove_container_fps, \
+from pvsfunc.helpers import anti_file_prefix, get_mime_type, get_video_codec, get_d2v, fps_reset, \
     calculate_par, calculate_aspect_ratio
 
 CODEC_SOURCER_MAP = {
@@ -76,7 +76,7 @@ class PSourcer:
             self.file_path = get_d2v(self.file_path)
         elif self.sourcer == "core.lsmas.LWLibavSource":
             # destroy the container-set fps
-            self.file_path = remove_container_fps(self.file_path)
+            self.file_path = fps_reset(self.file_path)
         # load video to clip using sourcer
         while True:
             try:

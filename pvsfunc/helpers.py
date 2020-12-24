@@ -148,35 +148,30 @@ def get_d2v(file_path: str) -> str:
     return d2v_path
 
 
-def remove_container_fps(file_path: str) -> str:
+def fps_reset(file_path: str) -> str:
     """Remove container-set FPS to only have the encoded FPS"""
-    mi = [x for x in MediaInfo.parse(file_path).tracks if x.track_type == "Video"]
-    if len(mi) == 0:
-        # does not have a video track?
+    video_tracks = [x for x in MediaInfo.parse(file_path).tracks if x.track_type == "Video"]
+    if not video_tracks:
+        raise Exception("File does not have a video track, removing container-set FPS isn't possible.")
+    video_track = video_tracks[0]
+    if video_track.original_frame_rate is None:
+        # no container-set FPS to remove, return unchanged
         return file_path
-    mi = mi[0]
-
-    if mi.original_frame_rate is None:
-        # does not have a container fps
-        return file_path
-
-    fps_fix_path = f"{file_path}.fpsfix.mkv"
-    if os.path.exists(fps_fix_path):
-        # an fps fix was already run on this file, re-use
-        return fps_fix_path
-
-    if mi.framerate_original_num and mi.framerate_original_den:
-        original_fps = f"{mi.framerate_original_num}/{mi.framerate_original_den}"
+    out_path = f"{file_path}.pfpsreset.mkv"
+    if os.path.exists(out_path):
+        # an fps reset was already run on this file, re-use
+        # todo ; could be dangerous, user might just make a file named this :/
+        return out_path
+    if video_track.framerate_original_num and video_track.framerate_original_den:
+        original_fps = f"{video_track.framerate_original_num}/{video_track.framerate_original_den}"
     else:
-        original_fps = mi.original_frame_rate
-
+        original_fps = video_track.original_frame_rate
     subprocess.check_output([
-        "mkvmerge", "--output", fps_fix_path,
-        "--default-duration", f"{mi.track_id - 1}:{original_fps}fps",
+        "mkvmerge", "--output", out_path,
+        "--default-duration", f"{video_track.track_id - 1}:{original_fps}fps",
         file_path
     ], cwd=os.path.dirname(file_path))
-
-    return fps_fix_path
+    return out_path
 
 
 def gcd(a, b):
