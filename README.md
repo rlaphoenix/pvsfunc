@@ -1,19 +1,51 @@
 # pvsfunc
 
-PHOENiX's compilation of VapourSynth Script's and Functions
+pvsfunc (PHOENiX's VapourSynth Functions) is my compilation of VapourSynth Script's, Functions, and Helpers.
 
-`pip install pvsfunc`
+[<img src="https://img.shields.io/badge/python-3.6%2B-informational?style=flat" alt="Python Version" />](https://python.org)
+[<img alt="GitHub license" src="https://img.shields.io/github/license/rlaPHOENiX/pvsfunc?style=flat" alt="License" />](https://github.com/rlaPHOENiX/pvsfunc/blob/master/LICENSE)
+[<img src="https://codefactor.io/repository/github/rlaphoenix/pvsfunc/badge" alt="CodeFactor" />](https://codefactor.io/repository/github/rlaphoenix/pvsfunc)
+[<img src="https://api.codacy.com/project/badge/Grade/574e843d9e044dcbbc2743cd8092148a" alt="Codacy" />](https://codacy.com/manual/rlaPHOENiX/pvsfunc?utm_source=github.com&utm_medium=referral&utm_content=rlaPHOENiX/pvsfunc&utm_campaign=Badge_Grade)
+[<img src="https://img.shields.io/github/issues/rlaPHOENiX/pvsfunc?style=flat" alt="GitHub Issues" />](https://github.com/rlaPHOENiX/pvsfunc/issues)
+<a href="https://makeapullrequest.com"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat"></a>
 
-<p align="center">
-<a href="https://python.org"><img src="https://img.shields.io/badge/python-3.6%2B-informational?style=flat-square" /></a>
-<a href="https://github.com/rlaPHOENiX/pvsfunc/blob/master/LICENSE"><img alt="GitHub license" src="https://img.shields.io/github/license/rlaPHOENiX/pvsfunc?style=flat-square"></a>
-<a href="https://www.codefactor.io/repository/github/rlaphoenix/pvsfunc"><img src="https://www.codefactor.io/repository/github/rlaphoenix/pvsfunc/badge" alt="CodeFactor" /></a>
-<a href="https://www.codacy.com/manual/rlaPHOENiX/pvsfunc?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=rlaPHOENiX/pvsfunc&amp;utm_campaign=Badge_Grade"><img src="https://api.codacy.com/project/badge/Grade/574e843d9e044dcbbc2743cd8092148a"/></a>
-<a href="https://github.com/rlaPHOENiX/pvsfunc/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/rlaPHOENiX/pvsfunc?style=flat-square"></a>
-<a href="http://makeapullrequest.com"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square"></a>
-</p>
+## Installation
 
-## Classes
+1. Install VapourSynth first! (this is different to the pypi/pip `vapoursynth` package!)
+2. `pip install pvsfunc`
+3. Make sure you have all the dependencies listed below installed.
+4. It's as simple as that!
+
+### Dependencies
+
+| Input File Codec | Sourcer Used                    | Dependencies                                             |
+| ---------------- | ------------------------------- | -------------------------------------------------------- |
+| MPEG-1, MPEG-2   | [d2vsource][d2vs] (d2v)         | [DGIndex v1.5.8][dg] **†1**, [mkvextract][mkvnix] **†2** |
+| Any other codec  | [L-SMASH-WORKS][lsmash] (lsmas) | [mkvmerge][mkvnix] **†3**                                |
+
+Installation of the sourcer cores:
+
+- Windows: `vsrepo install package_name` - You can get package names by searching for it on https://vsdb.top
+- Linux: You probably know the drill. Check your package repo's or compile it.
+- Mac: No idea how the python/vapoursynth eco-system works, sorry.
+
+Information for Linux users:
+
+- If any windows-only program is a dependency, then it is supported by wine and confirmed to be safe to use with full compatability.
+- Add DGIndex to path via `/etc/profile.d/` instead of `~/.profile`, `~/.bashrc` e.t.c as those are SHELL-exclusive PATH's, not global system-wide.\_
+
+**†1** Only used if the file path is not to a .d2v file, or there's no corresponding .d2v file next to the input file. Please note that this script uses this to make specifically configured .d2v files with specific settings. Supplying you're own .d2v files is unsafe.
+
+**†2** Only used if you're providing a file that isnt a .mpeg, .mpg, or .m2v (e.g. mkv, mp4) and there's no corresponding .d2v file. For efficiency and safety files are demuxed out of the container so DGIndex is reading a direct MPEG stream.
+
+**†3** Will only be used if the container has a manual frame rate set that differs to the encoded frame rate. For L-SMASH-WORKS to index the file with the correct source frame rate. PSourcer uses mkvmerge to re-mux the file, with the container-set FPS removed.
+
+[dg]: http://rationalqm.us/dgmpgdec/dgmpgdec.html
+[mkvnix]: https://mkvtoolnix.download
+[lsmash]: https://github.com/VFR-maniac/L-SMASH-Works
+[d2vs]: https://github.com/dwbuiten/d2vsource
+
+## Documentation
 
 | Class                                           | Import                                            |
 | ----------------------------------------------- | ------------------------------------------------- |
@@ -22,61 +54,50 @@ PHOENiX's compilation of VapourSynth Script's and Functions
 
 ### PSourcer ([psourcer.py](/pvsfunc/psourcer.py))
 
-PSourcer (class) is a convenience wrapper for loading video files to clip variables. It's purpose is to load an input file path with the most optimal clip source based on the file. For example for an MPEG-2 video file (e.g. DVD file) it will load using core.d2v.Source (and generate a d2v if needed too!), whereas for an MPEG-4/AVC/H.264 video it will load using core.ffms2.Source.
+PSourcer (class) is a convenience wrapper for loading video files to clip variables. It's purpose is to load an input file path with the most optimal clip source based on the file. For example for an MPEG-2 video file (e.g. DVD file) will load using `core.d2v.Source` (and generate an optimized d2v if needed too!), whereas an MPEG-4/AVC/H.264 video will load using `core.lsmas.LWLibavSource`.
 
-`from pvsfunc.psourcer import PSourcer`
-`PSourcer(str file_path)`
+`from pvsfunc.psourcer import PSourcer`  
+`PSourcer(str file_path[, bool debug=False])`
 
 - file_path: Path to a file to import. Don't worry about which type of container (if any) you use.
-
-The following must be installed and added to the system environment variables/PATH.
-
-- [mkvextract from MKVToolNix](https://mkvtoolnix.download)
-- [DGIndex from DGMpgDec v1.5.8](http://rationalqm.us/dgmpgdec/dgmpgdec.html) (dont worry it works with WINE on linux)
-
-\* _important: if your on linux, add DGIndex to path via `/etc/profile.d/` instead of `~/.profile`, `~/.bashrc` e.t.c as those are SHELL-exclusive PATH's, not global system-wide._
+- debug: Use core.text to print verbose information about the file and how it has been loaded.
 
 ### PDeinterlacer ([pdeinterlacer.py](/pvsfunc/pdeinterlacer.py))
 
-PDeinterlacer (class) is a convenience wrapper for deinterlacing clips. Its unique feature is it can handle mixed scan-type videos. It will always return a progressive and CFR (constant frame-rate) video. It's similar to a retail DVD player as it deinterlaces only if the frame is marked as interlaced, no metrics or guessing is involved.
+PDeinterlacer (class) is a convenience wrapper for deinterlacing clips. Its unique feature is it can handle variable scan-type videos and therefore variable frame-rate videos as well. It will always return a progressive and CFR (constant frame-rate) video. It's similar to a retail DVD player as it deinterlaces only if the frame is marked as interlaced, no metrics or guessing is involved.
 
-Just to clarify this is a deinterlacer wrapper, not a full-fledged deinterlacer, by default it interally uses QTGMC but you can change the kernel.
+Just to clarify this is a deinterlacer wrapper, not it's own deinterlacer kernel. You must supply it with a kernel to use. To reduce dependencies, no base kernel is defaulted.
 
 `from pvsfunc.pdeinterlacer import PDeinterlacer`  
-`PDeinterlacer(clip[, bool tff=True, func kernel=None, dict kernel_args=None, bool debug=False])`
+`PDeinterlacer(clip, func kernel[, dict kernel_args=None, bool debug=False])`
 
-- clip: Clip to deinterlace, this must be a clip loaded with PSourcer as it requires some of the props that PSourcer applies to clips
-- tff: Top-Field-First
-- kernel: Deinterlacer Kernel Function to use for deinterlacing. It defaults to `havsfunc.QTGMC`.
+- clip: Clip to deinterlace, this must be a clip loaded with PSourcer as it requires some of the props that PSourcer applies to clips.
+- kernel: Deinterlacer Kernel Function to use for deinterlacing. If you don't know which kernel to use, [QTGMC](http://avisynth.nl/index.php/QTGMC) is a good bet but may not be the answer for your specific source. For example, QTGMC isn't the best for Animated sources, or sources that have consistent amount of duplicate frames (e.g. animation).
 - kernel_args: Arguments to pass to the Kernel Function when deinterlacing.
 - debug: Debug Mode, Enable it if you want to debug frame information.
 
-## Functions
+### PDecimate ([pdecimate.py](/pvsfunc/pdecimate.py))
 
-| Function                                        | Import                                            |
-| ----------------------------------------------- | ------------------------------------------------- |
-| [decimate](#decimate-initpy)                    | `from pvsfunc.__init__ import decimate`           |
-| [debox](#debox-initpy)                          | `from pvsfunc.__init__ import debox`              |
+PDecimate (class) is a convenience wrapper for Decimating operations. It can be used to delete frames in a variable or constant pattern, either by manual definition or by automated means (via VDecimate however, https://git.io/avoid-tdecimate). Decimation is often used for IVTC purposes to remove constant pattern pulldown frames (duplicate frames for changing frame rate).
 
-### decimate ([**init**.py](/pvsfunc/__init__.py))
+`from pvsfunc.pdecimate import PDecimate`  
+`PDecimate(clip, int cycle, list<int> offsets[, per_vob_id=True, mode=0, debug=False])`
 
-IVTC (Inverse-telecine) the clip using decimation (frame deletion). This would commonly be used to revert the telecine process of FILM to NTSC but can be used for other rate changes.
+- clip: Clip to decimate, this must be a clip loaded with PSourcer as it requires some of the props that PSourcer applies to clips.
+- cycle: Defines the amount of frames to calculate offsets on at a time.
+- offset: Mode 0's offsets are a zero-indexed list. This indicates which frames to KEEP from the cycle. Set to `None` when using mode=1.
+- per_vob_id: When Clip is a DVD-Video Object (.VOB): Reset the cycle every time the VOB Cell changes.
+- mode: 0=core.std.SelectEvery (recommended), 1=core.vivtc.VDecimate (be warned; its inaccurate!)
+- debug: Skip decimation and print debugging information. Useful to check if the frames that the cycle and offset settings you have provided are correct and actually decimate the right frames.
 
-`from pvsfunc.__init__ import decimate`  
-`decimate([int mode=0, int cycle=5, list offsets=[0, 1, 3, 4], bool debug=False])`
+### PDebox ([pdebox.py](/pvsfunc/pdebox.py))
 
-- mode: 0=core.std.SelectEvery, 1=core.vivtc.VDecimate, If your source uses a constant offsets value throughout the entire source I recommend using mode=0 and ensure offsets are correct. If you need automation or the offsets tend to change throughout the source, use mode=1.
-- cycle: Chunks the clip into `n` frames, then deletes frames specified by `offsets` (if any).
-- offsets: _Only used if mode=0_ Starting from index of 0 which is frame 1 of the cycle, this indicates which frames to KEEP from the cycle. For example, cycle of 5, and the default offsets (`[0, 1, 3, 4]`) will delete the 3rd frame (because index 2 isn't in the list) every 5 (cycle) frames.
-- debug: Print debugging information
+PDebox (class) is a convenience wrapper for Deboxing operations. Ever encounter sources where there's black bars on the top and bottom, sides, or both? That means it's Letterboxed, Pillarboxed, or Windowboxed respectively. PDebox helps you remove Letterboxing and Pillarboxing, and through that Windowboxing too.
 
-### debox ([**init**.py](/pvsfunc/__init__.py))
+`from pvsfunc.pdebox import PDebox`  
+`PDebox(clip, str aspect_ratio, [int mode=0, offset=0])`
 
-Remove [Pillarboxing](https://wikipedia.org/wiki/Pillarbox), [Letterboxing](<https://wikipedia.org/wiki/Letterboxing_(filming)>) or [Windowboxing](<https://wikipedia.org/wiki/Windowbox_(filmmaking)>) from the video by calculating a crop area based on `aspect_ratio` calculated against clip width and height. If it's windowboxed, use this function twice, first for Pillarboxing, then for Letterboxing.
-
-`from pvsfunc.__init__ import debox`  
-`debox(str aspect_ratio[, int mode=0, int offset=0])`
-
-- aspect_ratio: The Aspect Ratio you wish to crop to, for example: `4:3` to crop to 4:3, `16:9` to crop to 16:9
-- mode: The Direction you wish to crop. `0`=Pillarboxing (would crop sides), `1`=Letterboxing (would crop top/bottom).
-- offset: If the content isnt _exactly_ in the center of the frame, you can modify offset to move the crop area. For example, if its a mode=0 (boxing on the left and right) and the content is 2 pixels towards the right (2 pixels away from being centered), use offset=2, if the content is 2 pixels towards the left, use offset=-2
+- clip: Clip to debox.
+- aspect_ratio: Aspect Ratio you wish to crop to, in string form, e.g. `"4:3"`.
+- mode: Mode of operation, 0=Pillarboxing, 1=Letterboxing.
+- offset: If the boxing is slightly more on one side than the other, than you can set this offset appropriately to move the area that PDebox returns. e.g. mode=0, and there's 1px more of a pillar on the right than on the left, the offset should be -1.
