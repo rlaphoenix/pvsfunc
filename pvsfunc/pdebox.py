@@ -1,5 +1,4 @@
 from vapoursynth import core
-import vapoursynth as vs
 
 
 class PDebox:

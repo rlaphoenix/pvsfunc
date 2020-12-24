@@ -1,6 +1,6 @@
-from vapoursynth import core
-import vapoursynth as vs
 import functools
+
+from vapoursynth import core
 
 
 class PDecimate:
@@ -44,10 +44,10 @@ class PDecimate:
                     ),
                     mode=mode,
                     cycle=(
-                        cycle[i] if len(cycle)-1 >= i else cycle[0]
+                        cycle[i] if len(cycle) - 1 >= i else cycle[0]
                     ) if isinstance(cycle, list) else cycle,
                     offsets=(
-                        offsets[i] if len(offsets)-1 >= i else offsets[0]
+                        offsets[i] if len(offsets) - 1 >= i else offsets[0]
                     ) if isinstance(offsets[0], list) else offsets,
                     debug=debug
                 ))
