@@ -57,7 +57,6 @@ def get_video_codec(file_path: str) -> Union[str, int]:
               -2 if no Video or Image track in the file exists
               or finally a unique codec ID str
     """
-    """Get video codec using MediaInfo"""
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
         return -1
     track = [t for t in MediaInfo.parse(

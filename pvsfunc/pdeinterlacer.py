@@ -46,7 +46,7 @@ class PDeinterlacer:
     def _get_kernel(self, clip) -> tuple:
         """
         Apply the deinterlacing kernel to the provided clip for both
-        TFF and BFF output. The Kernel function will be provided a 
+        TFF and BFF output. The Kernel function will be provided a
         True/False value to the "TFF" argument if any.
 
         Expecting a TFF argument (case-insensitive), it must be present.
