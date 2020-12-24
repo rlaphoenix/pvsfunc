@@ -2,6 +2,7 @@ import mimetypes
 import os
 import shutil
 import subprocess
+from typing import Union
 
 from pymediainfo import MediaInfo
 
@@ -29,7 +30,7 @@ def get_mime_type(file_path: str) -> str:
             if f.read(18) == "DGIndexProjectFile".encode("utf-8"):
                 if f.read(2) != bytes([0x31, 0x36]):
                     raise ValueError(
-                        "pvsfunc.get_file_type: D2V was created with an unsupported indexer, please use DGIndex v1.5.8." +
+                        "pvsfunc.get_file_type: D2V was created with an unsupported indexer, use DGIndex v1.5.8." +
                         (" It works perfectly fine under Wine." if os.name != "nt" else "")
                     )
                 return "video/d2v"
@@ -48,15 +49,22 @@ def get_mime_type(file_path: str) -> str:
     return mime_type
 
 
-def get_video_codec(file_path: str) -> str:
+def get_video_codec(file_path: str) -> Union[str, int]:
+    """
+    Get video codec using MediaInfo
+    :param file_path: Path to a video or image file
+    :returns: -1 if file does not exist,
+              -2 if no Video or Image track in the file exists
+              or finally a unique codec ID str
+    """
     """Get video codec using MediaInfo"""
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
-        return "?"
+        return -1
     track = [t for t in MediaInfo.parse(
         filename=file_path
     ).tracks if t.track_type in ["Video", "Image"]]
     if not track:
-        raise ValueError("No video/image track in file...")
+        return -2
     track = track[0]
     # we try both as in some cases codec_id isn't set
     codec = track.codec_id or track.commercial_name
@@ -69,24 +77,29 @@ def get_video_codec(file_path: str) -> str:
 
 def get_d2v(file_path: str) -> str:
     """Demux video track and generate a D2V file for it if needed"""
-    IS_VOB = os.path.splitext(file_path)[-1].lower() == ".vob"
-    # create file_path location of the d2v path
+    is_vob = os.path.splitext(file_path)[-1].lower() == ".vob"
     d2v_path = f"{os.path.splitext(file_path)[0]}.d2v"
     if os.path.exists(d2v_path):
         print("Skipping generation as a D2V file already exists")
         return d2v_path
-    # demux the mpeg stream if needed
+    # demux the mpeg stream if not a .VOB or .MPEG file
+    demuxed_ext = [".mpeg", ".mpg", ".m2v", ".vob"]
     vid_path = file_path
-    if not IS_VOB:
-        if os.path.splitext(file_path)[-1].lower() != ".mpeg":
-            vid_path = f"{os.path.splitext(file_path)[0]}.mpg"
-        if os.path.exists(vid_path):
-            print("Skipping demuxing of raw mpeg stream as it already exists")
-        else:
+    if os.path.splitext(file_path)[-1].lower() in demuxed_ext:
+        print("Skipping demuxing of raw MPEG stream as it already exists or is unnecessary")
+    else:
+        vid_path = None
+        for ext in demuxed_ext:
+            x = f"{os.path.splitext(file_path)[0]}{ext}"
+            if os.path.exists(x) and os.path.isfile(x):
+                vid_path = x
+                break
+        if not vid_path:
+            vid_path = f"{os.path.splitext(file_path)[0]}{demuxed_ext[0]}"
             mkvextract_path = shutil.which("mkvextract")
             if not mkvextract_path:
                 raise RuntimeError(
-                    "pvsfunc.PSourcer: Required binary 'mkvextract' not found. "
+                    "pvsfunc.PSourcer: Executable 'mkvextract' not found, but is needed for the provided file.\n"
                     "Install MKVToolNix and make sure it's binaries are in the environment path."
                 )
             subprocess.run([
@@ -98,18 +111,22 @@ def get_d2v(file_path: str) -> str:
     dgindex_path = shutil.which("DGIndex.exe") or shutil.which("dgindex.exe")
     if not dgindex_path:
         raise RuntimeError(
-            "pvsfunc.PSourcer: This video file will need a required binary 'DGIndex.exe' which isn't found.\n"
-            "tl-dr; add DGIndex.exe to your system path. Ensure the executable is named exactly `DGIndex.exe`.\n"
-            "Windows: Start Menu -> Environment Variables, Add DGIndex's folder to `PATH` variable.\n"
-            "Linux: append to $PATH in /etc/profile, I recommend using `nano /etc/profile.d/env.sh`. Must reboot."
+            "pvsfunc.PSourcer: Executable 'DGIndex.exe' not found, but is needed for the provided file.\n"
+            "Add DGIndex.exe to your system path. Ensure the executable is named exactly `DGIndex.exe`.\n"
+            "Windows: Search Start Menu for 'Environment Variables', Add DGIndex's folder to the `PATH` variable.\n"
+            "Linux: Append to $PATH in /etc/profile.d, I recommend using `nano /etc/profile.d/env.sh`. Must reboot. " +
+            "Make sure DGIndex.exe is marked as executable (chmod +x)."
         )
     args = []
     if dgindex_path.startswith("/"):
-        args.extend(["wine", "start", "/wait", "Z:" + dgindex_path])
+        # required to do it this way for whatever reason. Directly calling it sometimes fails.
+        args.extend(["wine", "start", "/wait", f"Z:{dgindex_path}"])
     else:
         args.extend([dgindex_path])
     args.extend([
-        "-ai" if IS_VOB else "-i", os.path.basename(vid_path),
+        # all the following D2V settings are VERY important
+        # please do not change these unless there's a good verifiable reason
+        "-ai" if is_vob else "-i", os.path.basename(vid_path),
         "-ia", "5",  # iDCT Algorithm, 5=IEEE-1180 Reference
         "-fo", "2",  # Field Operation, 2=Ignore Pulldown Flags
         "-yr", "1",  # YUV->RGB, 1=PC Scale
@@ -118,9 +135,10 @@ def get_d2v(file_path: str) -> str:
         "-o", os.path.splitext(os.path.basename(file_path))[0]
     ])
     subprocess.run(args, cwd=os.path.dirname(file_path))
-    # edit the video path of the d2v file if on linux
+    # Replace the Z:\bla\bla paths to /bla/bla unix paths, if on a unix system.
+    # This is needed simply due to how d2vsource loads the video files. On linux it doesn't use wine,
+    # so Z:\ paths obviously won't exist.
     if dgindex_path.startswith("/"):
-        d2v_content = []
         with open(d2v_path, "rt", encoding="utf-8") as f:
             d2v_content = f.read().splitlines()
         d2v_content = [(x[2:].replace("\\", "/") if x.startswith("Z:\\") else x) for x in d2v_content]
