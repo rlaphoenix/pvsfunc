@@ -1,6 +1,7 @@
 import functools
 import itertools
 import os
+from typing import Union
 
 import vapoursynth as vs
 from pyd2v import D2V
@@ -217,6 +218,36 @@ class PSourcer:
             # why the fuck is there no SetFrameProps, come on...
             # +1: https://github.com/vapoursynth/vapoursynth/issues/559
             self.clip = core.std.SetFrameProp(self.clip, prop=f"PVS{k}", data=v)
+
+    @classmethod
+    def change_chroma_loc(cls, clip: vs.VideoNode, new_loc: Union[int, str], verbose: bool = False):
+        """
+        Change the Chroma Location of the clip. It's a possible case for the chroma location to be incorrect, you can
+        use this to fix it's location. An incorrect chroma location value is often the reason for chroma bleed.
+
+        :param clip: Clip to change chroma location of
+        :param new_loc: New chroma location
+        :param verbose: Print the current and new locations that is changed on each frame
+        """
+        if new_loc is None:
+            return clip
+        elif isinstance(new_loc, int):
+            if 0 > new_loc > 5:
+                raise ValueError("pvsfunc.change_chroma_loc: new_loc must be between 0..5")
+        elif isinstance(new_loc, str):
+            if not new_loc:
+                raise ValueError("pvsfunc.change_chroma_loc: new_loc cannot be an empty string")
+            new_loc = {
+                "top-left": 2, "top": 3,
+                "left": 0, "center": 1,
+                "bottom-left": 4, "bottom": 5
+            }[new_loc]
+        else:
+            raise ValueError("pvsfunc.change_chroma_loc: Unexpected value for new_loc")
+        clip = core.resize.Point(clip, chromaloc=new_loc)
+        if verbose:
+            clip = core.text.Text(clip, f"ChromaLoc: {new_loc}", 3)
+        return clip
 
     @staticmethod
     def _set_flag_props(n, f, c, fl):
