@@ -40,11 +40,11 @@ def get_mime_type(file_path: str) -> str:
         # PSP UMD-VIDEO file
         if file_ext == ".mps":
             return "video/umd"
-        raise ValueError(f"pvsfunc.get_file_type: Unrecognised file extension ({file_ext})")
+        raise ValueError("pvsfunc.get_file_type: Unrecognised file extension (%s)" % file_ext)
     mime_type = mimetypes.types_map[file_ext]
     # ensure that the mime is a video or image file
     if not mime_type.startswith("video/") and not mime_type.startswith("image/"):
-        raise ValueError(f"pvsfunc.get_file_type: Only Video or Image files are supported. ({mime_type})")
+        raise ValueError("pvsfunc.get_file_type: Only Video or Image files are supported. (%s)" % mime_type)
     # return the mime
     return mime_type
 
@@ -77,7 +77,7 @@ def get_video_codec(file_path: str) -> Union[str, int]:
 def get_d2v(file_path: str) -> str:
     """Demux video track and generate a D2V file for it if needed"""
     is_vob = os.path.splitext(file_path)[-1].lower() == ".vob"
-    d2v_path = f"{os.path.splitext(file_path)[0]}.d2v"
+    d2v_path = os.path.splitext(file_path)[0] + ".d2v"
     if os.path.exists(d2v_path):
         print("Skipping generation as a D2V file already exists")
         return d2v_path
@@ -89,12 +89,12 @@ def get_d2v(file_path: str) -> str:
     else:
         vid_path = None
         for ext in demuxed_ext:
-            x = f"{os.path.splitext(file_path)[0]}{ext}"
+            x = os.path.splitext(file_path)[0] + ext
             if os.path.exists(x) and os.path.isfile(x):
                 vid_path = x
                 break
         if not vid_path:
-            vid_path = f"{os.path.splitext(file_path)[0]}{demuxed_ext[0]}"
+            vid_path = os.path.splitext(file_path)[0] + demuxed_ext[0]
             mkvextract_path = shutil.which("mkvextract")
             if not mkvextract_path:
                 raise RuntimeError(
@@ -104,7 +104,7 @@ def get_d2v(file_path: str) -> str:
             subprocess.run([
                 mkvextract_path, os.path.basename(file_path),
                 # todo ; this assumes the track with track-id of 0 is the video, not ideal
-                "tracks", f"0:{os.path.basename(vid_path)}"
+                "tracks", "0:" + os.path.basename(vid_path)
             ], cwd=os.path.dirname(file_path))
     # use dgindex to create a d2v file for the demuxed track
     dgindex_path = shutil.which("DGIndex.exe") or shutil.which("dgindex.exe")
@@ -119,7 +119,7 @@ def get_d2v(file_path: str) -> str:
     args = []
     if dgindex_path.startswith("/"):
         # required to do it this way for whatever reason. Directly calling it sometimes fails.
-        args.extend(["wine", "start", "/wait", f"Z:{dgindex_path}"])
+        args.extend(["wine", "start", "/wait", "Z:" + dgindex_path])
     else:
         args.extend([dgindex_path])
     args.extend([
@@ -156,18 +156,18 @@ def fps_reset(file_path: str) -> str:
     if video_track.original_frame_rate is None:
         # no container-set FPS to remove, return unchanged
         return file_path
-    out_path = f"{file_path}.pfpsreset.mkv"
+    out_path = file_path + ".pfpsreset.mkv"
     if os.path.exists(out_path):
         # an fps reset was already run on this file, re-use
         # todo ; could be dangerous, user might just make a file named this :/
         return out_path
     if video_track.framerate_original_num and video_track.framerate_original_den:
-        original_fps = f"{video_track.framerate_original_num}/{video_track.framerate_original_den}"
+        original_fps = "%d/%d" % (video_track.framerate_original_num, video_track.framerate_original_den)
     else:
         original_fps = video_track.original_frame_rate
     subprocess.check_output([
         "mkvmerge", "--output", out_path,
-        "--default-duration", f"{video_track.track_id - 1}:{original_fps}fps",
+        "--default-duration", "%d:%sfps" % (video_track.track_id - 1, original_fps),
         file_path
     ], cwd=os.path.dirname(file_path))
     return out_path
@@ -181,7 +181,7 @@ def gcd(a, b):
 def calculate_aspect_ratio(width: int, height: int) -> str:
     """Calculate the aspect-ratio gcd string from resolution"""
     r = gcd(width, height)
-    return f"{int(width / r)}:{int(height / r)}"
+    return "%d:%d" % (int(width / r), int(height / r))
 
 
 def calculate_par(width: int, height: int, aspect_ratio_w: int, aspect_ratio_h: int) -> str:
@@ -191,4 +191,4 @@ def calculate_par(width: int, height: int, aspect_ratio_w: int, aspect_ratio_h: 
     par_gcd = gcd(par_w, par_h)
     par_w = int(par_w / par_gcd)
     par_h = int(par_h / par_gcd)
-    return f"{par_w}:{par_h}"
+    return "%d:%d" % (par_w, par_h)
