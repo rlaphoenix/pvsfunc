@@ -2,12 +2,13 @@
 
 pvsfunc (PHOENiX's VapourSynth Functions) is my compilation of VapourSynth Script's, Functions, and Helpers.
 
-[<img src="https://img.shields.io/badge/python-3.6%2B-informational?style=flat" alt="Python Version" />](https://python.org)
-[<img alt="GitHub license" src="https://img.shields.io/github/license/rlaPHOENiX/pvsfunc?style=flat" alt="License" />](https://github.com/rlaPHOENiX/pvsfunc/blob/master/LICENSE)
-[<img src="https://codefactor.io/repository/github/rlaphoenix/pvsfunc/badge" alt="CodeFactor" />](https://codefactor.io/repository/github/rlaphoenix/pvsfunc)
-[<img src="https://api.codacy.com/project/badge/Grade/574e843d9e044dcbbc2743cd8092148a" alt="Codacy" />](https://codacy.com/manual/rlaPHOENiX/pvsfunc?utm_source=github.com&utm_medium=referral&utm_content=rlaPHOENiX/pvsfunc&utm_campaign=Badge_Grade)
-[<img src="https://img.shields.io/github/issues/rlaPHOENiX/pvsfunc?style=flat" alt="GitHub Issues" />](https://github.com/rlaPHOENiX/pvsfunc/issues)
-<a href="https://makeapullrequest.com"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat"></a>
+[![Build Tests](https://img.shields.io/github/workflow/status/rlaPHOENiX/pvsfunc/Version%20test?label=Python%203.5%2B%20builds)](https://github.com/rlaPHOENiX/pvsfunc/actions?query=workflow%3A%22Version+test%22)
+[![License](https://img.shields.io/github/license/rlaPHOENiX/pvsfunc?style=flat)](https://github.com/rlaPHOENiX/pvsfunc/blob/master/LICENSE)
+[![DeepSource](https://deepsource.io/gh/rlaPHOENiX/pvsfunc.svg/?label=active+issues&show_trend=true)](https://deepsource.io/gh/rlaPHOENiX/pvsfunc/?ref=repository-badge)
+[![Issues](https://img.shields.io/github/issues/rlaPHOENiX/pvsfunc?style=flat)](https://github.com/rlaPHOENiX/pvsfunc/issues)
+[![PR's Accepted](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)](https://makeapullrequest.com)
+
+* * *
 
 ## Installation
 
@@ -39,6 +40,39 @@ Information for Linux users:
 **†2** Only used if you're providing a file that isnt a .mpeg, .mpg, or .m2v (e.g. mkv, mp4) and there's no corresponding .d2v file. For efficiency and safety files are demuxed out of the container so DGIndex is reading a direct MPEG stream.
 
 **†3** Will only be used if the container has a manual frame rate set that differs to the encoded frame rate. For L-SMASH-WORKS to index the file with the correct source frame rate. PSourcer uses mkvmerge to re-mux the file, with the container-set FPS removed.
+
+* * *
+
+## Building
+
+This project is firmly requiring the use of Python PIP with [PEP 517][pep517] support. This means you need `pip >= 19`
+[(ref)][pip19].
+
+Considering version `19.0` released on the 22nd of January 2019, it isn't much of an ask in my opinion, when you end up
+with an overall much smoother build experience.
+
+Once you have pip with PEP 517 support, it's as simple as 3 calls:
+
+    pip install build
+    git clone https://github.com/rlaPHOENiX/pvsfunc && cd pvsfunc
+    python -m build
+
+To install the built project, install the .whl file available in /dist, e.g. `pip install dist/*.whl`
+
+If you want to simply install from the source, instead of `python -m build` run `pip install .`
+
+[pep517]: https://www.python.org/dev/peps/pep-0517
+
+[pip19]: https://pip.pypa.io/en/stable/news/#id415
+
+* * *
+
+## License
+
+This project is released under the GNU GENERAL PUBLIC LICENSE Version 3 (GPLv3) license.
+Please read and agree to the license before use, it can be found in the [LICENSE](LICENSE) file.
+
+* * *
 
 ## Documentation
 
