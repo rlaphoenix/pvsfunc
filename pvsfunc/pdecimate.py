@@ -57,9 +57,9 @@ class PDecimate:
             self.clip = self._decimate(self.clip, mode, cycle, offsets, debug)
 
     @staticmethod
-    def _decimate(clip, mode, cycle, offsets, debug):
+    def _decimate(clip, mode: int, cycle: int, offsets: list[int], debug: bool = False):
         if mode < 0 or mode > 1:
-            raise ValueError(f"pvsfunc.decimate: Incorrect mode ({mode}), it must be an int value between 0-1")
+            raise ValueError("pvsfunc.decimate: Incorrect mode (%d), it must be an int value between 0-1" % mode)
         if mode == 0:
             if isinstance(cycle, list):
                 cycle = cycle[0]
@@ -72,8 +72,10 @@ class PDecimate:
                     functools.partial(
                         lambda n, f, c: core.text.Text(
                             c,
-                            f" mode={mode} cycle={cycle} offsets={offsets} fps={res.fps.numerator}/{res.fps.denominator} \n"
-                            f" offset={n % cycle} decimate={(n % cycle) not in offsets} \n",
+                            " mode=%d cycle=%d offsets=%s fps=%d/%d \n" % (
+                                mode, cycle, offsets, res.fps.numerator, res.fps.denominator
+                            ) +
+                            " offset=%d decimate=%s \n" % (n % cycle, (n % cycle) not in offsets),
                             alignment=1
                         ),
                         c=clip
@@ -88,9 +90,9 @@ class PDecimate:
                     functools.partial(
                         lambda n, f, c: core.text.Text(
                             c,
-                            f" mode={mode} cycle={cycle} \n"
+                            " mode=%d cycle=%d \n"
                             " Important: Please consider another mode. More information: git.io/avoid-tdecimate. \n"
-                            f" decimated_frame={f.props['VDecimateDrop'] == 1} \n",
+                            " decimated_frame=%s \n" % (mode, cycle, f.props['VDecimateDrop'] == 1),
                             alignment=1
                         ),
                         c=clip
