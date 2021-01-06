@@ -1,4 +1,3 @@
-import mimetypes
 import os
 import shutil
 import subprocess
