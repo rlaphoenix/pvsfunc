@@ -38,7 +38,7 @@ class PDeinterlacer:
             "core.lsmas.LWLibavSource": self._lsmash,
             "core.ffms2.Source": self._ffms2,
             "core.imwri.Read": lambda c: c  # NOP
-        }.get(sourcer, None)
+        }.get(sourcer)
         if self.handler is None:
             raise NotImplementedError("pvsfunc.PDeinterlacer: No sourcer is defined for the given media stream")
         self.clip = self.handler(self.clip)
@@ -76,7 +76,7 @@ class PDeinterlacer:
         deinterlaced_tff, deinterlaced_bff = self._get_kernel(clip)
         fps_factor = deinterlaced_tff.fps.numerator / deinterlaced_tff.fps.denominator
         fps_factor = fps_factor / (clip.fps.numerator / clip.fps.denominator)
-        if fps_factor != 1.0 and fps_factor != 2.0:
+        if fps_factor not in (1.0, 2.0):
             raise ValueError(
                 "pvsfunc.PDeinterlacer: The deinterlacer kernel returned an unsupported frame-rate (%s). "
                 "Only single-rate and double-rate is supported with PDeinterlacer at the moment." % deinterlaced_tff.fps

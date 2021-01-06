@@ -58,8 +58,6 @@ class PDecimate:
 
     @staticmethod
     def _decimate(clip, mode: int, cycle: int, offsets: list[int], debug: bool = False):
-        if mode < 0 or mode > 1:
-            raise ValueError("pvsfunc.decimate: Incorrect mode (%d), it must be an int value between 0-1" % mode)
         if mode == 0:
             if isinstance(cycle, list):
                 cycle = cycle[0]
@@ -100,3 +98,4 @@ class PDecimate:
                     prop_src=core.vivtc.VDecimate(clip, cycle=cycle, dryrun=True)
                 )
             return core.vivtc.VDecimate(clip, cycle=cycle)
+        raise ValueError("pvsfunc.decimate: Incorrect mode (%d), it must be an int value between 0-1" % mode)

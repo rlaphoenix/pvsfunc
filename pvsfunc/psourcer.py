@@ -67,7 +67,7 @@ class PSourcer:
         self.d2v = None
         if self.video_codec == -1:
             raise ValueError("pvsfunc.PSourcer: File path supplied does not exist")
-        elif self.video_codec == -2:
+        if self.video_codec == -2:
             raise ValueError("pvsfunc.PSourcer: File supplied does not have a Video or Image track")
         if self.mime_type.startswith("image/"):
             # we do this after get_video_codec so it checks if an image
@@ -238,22 +238,20 @@ class PSourcer:
         """
         if new_loc is None:
             return clip
-        elif isinstance(new_loc, int):
-            if 0 > new_loc > 5:
-                raise ValueError("pvsfunc.change_chroma_loc: new_loc must be between 0..5")
-        elif isinstance(new_loc, str):
-            if not new_loc:
-                raise ValueError("pvsfunc.change_chroma_loc: new_loc cannot be an empty string")
+        if isinstance(new_loc, str):
             new_loc = {
                 "top-left": 2, "top": 3,
                 "left": 0, "center": 1,
                 "bottom-left": 4, "bottom": 5
-            }[new_loc]
-        else:
-            raise ValueError("pvsfunc.change_chroma_loc: Unexpected value for new_loc")
+            }.get(new_loc.replace(" ", "-").replace("_", "-"), None)
+        if not isinstance(new_loc, int) or (isinstance(new_loc, int) and 0 > new_loc > 5):
+            raise ValueError(
+                "pvsfunc.change_chroma_loc: new_loc must be an int between 0..5, "
+                "or a string denoting the location, e.g. top-left, center, bottom..."
+            )
         clip = core.resize.Point(clip, chromaloc=new_loc)
         if verbose:
-            clip = core.text.Text(clip, "ChromaLoc: %d" % new_loc, 3)
+            return core.text.Text(clip, "ChromaLoc: %d" % new_loc, 3)
         return clip
 
     @staticmethod
