@@ -78,14 +78,16 @@ Please read and agree to the license before use, it can be found in the [LICENSE
 
 | Class                                           | Import                                            |
 | ----------------------------------------------- | ------------------------------------------------- |
-| [PSourcer](#psourcer-psourcerpy)                | `from pvsfunc.psourcer import PSourcer`           |
-| [PDeinterlacer](#pdeinterlacer-pdeinterlacerpy) | `from pvsfunc.pdeinterlacer import PDeinterlacer` |
+| [PSourcer](#psourcer-psourcerpy)                | `from pvsfunc import PSourcer`                    |
+| [PDeinterlacer](#pdeinterlacer-pdeinterlacerpy) | `from pvsfunc import PDeinterlacer`               |
+| [PDecimate](#pdecimate-pdecimatepy)             | `from pvsfunc import PDecimate`                   |
+| [PDebox](#pdebox-pdeboxpy)                      | `from pvsfunc import PDebox`                      |
 
 ### PSourcer ([psourcer.py](/pvsfunc/psourcer.py))
 
 PSourcer (class) is a convenience wrapper for loading video files to clip variables. It's purpose is to load an input file path with the most optimal clip source based on the file. For example for an MPEG-2 video file (e.g. DVD file) will load using `core.d2v.Source` (and generate an optimized d2v if needed too!), whereas an MPEG-4/AVC/H.264 video will load using `core.lsmas.LWLibavSource`.
 
-`from pvsfunc.psourcer import PSourcer`  
+`from pvsfunc import PSourcer`  
 `PSourcer(str file_path[, bool debug=False])`
 
 -   file_path: Path to a file to import. Don't worry about which type of container (if any) you use.
@@ -97,7 +99,7 @@ PDeinterlacer (class) is a convenience wrapper for deinterlacing clips. Its uniq
 
 Just to clarify this is a deinterlacer wrapper, not it's own deinterlacer kernel. You must supply it with a kernel to use. To reduce dependencies, no base kernel is defaulted.
 
-`from pvsfunc.pdeinterlacer import PDeinterlacer`  
+`from pvsfunc import PDeinterlacer`  
 `PDeinterlacer(clip, func kernel[, dict kernel_args=None, bool debug=False])`
 
 -   clip: Clip to deinterlace, this must be a clip loaded with PSourcer as it requires some of the props that PSourcer applies to clips.
@@ -109,7 +111,7 @@ Just to clarify this is a deinterlacer wrapper, not it's own deinterlacer kernel
 
 PDecimate (class) is a convenience wrapper for Decimating operations. It can be used to delete frames in a variable or constant pattern, either by manual definition or by automated means (via VDecimate however, <https://git.io/avoid-tdecimate>). Decimation is often used for IVTC purposes to remove constant pattern pulldown frames (duplicate frames for changing frame rate).
 
-`from pvsfunc.pdecimate import PDecimate`  
+`from pvsfunc import PDecimate`  
 `PDecimate(clip, int cycle, list<int> offsets[, per_vob_id=True, mode=0, debug=False])`
 
 -   clip: Clip to decimate, this must be a clip loaded with PSourcer as it requires some of the props that PSourcer applies to clips.
@@ -123,7 +125,7 @@ PDecimate (class) is a convenience wrapper for Decimating operations. It can be 
 
 PDebox (class) is a convenience wrapper for Deboxing operations. Ever encounter sources where there's black bars on the top and bottom, sides, or both? That means it's Letterboxed, Pillarboxed, or Windowboxed respectively. PDebox helps you remove Letterboxing and Pillarboxing, and through that Windowboxing too.
 
-`from pvsfunc.pdebox import PDebox`  
+`from pvsfunc import PDebox`  
 `PDebox(clip, str aspect_ratio, [int mode=0, offset=0])`
 
 -   clip: Clip to debox.
