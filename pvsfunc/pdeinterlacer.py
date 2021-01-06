@@ -27,7 +27,7 @@ class PDeinterlacer:
         if sourcer == "core.imwri.Read":
             # todo ; add support for deinterlacing image data (somehow)
             print("pvsfunc.PDeinterlacer: Warning: This source is a clip of images and cannot be deinterlaced")
-        elif sourcer in ["core.ffms2.Source", "core.lsmas.LWLibavSource"]:
+        elif sourcer in ["core.lsmas.LWLibavSource"]:
             if "FPSDivisor" in kernel_args and kernel_args["FPSDivisor"] != 2:
                 # todo ; ideally make this unnecessary
                 raise ValueError(
@@ -36,7 +36,6 @@ class PDeinterlacer:
         self.handler = {
             "core.d2v.Source": self._d2v,
             "core.lsmas.LWLibavSource": self._lsmash,
-            "core.ffms2.Source": self._ffms2,
             "core.imwri.Read": lambda c: c  # NOP
         }.get(sourcer)
         if self.handler is None:
@@ -120,9 +119,9 @@ class PDeinterlacer:
             prop_src=clip
         )
 
-    def _ffms2(self, clip):
+    def _lsmash(self, clip):
         """
-        Deinterlace using ffms2 (ffmpeg) using a basic FieldBased!=0 => QTGMC method
+        Deinterlace using lsmas (lsmash) using a basic FieldBased!=0 => QTGMC method
         """
         deinterlaced_tff, deinterlaced_bff = self._get_kernel(clip)
         return core.std.FrameEval(
@@ -143,12 +142,6 @@ class PDeinterlacer:
             ),
             prop_src=clip
         )
-
-    def _lsmash(self, clip):
-        """
-        Deinterlace using lsmas (lsmash) using a basic FieldBased!=0 => QTGMC method
-        """
-        return self._ffms2(clip)  # same method as ffms2
 
     @classmethod
     def RGBtoYUV(cls, r, g, b):
