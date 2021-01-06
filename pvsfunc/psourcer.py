@@ -1,5 +1,6 @@
 import functools
 import itertools
+import mimetypes
 import os
 from typing import Union
 
@@ -7,8 +8,8 @@ import vapoursynth as vs
 from pyd2v import D2V
 from vapoursynth import core
 
-from pvsfunc.helpers import anti_file_prefix, get_mime_type, get_video_codec, get_d2v, fps_reset, \
-    calculate_par, calculate_aspect_ratio
+from pvsfunc.helpers import anti_file_prefix, get_video_codec, get_d2v, fps_reset, calculate_par, \
+    calculate_aspect_ratio
 
 CODEC_SOURCER_MAP = {
     "IMAGE": "core.imwri.Read",
@@ -61,7 +62,10 @@ class PSourcer:
         self.debug = debug
         self.clip = None
         self.file_path = anti_file_prefix(file_path)
-        self.mime_type = get_mime_type(self.file_path)
+        # if unknown mime type, assume video, I don't want to constantly update a whitelist
+        self.file_type = mimetypes.guess_type(self.file_path)[0] or "video"
+        if self.file_type not in ("video", "image"):
+            raise ValueError("pvsfunc.PSourcer: Only Video or Image files are supported. (%s)" % self.file_type)
         self.video_codec = get_video_codec(self.file_path)
         # core.d2v.Source specific
         self.d2v = None
@@ -69,7 +73,7 @@ class PSourcer:
             raise ValueError("pvsfunc.PSourcer: File path supplied does not exist")
         if self.video_codec == -2:
             raise ValueError("pvsfunc.PSourcer: File supplied does not have a Video or Image track")
-        if self.mime_type.startswith("image/"):
+        if self.file_type == "image":
             # we do this after get_video_codec so it checks if an image
             # track actually exists, and not just an empty image container
             self.video_codec = "IMAGE"
