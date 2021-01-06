@@ -129,7 +129,7 @@ def fps_reset(file_path: str) -> str:
         # todo ; could be dangerous, user might just make a file named this :/
         return out_path
     if video_track.framerate_original_num and video_track.framerate_original_den:
-        original_fps = "%d/%d" % (video_track.framerate_original_num, video_track.framerate_original_den)
+        original_fps = "%s/%s" % (video_track.framerate_original_num, video_track.framerate_original_den)
     else:
         original_fps = video_track.original_frame_rate
     subprocess.check_output([
