@@ -20,7 +20,6 @@ class PDecimate:
         :param debug: Skip decimation and print debugging information. Useful to check if the frames that the cycle
         and offset settings you have provided are correct and actually decimate the right frames.
         """
-
         self.clip = clip
         self.cycle = cycle
         self.offsets = offsets

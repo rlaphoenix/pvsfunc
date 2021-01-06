@@ -141,7 +141,7 @@ def fps_reset(file_path: str) -> str:
 
 
 def gcd(a, b):
-    """The GCD (greatest common divisor) is the highest number that evenly divides both width and height."""
+    """Calculate the GCD (greatest common divisor); the highest number that evenly divides both width and height."""
     return a if b == 0 else gcd(b, a % b)
 
 

@@ -2,6 +2,7 @@ from vapoursynth import core
 
 
 class PDebox:
+    """PDebox (PHOENiX Debox)."""
 
     def __init__(self, clip, aspect_ratio, mode=0, offset=0):
         """

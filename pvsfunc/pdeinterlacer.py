@@ -7,7 +7,7 @@ from vapoursynth import core
 
 class PDeinterlacer:
     """
-    PDeinterlacer (PHOENiX Deinterlacer)
+    PDeinterlacer (PHOENiX Deinterlacer).
     Deinterlaces a clip with the most optimal wrapping based on the sourcer.
     The clip will need to be loaded from PSourcer to work as it needs it's Props.
     """
@@ -148,14 +148,6 @@ class PDeinterlacer:
         )
 
     @classmethod
-    def RGBtoYUV(cls, r, g, b):
-        return [
-            (0.257 * r) + (0.504 * g) + (0.098 * b) + 16,
-            -(0.148 * r) - (0.291 * g) + (0.439 * b) + 128,
-            (0.439 * r) - (0.368 * g) - (0.071 * b) + 128
-        ]
-
-    @classmethod
     def VoidWeave(cls, clip: vs.VideoNode, tff: bool, color: List[Union[int, float]],
                   bob: bool = False) -> vs.VideoNode:
         """
@@ -171,12 +163,9 @@ class PDeinterlacer:
         actual field clip to be able to weave them together.
         """
         # colors
-        # help needed ; figure out a way to get this working without having to convert color-space at all
-        # the if color family == YUV RGBtoYUV call is always NOP until then
+        # TODO: figure out a way to get this working without having to convert color-space at all
         if clip.format.name != "RGB24":
             clip = core.resize.Point(clip, format=vs.RGB24)
-        if clip.format.color_family.name == "YUV":
-            color = cls.RGBtoYUV(*color)
         # weave
         clip = core.std.SeparateFields(clip, tff=tff)
         clip = core.std.Interleave([
