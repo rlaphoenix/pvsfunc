@@ -243,7 +243,7 @@ class PSourcer:
                 "top-left": 2, "top": 3,
                 "left": 0, "center": 1,
                 "bottom-left": 4, "bottom": 5
-            }.get(new_loc.replace(" ", "-").replace("_", "-"), None)
+            }.get(new_loc.replace(" ", "-").replace("_", "-"))
         if not isinstance(new_loc, int) or (isinstance(new_loc, int) and 0 > new_loc > 5):
             raise ValueError(
                 "pvsfunc.change_chroma_loc: new_loc must be an int between 0..5, "

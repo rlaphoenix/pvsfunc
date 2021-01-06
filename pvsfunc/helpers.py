@@ -105,7 +105,7 @@ def get_d2v(file_path: str) -> str:
                 mkvextract_path, os.path.basename(file_path),
                 # todo ; this assumes the track with track-id of 0 is the video, not ideal
                 "tracks", "0:" + os.path.basename(vid_path)
-            ], cwd=os.path.dirname(file_path))
+            ], cwd=os.path.dirname(file_path), check=True)
     # use dgindex to create a d2v file for the demuxed track
     dgindex_path = shutil.which("DGIndex.exe") or shutil.which("dgindex.exe")
     if not dgindex_path:
@@ -133,7 +133,7 @@ def get_d2v(file_path: str) -> str:
         "-hide", "-exit",  # start hidden and exit when saved
         "-o", os.path.splitext(os.path.basename(file_path))[0]
     ])
-    subprocess.run(args, cwd=os.path.dirname(file_path))
+    subprocess.run(args, cwd=os.path.dirname(file_path), check=True)
     # Replace the Z:\bla\bla paths to /bla/bla unix paths, if on a unix system.
     # This is needed simply due to how d2vsource loads the video files. On linux it doesn't use wine,
     # so Z:\ paths obviously won't exist.
