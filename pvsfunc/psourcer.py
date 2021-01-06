@@ -182,7 +182,9 @@ class PSourcer:
                 prop_src=self.clip
             )
             vob_indexes = [index for _, index in {f["vob"]: n for n, f in enumerate(flags)}.items()]
-            vob_indexes = [f"{(0 if n == 0 else (vob_indexes[n - 1] + 1))}-{i}" for n, i in enumerate(vob_indexes)]
+            vob_indexes = [
+                "%d-%d" % ((0 if n == 0 else (vob_indexes[n - 1] + 1)), i) for n, i in enumerate(vob_indexes)
+            ]
             self.clip = core.std.SetFrameProp(self.clip, prop="PVSVobIdIndexes", data=" ".join(vob_indexes))
             if self.debug:
                 # fps
@@ -200,12 +202,17 @@ class PSourcer:
                 self.clip = core.text.Text(
                     self.clip,
                     " " + (" \n ".join([
-                        f"{os.path.basename(self.file_path)}",
-                        f"Loaded with {str(self.sourcer)}",
-                        f"- {coded_pictures:,} coded pictures, which {progressive_percent:.2f}% of are Progressive",
-                        f"- {pulldown_count:,} frames are asking for pulldown{f' which occurs every {pulldown_cycle} frames' if pulldown_cycle else ''}",
-                        f"- {coded_pictures + pulldown_count:,} total frames after pulldown flags are honored",
-                        f"DAR: {dar}  SAR: {sar}  PAR: {par}  FPS: {fps}"
+                        os.path.basename(self.file_path),
+                        "Loaded with %s" % self.sourcer,
+                        "- {:,d} coded pictures, which {:.2f}% of are Progressive".format(
+                            coded_pictures, progressive_percent
+                        ),
+                        "- {:,d} frames are asking for pulldown{:s}".format(
+                            pulldown_count,
+                            ' which occurs every {:,d} frames'.format(pulldown_cycle) if pulldown_cycle else ''
+                        ),
+                        "- {:,d} total frames after pulldown flags are honored".format(coded_pictures + pulldown_count),
+                        "DAR: %s  SAR: %s  PAR: %s  FPS: %s" % (dar, sar, par, fps)
                     ])) + " ",
                     alignment=7
                 )
@@ -217,7 +224,7 @@ class PSourcer:
         ]:
             # why the fuck is there no SetFrameProps, come on...
             # +1: https://github.com/vapoursynth/vapoursynth/issues/559
-            self.clip = core.std.SetFrameProp(self.clip, prop=f"PVS{k}", data=v)
+            self.clip = core.std.SetFrameProp(self.clip, prop="PVS" + k, data=v)
 
     @classmethod
     def change_chroma_loc(cls, clip: vs.VideoNode, new_loc: Union[int, str], verbose: bool = False):
@@ -246,7 +253,7 @@ class PSourcer:
             raise ValueError("pvsfunc.change_chroma_loc: Unexpected value for new_loc")
         clip = core.resize.Point(clip, chromaloc=new_loc)
         if verbose:
-            clip = core.text.Text(clip, f"ChromaLoc: {new_loc}", 3)
+            clip = core.text.Text(clip, "ChromaLoc: %d" % new_loc, 3)
         return clip
 
     @staticmethod
@@ -258,5 +265,5 @@ class PSourcer:
                 value = value.decode("utf-8")
             c = core.std.SetFrameProp(c, **{
                 ("intval" if isinstance(value, int) else "data"): value
-            }, prop=f"PVSFlag{key.title().replace('_', '')}")
+            }, prop="PVSFlag%s" % key.title().replace("_", ""))
         return c[n]
