@@ -44,15 +44,13 @@ class PDeinterlacer:
 
     def _get_kernel(self, clip) -> tuple:
         """
-        Apply the deinterlacing kernel to the provided clip for both
-        TFF and BFF output. The Kernel function will be provided a
-        True/False value to the "TFF" argument if any.
+        Apply the deinterlacing kernel to the provided clip for both TFF and BFF output.
 
-        Expecting a TFF argument (case-insensitive), it must be present.
-        If the function truly doesn't need it (what??) then wrap it in a lambda, e.g.
-        lambda clip, TFF: yourWeirdFunc(clip)
+        The Kernel function will be provided a True/False value to the "TFF". A "TFF" argument on the kernel
+        function is required, but is not case sensitive. If the function truly doesn't need a field order specification
+        then wrap it in a lambda, e.g. `lambda clip, tff: yourWeirdFunc(clip)`
 
-        Returns 2 clips, one for TFF operations, and one for BFF operations
+        Returns 2 clips, one for TFF operations, and one for BFF operations.
         """
         field_order_arg = [x for x in self.kernel.__code__.co_varnames if x.lower() == "tff"]
         if field_order_arg:
@@ -65,11 +63,12 @@ class PDeinterlacer:
 
     def _d2v(self, clip):
         """
-        Very accurate deinterlacing using raw frame metadata to know what to
-        deinterlace when necessary. It even fixes the frame rates of progressive
-        streams and converts VFR to CFR when necessary.
+        Deinterlace clips that are loaded with core.d2v.Source.
+        It only deinterlaces frames that need to be deinterlaced. It entirely skips frames marked as progressive.
+        It uses DGIndex internally to handle frame indexing as no other Frame indexer I have tested comes anywhere
+        as close as DGIndex's usability and accuracy.
 
-        For MPEG2, this is as good as it gets in terms of using a deinterlacer.
+        Typically used for MPEG Format version 1 and 2 video sources.
         """
         # 1. create a clip from the output of the kernel deinterlacer
         deinterlaced_tff, deinterlaced_bff = self._get_kernel(clip)
@@ -121,7 +120,12 @@ class PDeinterlacer:
 
     def _lsmash(self, clip):
         """
-        Deinterlace using lsmas (lsmash) using a basic FieldBased!=0 => QTGMC method
+        Deinterlace clips that are loaded with core.lsmas.LWLibavSource.
+        It only deinterlaces frames that need to be deinterlaced. It entirely skips frames marked as progressive.
+        However, this isn't as perfect as the _d2v method, as it doesn't manually use the frame index data. Instead
+        it assumes LWLibavSource has done it correctly, and assumes it did it at all.
+
+        Typically used for AVC/MPEG-4/H.264 or HEVC/H.265 video sources.
         """
         deinterlaced_tff, deinterlaced_bff = self._get_kernel(clip)
         return core.std.FrameEval(

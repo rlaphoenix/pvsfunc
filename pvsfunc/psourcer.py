@@ -38,7 +38,7 @@ SOURCER_ARGS_MAP = {
 
 class PSourcer:
     """
-    PSourcer (PHOENiX Sourcer)
+    PSourcer (PHOENiX Sourcer).
     Loads an input file path with the most optimal clip source based on the file.
     This is mainly a wrapper function for my other classes and functions of pvsfunc.
     The sourcer (and it's arguments) are based on my own personal opinions.
@@ -233,9 +233,9 @@ class PSourcer:
     @classmethod
     def change_chroma_loc(cls, clip: vs.VideoNode, new_loc: Union[int, str], verbose: bool = False):
         """
-        Change the Chroma Location of the clip. It's a possible case for the chroma location to be incorrect, you can
-        use this to fix it's location. An incorrect chroma location value is often the reason for chroma bleed.
-
+        Change the Chroma Location of the clip.
+        It's a possible case for the chroma location to be incorrect, you can use this to fix it's location
+        An incorrect chroma location value is often the reason for chroma bleed.
         :param clip: Clip to change chroma location of
         :param new_loc: New chroma location
         :param verbose: Print the current and new locations that is changed on each frame

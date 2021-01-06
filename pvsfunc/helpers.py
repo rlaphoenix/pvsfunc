@@ -7,7 +7,7 @@ from pymediainfo import MediaInfo
 
 
 def anti_file_prefix(path: str) -> str:
-    """Remove prefixed 'file://' from path"""
+    """Remove prefixed 'file://' from path."""
     if path.lower().startswith("file://"):
         path = path[7:]
         if os.name == "nt":
@@ -18,7 +18,7 @@ def anti_file_prefix(path: str) -> str:
 
 def get_video_codec(file_path: str) -> Union[str, int]:
     """
-    Get video codec using MediaInfo
+    Get video codec using MediaInfo.
     :param file_path: Path to a video or image file
     :returns: -1 if file does not exist,
               -2 if no Video or Image track in the file exists
@@ -42,7 +42,7 @@ def get_video_codec(file_path: str) -> Union[str, int]:
 
 
 def get_d2v(file_path: str) -> str:
-    """Demux video track and generate a D2V file for it if needed"""
+    """Demux video track and generate a D2V file for it if needed."""
     is_vob = os.path.splitext(file_path)[-1].lower() == ".vob"
     d2v_path = os.path.splitext(file_path)[0] + ".d2v"
     if os.path.exists(d2v_path):
@@ -115,7 +115,7 @@ def get_d2v(file_path: str) -> str:
 
 
 def fps_reset(file_path: str) -> str:
-    """Remove container-set FPS to only have the encoded FPS"""
+    """Remove container-set FPS to only have the encoded FPS."""
     video_tracks = [x for x in MediaInfo.parse(file_path).tracks if x.track_type == "Video"]
     if not video_tracks:
         raise Exception("File does not have a video track, removing container-set FPS isn't possible.")
@@ -146,13 +146,13 @@ def gcd(a, b):
 
 
 def calculate_aspect_ratio(width: int, height: int) -> str:
-    """Calculate the aspect-ratio gcd string from resolution"""
+    """Calculate the aspect-ratio gcd string from resolution."""
     r = gcd(width, height)
     return "%d:%d" % (int(width / r), int(height / r))
 
 
 def calculate_par(width: int, height: int, aspect_ratio_w: int, aspect_ratio_h: int) -> str:
-    """Calculate the pixel-aspect-ratio string from resolution"""
+    """Calculate the pixel-aspect-ratio string from resolution."""
     par_w = height * aspect_ratio_w
     par_h = width * aspect_ratio_h
     par_gcd = gcd(par_w, par_h)

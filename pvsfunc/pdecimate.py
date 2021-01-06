@@ -4,9 +4,7 @@ from vapoursynth import core
 
 
 class PDecimate:
-    """
-    PDecimate (PHOENiX Decimate)
-    """
+    """PDecimate (PHOENiX Decimate)."""
 
     def __init__(self, clip, cycle, offsets, per_vob_id=True, mode=0, debug=False):
         """
