@@ -31,7 +31,7 @@ class PDeinterlacer:
             if "FPSDivisor" in kernel_args and kernel_args["FPSDivisor"] != 2:
                 # todo ; ideally make this unnecessary
                 raise ValueError(
-                    f"pvsfunc.PDeinterlacer: {sourcer} only supports QTGMC single-rate output (FPSDivisor=2)"
+                    "pvsfunc.PDeinterlacer: %s only supports QTGMC single-rate output (FPSDivisor=2)" % sourcer
                 )
         self.handler = {
             "core.d2v.Source": self._d2v,
@@ -40,7 +40,7 @@ class PDeinterlacer:
             "core.imwri.Read": lambda c: c  # NOP
         }.get(sourcer, None)
         if self.handler is None:
-            raise NotImplementedError(f"pvsfunc.PDeinterlacer: No sourcer is defined for the given media stream")
+            raise NotImplementedError("pvsfunc.PDeinterlacer: No sourcer is defined for the given media stream")
         self.clip = self.handler(self.clip)
 
     def _get_kernel(self, clip) -> tuple:
@@ -78,15 +78,15 @@ class PDeinterlacer:
         fps_factor = fps_factor / (clip.fps.numerator / clip.fps.denominator)
         if fps_factor != 1.0 and fps_factor != 2.0:
             raise ValueError(
-                f"pvsfunc.PDeinterlacer: The deinterlacer kernel returned an unsupported frame-rate ({deinterlaced_tff.fps}). "
-                "Only single-rate and double-rate is supported with PDeinterlacer at the moment."
+                "pvsfunc.PDeinterlacer: The deinterlacer kernel returned an unsupported frame-rate (%s). "
+                "Only single-rate and double-rate is supported with PDeinterlacer at the moment." % deinterlaced_tff.fps
             )
         fps_factor = int(fps_factor)
 
         # 2. ensure the color families between tff and bff kernel uses match
         if deinterlaced_tff.format.id != deinterlaced_bff.format.id:
             raise ValueError(
-                f"pvsfunc.PDeinterlacer: The kernel used supplied different color space outputs between TFF and BFF usage."
+                "pvsfunc.PDeinterlacer: The kernel supplied different color space outputs between TFF and BFF usage."
             )
 
         # 3. deinterlace whats interlaced
@@ -94,18 +94,18 @@ class PDeinterlacer:
             # compile debug information to print if requested
             debug_info = None
             if self.debug:
-                debug_info = f"VOB: {f.props['PVSFlagVob']}:{f.props['PVSFlagCell']} - Frame #{n:,}"
+                debug_info = "VOB: {:,d}:{:,d} - Frame #{:,d}".format(f.props['PVSFlagVob'], f.props['PVSFlagCell'], n)
             # progressive frame, simply skip deinterlacing
             if f.props["PVSFlagProgressiveFrame"]:
                 rc = core.std.Interleave([c] * ff) if ff > 1 else c  # duplicate if not a single-rate fps output
                 if rc.format.id != d_tff.format.id:
                     rc = core.resize.Point(rc, format=d_tff.format.id)
-                return core.text.Text(rc, f" {debug_info} - Progressive ", alignment=1) if self.debug else rc
+                return core.text.Text(rc, " %s - Progressive " % debug_info, alignment=1) if self.debug else rc
             # interlaced frame, use deinterlaced clip, d_tff if TFF (2) or d_bff if BFF (1)
             rc = {0: c, 1: d_bff, 2: d_tff}[f.props["_FieldBased"]]
             if self.debug:
                 field_order = {0: "Progressive", 1: "BFF", 2: "TFF"}[f.props["_FieldBased"]]
-                return core.text.Text(rc, f" {debug_info} - Deinterlaced ({field_order} ", alignment=1)
+                return core.text.Text(rc, " %s - Deinterlaced (%s) " % (debug_info, field_order), alignment=1)
             return rc
 
         return core.std.FrameEval(
@@ -174,7 +174,7 @@ class PDeinterlacer:
         actual field clip to be able to weave them together.
         """
         # colors
-        # help needed ; figure out a way to get this working without having to convert colorspace at all
+        # help needed ; figure out a way to get this working without having to convert color-space at all
         # the if color family == YUV RGBtoYUV call is always NOP until then
         if clip.format.name != "RGB24":
             clip = core.resize.Point(clip, format=vs.RGB24)
