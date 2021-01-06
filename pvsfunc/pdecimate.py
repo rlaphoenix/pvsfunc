@@ -1,4 +1,5 @@
 import functools
+from typing import List
 
 from vapoursynth import core
 
@@ -54,7 +55,7 @@ class PDecimate:
             self.clip = self._decimate(self.clip, mode, cycle, offsets, debug)
 
     @staticmethod
-    def _decimate(clip, mode: int, cycle: int, offsets: list[int], debug: bool = False):
+    def _decimate(clip, mode: int, cycle: int, offsets: List[int], debug: bool = False):
         if mode == 0:
             if isinstance(cycle, list):
                 cycle = cycle[0]
