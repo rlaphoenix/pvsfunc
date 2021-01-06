@@ -17,38 +17,6 @@ def anti_file_prefix(path: str) -> str:
     return path
 
 
-def get_mime_type(file_path: str) -> str:
-    """Get file mime-type based on file contents or extension"""
-    # initialise mime-types, let it load all mimes
-    mimetypes.init()
-    # get the file extension
-    file_ext = os.path.splitext(file_path)[-1].lower()
-    # check for special file types if theres no mime type
-    if file_ext not in mimetypes.types_map:
-        # check if the file is a D2V/DGIndexProjectFile
-        with open(file_path, mode="rb") as f:
-            if f.read(18) == "DGIndexProjectFile".encode("utf-8"):
-                if f.read(2) != bytes([0x31, 0x36]):
-                    raise ValueError(
-                        "pvsfunc.get_file_type: D2V was created with an unsupported indexer, use DGIndex v1.5.8." +
-                        (" It works perfectly fine under Wine." if os.name != "nt" else "")
-                    )
-                return "video/d2v"
-        # DVD-Video Object File
-        if file_ext == ".vob":
-            return "video/vob"
-        # PSP UMD-VIDEO file
-        if file_ext == ".mps":
-            return "video/umd"
-        raise ValueError("pvsfunc.get_file_type: Unrecognised file extension (%s)" % file_ext)
-    mime_type = mimetypes.types_map[file_ext]
-    # ensure that the mime is a video or image file
-    if not mime_type.startswith("video/") and not mime_type.startswith("image/"):
-        raise ValueError("pvsfunc.get_file_type: Only Video or Image files are supported. (%s)" % mime_type)
-    # return the mime
-    return mime_type
-
-
 def get_video_codec(file_path: str) -> Union[str, int]:
     """
     Get video codec using MediaInfo
