@@ -64,6 +64,7 @@ class PSourcer:
         self.file_path = anti_file_prefix(file_path)
         # if unknown mime type, assume video, I don't want to constantly update a whitelist
         self.file_type = mimetypes.guess_type(self.file_path)[0] or "video"
+        self.file_type = self.file_type.split("/")[0]
         if self.file_type not in ("video", "image"):
             raise ValueError("pvsfunc.PSourcer: Only Video or Image files are supported. (%s)" % self.file_type)
         self.video_codec = get_video_codec(self.file_path)
