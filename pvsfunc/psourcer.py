@@ -202,6 +202,8 @@ class PSourcer:
                     fps = "FILM"
                 # aspect ratio
                 dar = self.d2v.settings["Aspect_Ratio"]
+                if isinstance(dar, list):
+                    dar = dar[0]
                 par = calculate_par(self.clip.width, self.clip.height, *[int(x) for x in dar.split(":")])
                 sar = calculate_aspect_ratio(self.clip.width, self.clip.height)
                 self.clip = core.text.Text(
