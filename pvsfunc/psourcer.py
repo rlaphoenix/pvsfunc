@@ -142,7 +142,8 @@ class PSourcer:
             if self.debug:
                 coded_pictures = len(flags)
                 progressive_percent = (sum(1 for f in flags if f["progressive_frame"]) / len(flags)) * 100
-                pulldown_count = sum(1 for f in flags if f["progressive_frame"] and f["rff"] and f["tff"])
+                # pulldown frame count / 2 is done for the same reason as the start of cycle calculation earlier
+                pulldown_count = int(sum(1 for f in flags if f["progressive_frame"] and f["rff"]) / 2)
             # fix flag items if variable scan type
             if not all(x["progressive_frame"] for x in flags):
                 # video is not all progressive content, meaning it is either:
