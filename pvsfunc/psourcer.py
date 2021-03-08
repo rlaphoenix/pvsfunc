@@ -122,11 +122,13 @@ class PSourcer:
             # todo ; get an mpeg2 that uses Pulldown metadata (rff flags) that ISN'T Pulldown 2:3 to test math
             #        this math seems pretty far fetched, if we can somehow obtain the Pulldown x:x:...
             #        string that mediainfo can get, then calculating it can be much easier and more efficient.
-            pulldown_cycle = [n for n, f in enumerate(flags) if f["tff"] and f["rff"]]
+            pulldown_cycle = [n for n, f in enumerate(flags) if f["rff"]]
             if not pulldown_cycle or len(pulldown_cycle) <= 1:
                 pulldown_cycle = 0  # a 0 would be better than an empty list/list with only a 0
             else:
-                # pair every 2 frame indexes together
+                # the check needs to apply only once per field, so lets just delete every 2nd flag index
+                pulldown_cycle = pulldown_cycle[::2]
+                # pair every 2 flag indexes together
                 pulldown_cycle = list(zip(pulldown_cycle[::2], pulldown_cycle[1::2]))
                 # subtract the right index with the left index to calculate the cycle
                 pulldown_cycle = [right - left for left, right in pulldown_cycle]
@@ -154,7 +156,7 @@ class PSourcer:
                 # 2. apply the changes above to the flag list to match the fixed clip
                 flags = [f for sl in [(
                     [f, dict(**{**f, **{"progressive_frame": True, "rff": False, "tff": False}})]
-                    if f["progressive_frame"] and f["rff"] and f["tff"] else [f]
+                    if f["progressive_frame"] and f["rff"] else [f]
                 ) for f in flags] for f in sl]
             else:
                 # video is fully progressive, but the frame rate needs to be fixed.
