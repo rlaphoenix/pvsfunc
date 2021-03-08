@@ -123,7 +123,7 @@ class PSourcer:
             #        this math seems pretty far fetched, if we can somehow obtain the Pulldown x:x:...
             #        string that mediainfo can get, then calculating it can be much easier and more efficient.
             pulldown_cycle = [n for n, f in enumerate(flags) if f["tff"] and f["rff"]]
-            if not pulldown_cycle or pulldown_cycle == [0]:
+            if not pulldown_cycle or len(pulldown_cycle) <= 1:
                 pulldown_cycle = 0  # a 0 would be better than an empty list/list with only a 0
             else:
                 # pair every 2 frame indexes together
