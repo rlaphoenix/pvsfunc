@@ -151,14 +151,16 @@ class PSourcer:
                 # - mix of progressive and interlaced sections
                 # 1. fix the frame rate of the progressive sections by applying it's pulldown
                 #    we fix it by duplicating the pulldown specified frames rather than as fields
-                pulldown_indexes = [n for n, f in enumerate(flags) if f["progressive_frame"] and f["rff"] and f["tff"]]
+                pulldown_indexes = [n for n, f in enumerate(flags) if f["progressive_frame"] and f["rff"]]
                 if pulldown_indexes:
+                    pulldown_indexes = pulldown_indexes[::2]  # again same reason as above pulldown_count and pulldown_cycle
                     self.clip = core.std.DuplicateFrames(clip=self.clip, frames=pulldown_indexes)
                 # 2. apply the changes above to the flag list to match the fixed clip
-                flags = [f for sl in [(
+                flags = [(
                     [f, dict(**{**f, **{"progressive_frame": True, "rff": False, "tff": False}})]
-                    if f["progressive_frame"] and f["rff"] else [f]
-                ) for f in flags] for f in sl]
+                    if i in pulldown_indexes else [f]
+                ) for i, f in enumerate(flags)]
+                flags = [f for sl in flags for f in sl]
             else:
                 # video is fully progressive, but the frame rate needs to be fixed.
                 # core.d2v.Source loads the video while ignoring pulldown flags, but
