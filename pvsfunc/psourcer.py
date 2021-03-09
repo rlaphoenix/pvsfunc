@@ -49,6 +49,15 @@ class PSourcer:
     """
 
     def __init__(self, file_path, debug=False):
+        """
+        Convenience wrapper for loading video files to clip variables. It's purpose is to load an input file path
+        with the most optimal clip source based on the file. For example for an MPEG-2 video file (e.g. DVD file) will
+        load using core.d2v.Source (and generate an optimized d2v if needed too!), whereas an MPEG-4/AVC/H.264 video
+        will load using core.lsmas.LWLibavSource.
+        
+        :param file_path: Input file path, can be any extension and can include `file://` prefix.
+        :param debug: Print various information and metadata about the loaded clip.
+        """
         if not hasattr(core, "d2v"):
             raise RuntimeError(
                 "pvsfunc.PSourcer: Required plugin d2vsource for namespace 'd2v' not found. "
