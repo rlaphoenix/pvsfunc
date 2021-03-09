@@ -2,7 +2,7 @@ import functools
 import itertools
 import mimetypes
 import os
-from typing import Union
+from typing import Union, Optional
 
 import vapoursynth as vs
 from pyd2v import D2V
@@ -48,14 +48,26 @@ class PSourcer:
     if DGDecNV ever gets linux support I will test it out and add support. Until then its dead to me.
     """
 
-    def __init__(self, file_path, debug=False):
+    def __init__(self, file_path, d2v_vst_vfr_mode: ((int, bool), Optional[list[int]]) = False, debug=False):
         """
         Convenience wrapper for loading video files to clip variables. It's purpose is to load an input file path
         with the most optimal clip source based on the file. For example for an MPEG-2 video file (e.g. DVD file) will
         load using core.d2v.Source (and generate an optimized d2v if needed too!), whereas an MPEG-4/AVC/H.264 video
         will load using core.lsmas.LWLibavSource.
-        
+
         :param file_path: Input file path, can be any extension and can include `file://` prefix.
+        :param d2v_vst_vfr_mode: Mode to use when matching frame rates for VFR (specifically VST) input.
+            False : Duplicate the progressive frames that have `rff flags`, No frame drops. This is
+                the operation that was done prior to this parameter being added. This is the safest option, it wont
+                drop any frames, but you will end up with duplicate frames in the progressive sections.
+            True : Decimate interlaced sections with a Pulldown cycle that matches the one using by the Progressive RFF
+                sections. It's offsets will default to delete the middle (if cycle is an odd number, otherwise last)
+                frame number of every cycle. You can do: (True, [0, 1, 2, 3]) to use a custom offsets list.
+            tuple of (int/bool, list[int]) : Decimate interlaced sections with a manual (cycle, offsets list).
+                A value of (False, list[int]) is an error, but a value of (True, list[int]) is fine, see above.
+            NOTE: For the modes that decimate frames, it doesn't do any checks in regards to cycle resets when
+                entering a new VOB id/cell like PDecimate does. It also doesn't decimate using SelectEvery or cycles.
+                It decimates simply by deleting every nth frame where n is the value you chose (explained above).
         :param debug: Print various information and metadata about the loaded clip.
         """
         if not hasattr(core, "d2v"):
@@ -158,18 +170,53 @@ class PSourcer:
                 # video is not all progressive content, meaning it is either:
                 # - entirely interlaced
                 # - mix of progressive and interlaced sections
-                # 1. fix the frame rate of the progressive sections by applying it's pulldown
-                #    we fix it by duplicating the pulldown specified frames rather than as fields
-                pulldown_indexes = [n for n, f in enumerate(flags) if f["progressive_frame"] and f["rff"]]
-                if pulldown_indexes:
-                    pulldown_indexes = pulldown_indexes[::2]  # again same reason as above pulldown_count and pulldown_cycle
-                    self.clip = core.std.DuplicateFrames(clip=self.clip, frames=pulldown_indexes)
-                # 2. apply the changes above to the flag list to match the fixed clip
-                flags = [(
-                    [f, dict(**{**f, **{"progressive_frame": True, "rff": False, "tff": False}})]
-                    if i in pulldown_indexes else [f]
-                ) for i, f in enumerate(flags)]
-                flags = [f for sl in flags for f in sl]
+                if not isinstance(d2v_vst_vfr_mode, tuple):
+                    d2v_vst_vfr_mode = (d2v_vst_vfr_mode, None)
+                cycle, offsets = d2v_vst_vfr_mode
+
+                if not cycle:
+                    pulldown_indexes = [n for n, f in enumerate(flags) if f["progressive_frame"] and f["rff"]]
+                    if pulldown_indexes:
+                        pulldown_indexes = pulldown_indexes[::2]  # again same reason as above pulldown_count and pulldown_cycle
+                        self.clip = core.std.DuplicateFrames(clip=self.clip, frames=pulldown_indexes)
+                        flags = [(
+                            [f, dict(**{**f, **{"progressive_frame": True, "rff": False, "tff": False}})]
+                            if i in pulldown_indexes else [f]
+                        ) for i, f in enumerate(flags)]
+                        flags = [f for sl in flags for f in sl]
+                else:
+                    if isinstance(cycle, bool):
+                        cycle = pulldown_cycle
+                    if not isinstance(offsets, list) or not offsets:
+                        if cycle % 2 != 0:
+                            # offsets array that removes the middle frame number
+                            offsets = list(range(cycle))
+                            offsets.pop((cycle - 1) // 2)
+                        else:
+                            # offsets array that removes the last frame number
+                            # cant do above as its not an odd number
+                            offsets = list(range(cycle - 1))
+                    if len(offsets) < 1 or len(offsets) > cycle:
+                        raise ValueError("The length of offsets provided cannot be less than 1 or more than the cycle")
+
+                    # apply a cycle offset, aka SelectEvery but these arent clips so gotta do it manually
+                    # this will do an inverse offsets though, aka return [2] instead of [0,1,3,4], as it
+                    # needs to be a list of frames to delete, not keep.
+                    interlaced_frames = [n for n, f in enumerate(flags) if not f["progressive_frame"]]
+                    interlaced_frames = [interlaced_frames[i:i + cycle] for i in range(0, len(interlaced_frames), cycle)]
+                    interlaced_frames = [[x for n, x in enumerate(c) if n not in offsets] for c in interlaced_frames]
+                    interlaced_frames = [x for xx in interlaced_frames for x in xx]
+
+                    # delete the unwanted frames, change the FPS based on the cycle
+                    self.clip = core.std.DeleteFrames(self.clip, frames=interlaced_frames)
+                    self.clip = core.std.AssumeFPS(
+                        self.clip,
+                        fpsnum=self.clip.fps.numerator - (self.clip.fps.numerator / cycle),
+                        fpsden=self.clip.fps.denominator
+                    )
+
+                    # apply decimation to flags as well, so flag information props go to the right frames
+                    flags = [f for i, f in enumerate(flags) if i not in interlaced_frames]
             else:
                 # video is fully progressive, but the frame rate needs to be fixed.
                 # core.d2v.Source loads the video while ignoring pulldown flags, but
