@@ -73,6 +73,9 @@ class PSourcer:
         self.debug = debug
         self.clip = None
         self.file_path = anti_file_prefix(file_path)
+        if not isinstance(d2v_vst_vfr_mode, tuple):
+            d2v_vst_vfr_mode = (d2v_vst_vfr_mode, None)
+
         # if unknown mime type, assume video, I don't want to constantly update a whitelist
         self.file_type = mimetypes.guess_type(self.file_path)[0] or "video"
         self.file_type = self.file_type.split("/")[0]
@@ -175,8 +178,6 @@ class PSourcer:
                 # video is not all progressive content, meaning it is either:
                 # - entirely interlaced
                 # - mix of progressive and interlaced sections
-                if not isinstance(d2v_vst_vfr_mode, tuple):
-                    d2v_vst_vfr_mode = (d2v_vst_vfr_mode, None)
                 cycle, offsets = d2v_vst_vfr_mode
 
                 if not cycle:
