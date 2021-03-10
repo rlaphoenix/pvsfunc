@@ -166,8 +166,18 @@ def list_select_every(data: list, cycle: int, offsets: (set, Iterable[int]), inv
     Same as VapourSynth's core.std.SelectEvery but for generic list data, and inverse.
     Don't use this as a replacement to core.std.SelectEvery, this should only be used on generic list data.
     """
+    if not isinstance(cycle, int) or cycle < 1:
+        raise ValueError("Cycle must be an int greater than or equal to 1.")
+    if not offsets:
+        raise ValueError("Offsets must not be empty.")
     if not isinstance(offsets, set):
         offsets = set(offsets)
+    if not isinstance(inverse, bool) and inverse not in (0, 1):
+        raise ValueError("Inverse must be a bool or int bool.")
+
+    if not data:
+        return data
+
     return [x for n, x in enumerate(data) if (n % cycle in offsets) ^ inverse]
 
 
