@@ -70,16 +70,6 @@ class PSourcer:
                 It decimates simply by deleting every nth frame where n is the value you chose (explained above).
         :param debug: Print various information and metadata about the loaded clip.
         """
-        if not hasattr(core, "d2v"):
-            raise RuntimeError(
-                "pvsfunc.PSourcer: Required plugin d2vsource for namespace 'd2v' not found. "
-                "https://github.com/dwbuiten/d2vsource"
-            )
-        if not hasattr(core, "lsmas"):
-            raise RuntimeError(
-                "pvsfunc.PSourcer: Required plugin lsmas for namespace 'lsmas' not found. "
-                "https://github.com/VFR-maniac/L-SMASH-Works"
-            )
         self.debug = debug
         self.clip = None
         self.file_path = anti_file_prefix(file_path)
@@ -102,9 +92,19 @@ class PSourcer:
         self.sourcer = CODEC_SOURCER_MAP.get(self.video_codec, "core.lsmas.LWLibavSource")
         # sourcer preparations
         if self.sourcer == "core.d2v.Source":
+            if not hasattr(core, "d2v"):
+                raise RuntimeError(
+                    "pvsfunc.PSourcer: Required plugin d2vsource for namespace 'd2v' not found. "
+                    "https://github.com/dwbuiten/d2vsource"
+                )
             # make sure a d2v file for this video exists
             self.file_path = get_d2v(self.file_path)
         elif self.sourcer == "core.lsmas.LWLibavSource":
+            if not hasattr(core, "lsmas"):
+                raise RuntimeError(
+                    "pvsfunc.PSourcer: Required plugin lsmas for namespace 'lsmas' not found. "
+                    "https://github.com/VFR-maniac/L-SMASH-Works"
+                )
             # destroy the container-set fps
             self.file_path = fps_reset(self.file_path)
         # load video to clip using sourcer
