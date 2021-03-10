@@ -183,7 +183,7 @@ class PSourcer:
                             [f, dict(**{**f, **{"progressive_frame": True, "rff": False, "tff": False}})]
                             if i in pulldown_indexes else [f]
                         ) for i, f in enumerate(flags)]
-                        flags = [f for sl in flags for f in sl]
+                        flags = list(itertools.chain.from_iterable(flags))
                 else:
                     if isinstance(cycle, bool):
                         cycle = pulldown_cycle
@@ -205,7 +205,7 @@ class PSourcer:
                     interlaced_frames = [n for n, f in enumerate(flags) if not f["progressive_frame"]]
                     interlaced_frames = [interlaced_frames[i:i + cycle] for i in range(0, len(interlaced_frames), cycle)]
                     interlaced_frames = [[x for n, x in enumerate(c) if n not in offsets] for c in interlaced_frames]
-                    interlaced_frames = [x for xx in interlaced_frames for x in xx]
+                    interlaced_frames = list(itertools.chain.from_iterable(interlaced_frames))
 
                     # delete the unwanted frames, change the FPS based on the cycle
                     self.clip = core.std.DeleteFrames(self.clip, frames=interlaced_frames)
