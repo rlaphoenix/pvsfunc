@@ -2,7 +2,7 @@ import itertools
 import os
 import shutil
 import subprocess
-from typing import Union
+from typing import Union, Iterable
 
 from pymediainfo import MediaInfo
 
@@ -162,7 +162,7 @@ def calculate_par(width: int, height: int, aspect_ratio_w: int, aspect_ratio_h: 
     return "%d:%d" % (par_w, par_h)
 
 
-def list_select_every(data: list, cycle: int, offsets: set, inverse: bool = False) -> list:
+def list_select_every(data: list, cycle: int, offsets: (set, Iterable[int]), inverse: bool = False) -> list:
     """
     Same as VapourSynth's core.std.SelectEvery but for generic list data, and inverse.
     Don't use this as a replacement to core.std.SelectEvery, this should only be used on generic list data.
