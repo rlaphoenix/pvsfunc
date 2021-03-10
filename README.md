@@ -88,9 +88,21 @@ Please read and agree to the license before use, it can be found in the [LICENSE
 PSourcer (class) is a convenience wrapper for loading video files to clip variables. It's purpose is to load an input file path with the most optimal clip source based on the file. For example for an MPEG-2 video file (e.g. DVD file) will load using `core.d2v.Source` (and generate an optimized d2v if needed too!), whereas an MPEG-4/AVC/H.264 video will load using `core.lsmas.LWLibavSource`.
 
 `from pvsfunc import PSourcer`  
-`PSourcer(str file_path[, bool debug=False])`
+`PSourcer(str file_path[, ((int, bool)[, list[int]]) d2v_vst_vfr_mode, bool debug=False])`
 
 -   file_path: Path to a file to import. Don't worry about which type of container (if any) you use.
+-   d2v_vst_vfr_mode: Mode to use when matching frame rates for VFR (specifically VST) input.
+        False : Duplicate the progressive frames that have `rff flags`, No frame drops. This is
+            the operation that was done prior to this parameter being added. This is the safest option, it wont
+            drop any frames, but you will end up with duplicate frames in the progressive sections.
+        True : Decimate interlaced sections with a Pulldown cycle that matches the one using by the Progressive RFF
+            sections. It's offsets will default to delete the middle (if cycle is an odd number, otherwise last)
+            frame number of every cycle. You can do: (True, [0, 1, 2, 3]) to use a custom offsets list.
+        tuple of (int/bool, list[int]) : Decimate interlaced sections with a manual (cycle, offsets list).
+            A value of (False, list[int]) is an error, but a value of (True, list[int]) is fine, see above.
+        NOTE: For the modes that decimate frames, it doesn't do any checks in regards to cycle resets when
+            entering a new VOB id/cell like PDecimate does. It also doesn't decimate using SelectEvery or cycles.
+            It decimates simply by deleting every nth frame where n is the value you chose (explained above).
 -   debug: Use core.text to print verbose information about the file and how it has been loaded.
 
 ### PDeinterlacer ([pdeinterlacer.py](/pvsfunc/pdeinterlacer.py))
