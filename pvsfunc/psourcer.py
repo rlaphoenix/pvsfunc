@@ -162,19 +162,16 @@ class PSourcer:
                 pulldown_cycle = pulldown_cycle[::2]  # skip every 2nd item: once per field
                 pulldown_cycle = list(zip(pulldown_cycle[::2], pulldown_cycle[1::2]))
                 pulldown_cycle = [right - left for left, right in pulldown_cycle]
-            coded_pictures = None
-            progressive_percent = None
-            pulldown_count = None
-            if self.debug:
-                coded_pictures = len(flags)
-                progressive_percent = (sum(1 for f in flags if f["progressive_frame"]) / len(flags)) * 100
-                # pulldown frame count / 2 is done for the same reason as the start of cycle calculation earlier
-                pulldown_count = int(sum(1 for f in flags if f["progressive_frame"] and f["rff"]) / 2)
                 pulldown_cycle = max(set(pulldown_cycle), key=pulldown_cycle.count) + 1  # +1 to one-index it
 
             # Set various data for use later on
+            coded_pictures = len(flags)
+            progressive_pictures = sum(f["progressive_frame"] for f in flags)
+            progressive_percent = (progressive_pictures / coded_pictures) * 100
+            pulldown_count = int(sum(f["progressive_frame"] and f["rff"] for f in flags) / 2)  # / 2: once per field
+
             # fix flag items if variable scan type
-            if not all(x["progressive_frame"] for x in flags):
+            if not progressive_pictures == coded_pictures:
                 # video is not all progressive content, meaning it is either:
                 # - entirely interlaced
                 # - mix of progressive and interlaced sections
