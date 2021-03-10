@@ -179,19 +179,3 @@ def list_select_every(data: list, cycle: int, offsets: (set, Iterable[int]), inv
         return data
 
     return [x for n, x in enumerate(data) if (n % cycle in offsets) ^ inverse]
-
-
-def chroma_shift(clip, left: int = 0, right: int = 0, top: int = 0, bottom: int = 0):
-    if not left and not right and not top and not bottom:
-        return clip
-    
-    def crop(plane):
-        plane = core.std.Crop(plane, left, right, top, bottom)
-        plane = core.std.AddBorders(plane, left=right, right=left, top=bottom, bottom=top)
-        return plane
-    
-    return core.std.ShufflePlanes([
-        clip,
-        crop(core.std.ShufflePlanes(clip, [1], vs.GRAY)),
-        crop(core.std.ShufflePlanes(clip, [2], vs.GRAY))
-    ], [0, 0, 0], vs.YUV)
