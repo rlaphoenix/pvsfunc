@@ -175,44 +175,47 @@ class PSourcer:
                 # video is not all progressive content, meaning it is either:
                 # - entirely interlaced
                 # - mix of progressive and interlaced sections
-                cycle, offsets = d2v_vst_vfr_mode
+                match_cycle, match_offsets = d2v_vst_vfr_mode
 
-                if not cycle:
-                    pulldown_indexes = [n for n, f in enumerate(flags) if f["progressive_frame"] and f["rff"]]
-                    if pulldown_indexes:
-                        pulldown_indexes = pulldown_indexes[::2]  # again same reason as above pulldown_count and pulldown_cycle
-                        self.clip = core.std.DuplicateFrames(clip=self.clip, frames=pulldown_indexes)
+                if not match_cycle:
+                    # Mode A (default): Match FPS by duplicating the progressive frames with RFF flags.
+                    progressive_rff_indexes = [n for n, f in enumerate(flags) if f["progressive_frame"] and f["rff"]]
+                    progressive_rff_indexes = progressive_rff_indexes[::2]  # skip every 2nd item: once per field
+                    if progressive_rff_indexes:
+                        self.clip = core.std.DuplicateFrames(clip=self.clip, frames=progressive_rff_indexes)
                         flags = [(
                             [f, dict(**{**f, **{"progressive_frame": True, "rff": False, "tff": False}})]
-                            if i in pulldown_indexes else [f]
+                            if i in progressive_rff_indexes else [f]
                         ) for i, f in enumerate(flags)]
                         flags = list(itertools.chain.from_iterable(flags))
                 else:
-                    if isinstance(cycle, bool):
-                        cycle = pulldown_cycle
-                    if not isinstance(offsets, list) or not offsets:
-                        if cycle % 2 != 0:
+                    # Mode B: Match FPS by decimating only the interlaced sections (prior to deinterlacing).
+                    if match_cycle is True:
+                        match_cycle = pulldown_cycle  # True as cycle is a "symbol" for using pulldown_cycle
+                    if not isinstance(match_offsets, list) or not match_offsets:
+                        if match_cycle % 2 != 0:
                             # offsets array that removes the middle frame number
-                            offsets = list(range(cycle))
-                            offsets.pop((cycle - 1) // 2)
+                            match_offsets = list(range(match_cycle))
+                            match_offsets.pop((match_cycle - 1) // 2)
                         else:
                             # offsets array that removes the last frame number
                             # cant do above as its not an odd number
-                            offsets = list(range(cycle - 1))
-                    if len(offsets) < 1 or len(offsets) > cycle:
+                            match_offsets = list(range(match_cycle - 1))
+                    if len(match_offsets) < 1 or len(match_offsets) > match_cycle:
                         raise ValueError("The length of offsets provided cannot be less than 1 or more than the cycle")
 
-                    # apply a cycle offset, aka SelectEvery but these arent clips so gotta do it manually
-                    # this will do an inverse offsets though, aka return [2] instead of [0,1,3,4], as it
-                    # needs to be a list of frames to delete, not keep.
                     interlaced_frames = [n for n, f in enumerate(flags) if not f["progressive_frame"]]
-                    interlaced_frames = list_select_every(interlaced_frames, cycle, offsets, inverse=True)
+                    interlaced_frames = list_select_every(interlaced_frames, match_cycle, match_offsets, inverse=True)
 
-                    # delete the unwanted frames, change the FPS based on the cycle
+                    # todo: what if theres progressive sections in between interlaced sections? the cycle would need
+                    #       to be reset otherwise it wont start at the correct index at the start of interlaced
+                    #       sections. May need to do something like PDeinterlacer does for vob cells
+
+                    # delete the unwanted frames, change the FPS based on the match cycle
                     self.clip = core.std.DeleteFrames(self.clip, frames=interlaced_frames)
                     self.clip = core.std.AssumeFPS(
                         self.clip,
-                        fpsnum=self.clip.fps.numerator - (self.clip.fps.numerator / cycle),
+                        fpsnum=self.clip.fps.numerator - (self.clip.fps.numerator / match_cycle),
                         fpsden=self.clip.fps.denominator
                     )
 
