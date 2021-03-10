@@ -9,7 +9,7 @@ from pyd2v import D2V
 from vapoursynth import core
 
 from pvsfunc.helpers import anti_file_prefix, get_video_codec, get_d2v, fps_reset, calculate_par, \
-    calculate_aspect_ratio
+    calculate_aspect_ratio, list_select_every
 
 CODEC_SOURCER_MAP = {
     "IMAGE": "core.imwri.Read",
@@ -206,9 +206,7 @@ class PSourcer:
                     # this will do an inverse offsets though, aka return [2] instead of [0,1,3,4], as it
                     # needs to be a list of frames to delete, not keep.
                     interlaced_frames = [n for n, f in enumerate(flags) if not f["progressive_frame"]]
-                    interlaced_frames = [interlaced_frames[i:i + cycle] for i in range(0, len(interlaced_frames), cycle)]
-                    interlaced_frames = [[x for n, x in enumerate(c) if n not in offsets] for c in interlaced_frames]
-                    interlaced_frames = list(itertools.chain.from_iterable(interlaced_frames))
+                    interlaced_frames = list_select_every(interlaced_frames, cycle, offsets, inverse=True)
 
                     # delete the unwanted frames, change the FPS based on the cycle
                     self.clip = core.std.DeleteFrames(self.clip, frames=interlaced_frames)
