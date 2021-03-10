@@ -133,30 +133,32 @@ class PSourcer:
             # in a Constant frame rate. Apply any duplication done to the list of flags #
             # as well.                                                                  #
             # ========================================================================= #
-            # parse d2v file with pyd2v
+
+            # Parse d2v file with pyd2v
             self.d2v = D2V(self.file_path)
-            # get every frames' flag data, this contains information on displaying frames
-            # add vob and cell number to each frames flag data as well
+
+            # Get all flag data, this contains information on displaying frames/fields.
+            # Each flag in the list can be either a progressive (full) frame, or a field (half) frame.
+            # So unless the video is 100% interlaced or progressive, the flags count wont match the video FPS.
             flags = [[dict(**y, vob=d["vob"], cell=d["cell"]) for y in d["flags"]] for d in self.d2v.data]
-            flags = list(itertools.chain.from_iterable(flags))  # flatten list of lists
-            # Get pulldown cycle
+            flags = list(itertools.chain.from_iterable(flags))
+
+            # Get Pulldown Cycle
             # todo ; get an mpeg2 that uses Pulldown metadata (rff flags) that ISN'T Pulldown 2:3 to test math
             #        this math seems pretty far fetched, if we can somehow obtain the Pulldown x:x:...
             #        string that mediainfo can get, then calculating it can be much easier and more efficient.
             pulldown_cycle = [n for n, f in enumerate(flags) if f["rff"]]
             if not pulldown_cycle or len(pulldown_cycle) <= 1:
-                pulldown_cycle = 0  # a 0 would be better than an empty list/list with only a 0
+                # use 0 instead of None/[]/e.t.c as it is used for printing later on.
+                pulldown_cycle = 0
             else:
-                # the check needs to apply only once per field, so lets just delete every 2nd flag index
-                pulldown_cycle = pulldown_cycle[::2]
-                # pair every 2 flag indexes together
+                # get the cycle by grouping every 2 flag indexes together, then subtracting the right-most (1) index
+                # with the left-most (0) index and getting the most common number and adding 1 to it to be one-indexed.
+                # Getting the common number is needed as interlaced sections in variable scan-type (VST) content
+                # messes up the calculations where it enters and exits interlaced sections.
+                pulldown_cycle = pulldown_cycle[::2]  # skip every 2nd item: once per field
                 pulldown_cycle = list(zip(pulldown_cycle[::2], pulldown_cycle[1::2]))
-                # subtract the right index with the left index to calculate the cycle
                 pulldown_cycle = [right - left for left, right in pulldown_cycle]
-                # get the most common cycle (+1), interlaced sections in variable scan-type content messes up the
-                # results, so the only way around it is to get the most common entry.
-                pulldown_cycle = max(set(pulldown_cycle), key=pulldown_cycle.count) + 1
-            # set various data used for debugging (if debug enabled)
             coded_pictures = None
             progressive_percent = None
             pulldown_count = None
@@ -165,6 +167,9 @@ class PSourcer:
                 progressive_percent = (sum(1 for f in flags if f["progressive_frame"]) / len(flags)) * 100
                 # pulldown frame count / 2 is done for the same reason as the start of cycle calculation earlier
                 pulldown_count = int(sum(1 for f in flags if f["progressive_frame"] and f["rff"]) / 2)
+                pulldown_cycle = max(set(pulldown_cycle), key=pulldown_cycle.count) + 1  # +1 to one-index it
+
+            # Set various data for use later on
             # fix flag items if variable scan type
             if not all(x["progressive_frame"] for x in flags):
                 # video is not all progressive content, meaning it is either:
