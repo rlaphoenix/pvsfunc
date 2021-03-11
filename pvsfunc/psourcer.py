@@ -9,7 +9,7 @@ from pyd2v import D2V
 from vapoursynth import core
 
 from pvsfunc.helpers import anti_file_prefix, get_video_codec, get_d2v, fps_reset, calculate_par, \
-    calculate_aspect_ratio, list_select_every
+    calculate_aspect_ratio, list_select_every, group_by_int
 
 CODEC_SOURCER_MAP = {
     "IMAGE": "core.imwri.Read",
@@ -198,23 +198,43 @@ class PSourcer:
                     if len(match_offsets) < 1 or len(match_offsets) > match_cycle:
                         raise ValueError("The length of offsets provided cannot be less than 1 or more than the cycle")
 
-                    interlaced_frames = [n for n, f in enumerate(flags) if not f["progressive_frame"]]
-                    interlaced_frames = list_select_every(interlaced_frames, match_cycle, match_offsets, inverse=True)
+                    progressive_frames = group_by_int([n for n, f in enumerate(flags) if f["progressive_frame"]])
+                    interlaced_frames = group_by_int([n for n, f in enumerate(flags) if not f["progressive_frame"]])
 
-                    # todo: what if theres progressive sections in between interlaced sections? the cycle would need
-                    #       to be reset otherwise it wont start at the correct index at the start of interlaced
-                    #       sections. May need to do something like PDeinterlacer does for vob cells
+                    wanted_fps_num = self.clip.fps.numerator - (self.clip.fps.numerator / match_cycle)
 
-                    # delete the unwanted frames, change the FPS based on the match cycle
-                    self.clip = core.std.DeleteFrames(self.clip, frames=interlaced_frames)
-                    self.clip = core.std.AssumeFPS(
-                        self.clip,
-                        fpsnum=self.clip.fps.numerator - (self.clip.fps.numerator / match_cycle),
-                        fpsden=self.clip.fps.denominator
-                    )
+                    self.clip = core.std.Splice([x for _, x in sorted(
+                        [
+                            # progressive sections:
+                            (
+                                x[0],  # first frame # of the section, used for sorting when splicing
+                                core.std.AssumeFPS(
+                                    self.clip[x[0]:x[-1] + 1],
+                                    fpsnum=wanted_fps_num,
+                                    fpsden=self.clip.fps.denominator
+                                )
+                            ) for x in progressive_frames
+                        ] + [
+                            # interlaced sections:
+                            (
+                                x[0],
+                                core.std.SelectEvery(
+                                    self.clip[x[0]:x[-1] + 1],
+                                    match_cycle,
+                                    match_offsets
+                                )
+                            ) for x in interlaced_frames
+                        ],
+                        key=lambda section: int(section[0])
+                    )])
 
-                    # apply decimation to flags as well, so flag information props go to the right frames
-                    flags = [f for i, f in enumerate(flags) if i not in interlaced_frames]
+                    flags = [
+                        f for i, f in enumerate(flags) if i not in [
+                            n
+                            for s in interlaced_frames
+                            for n in list_select_every(s, match_cycle, match_offsets, inverse=True)
+                        ]
+                    ]
             else:
                 # video is fully progressive, but the frame rate needs to be fixed.
                 # core.d2v.Source loads the video while ignoring pulldown flags, but
