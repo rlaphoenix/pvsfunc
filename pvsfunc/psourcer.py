@@ -193,14 +193,8 @@ class PSourcer:
                     if match_cycle is True:
                         match_cycle = pulldown_cycle  # True as cycle is a "symbol" for using pulldown_cycle
                     if not isinstance(match_offsets, list) or not match_offsets:
-                        if match_cycle % 2 != 0:
-                            # offsets array that removes the middle frame number
-                            match_offsets = list(range(match_cycle))
-                            match_offsets.pop((match_cycle - 1) // 2)
-                        else:
-                            # offsets array that removes the last frame number
-                            # cant do above as its not an odd number
-                            match_offsets = list(range(match_cycle - 1))
+                        # offsets array that removes the last frame of the cycle
+                        match_offsets = list(range(match_cycle - 1))
                     if len(match_offsets) < 1 or len(match_offsets) > match_cycle:
                         raise ValueError("The length of offsets provided cannot be less than 1 or more than the cycle")
 
