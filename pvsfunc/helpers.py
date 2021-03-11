@@ -1,6 +1,8 @@
 import os
 import shutil
 import subprocess
+from itertools import groupby
+from operator import itemgetter
 from typing import Union, Iterable
 
 from pymediainfo import MediaInfo
@@ -179,3 +181,12 @@ def list_select_every(data: list, cycle: int, offsets: (set, Iterable[int]), inv
         return data
 
     return [x for n, x in enumerate(data) if (n % cycle in offsets) ^ inverse]
+
+
+def group_by_int(data: list[int]):
+    """
+    Group a list of integers into sub-lists.
+    e.g. [1,2,3,5,6,7,9]: [[1,2,3],[5,6,7],[9]]
+    """
+    for k, g in groupby(enumerate(data), lambda x: x[0] - x[1]):
+        yield list(map(itemgetter(1), g))
