@@ -194,6 +194,10 @@ class PSourcer:
                     flags = list(itertools.chain.from_iterable(flags))
             else:
                 # Mode B: Match FPS by decimating only the interlaced sections (prior to deinterlacing).
+                # WARNING! This CAN cause problems. If the video has burned-in interlacing and therefore
+                # butchered RFF flags on them (or rather not on them) can cause those sections to play out
+                # longer than they should frame duration wise. Resulting in a de-sync. Only use this mode on
+                # properly mastered and clean VST discs.
                 if match_cycle is True:
                     match_cycle = pulldown_cycle  # True as cycle is a "symbol" for using pulldown_cycle
                 if not isinstance(match_offsets, list) or not match_offsets:
