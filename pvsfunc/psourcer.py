@@ -161,10 +161,8 @@ class PSourcer:
                 pulldown_cycle = [right - left for left, right in pulldown_cycle]
                 pulldown_cycle = max(set(pulldown_cycle), key=pulldown_cycle.count) + 1  # +1 to one-index it
 
-            # Set various data for use later on
             coded_pictures = len(flags)
             progressive_pictures = sum(f["progressive_frame"] for f in flags)
-            progressive_percent = (progressive_pictures / coded_pictures) * 100
             pulldown_count = int(sum(f["progressive_frame"] and f["rff"] for f in flags) / 2)  # / 2: once per field
 
             match_cycle, match_offsets = d2v_vst_vfr_mode
@@ -233,13 +231,12 @@ class PSourcer:
                     key=lambda section: int(section[0])
                 )])
 
-                flags = [
-                    f for i, f in enumerate(flags) if i not in [
-                        n
-                        for s in interlaced_frames
-                        for n in list_select_every(s, match_cycle, match_offsets, inverse=True)
-                    ]
+                interlaced_frames = [
+                    n
+                    for s in interlaced_frames
+                    for n in list_select_every(s, match_cycle, match_offsets, inverse=True)
                 ]
+                flags = [f for f in flags if f["index"] not in interlaced_frames]
 
             # ========================================================================= #
             #  Store flags in each frame's props                                        #
@@ -284,7 +281,7 @@ class PSourcer:
                         os.path.basename(self.file_path),
                         "Loaded with %s" % self.sourcer,
                         "- {:,d} coded pictures, which {:.2f}% of are Progressive".format(
-                            coded_pictures, progressive_percent
+                            coded_pictures, (progressive_pictures / coded_pictures) * 100
                         ),
                         "- {:,d} frames are asking for pulldown{:s}".format(
                             pulldown_count,
