@@ -134,8 +134,11 @@ class PSourcer:
             # Get all flag data, this contains information on displaying frames/fields.
             # Each flag in the list can be either a progressive (full) frame, or a field (half) frame.
             # So unless the video is 100% interlaced or progressive, the flags count wont match the video FPS.
-            flags = [[dict(**y, vob=d["vob"], cell=d["cell"]) for y in d["flags"]] for d in self.d2v.data]
-            flags = list(itertools.chain.from_iterable(flags))
+            flags = [
+                dict(**y, vob=d["vob"], cell=d["cell"])  # flag from data, vob & cell from data
+                for d in self.d2v.data
+                for y in d["flags"]
+            ]
 
             # Get Pulldown Cycle
             # todo ; get an mpeg2 that uses Pulldown metadata (rff flags) that ISN'T Pulldown 2:3 to test math
