@@ -145,9 +145,9 @@ class PSourcer:
             #        this math seems pretty far fetched, if we can somehow obtain the Pulldown x:x:...
             #        string that mediainfo can get, then calculating it can be much easier and more efficient.
             pulldown_cycle = [n for n, f in enumerate(flags) if f["rff"]]
-            if not pulldown_cycle or len(pulldown_cycle) <= 1:
-                # use 0 instead of None/[]/e.t.c as it is used for printing later on.
-                pulldown_cycle = 0
+            if len(pulldown_cycle) <= 1:
+                # no pulldown, or one strangler rff flag in the flags, only one rff index is useless
+                pulldown_cycle = 0  # so just use 0 and assume its a mistake/mastering error
             else:
                 # get the cycle by grouping every 2 flag indexes together, then subtracting the right-most (1) index
                 # with the left-most (0) index and getting the most common number and adding 1 to it to be one-indexed.
