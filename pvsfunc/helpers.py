@@ -183,7 +183,7 @@ def list_select_every(data: list, cycle: int, offsets: (set, Iterable[int]), inv
     return [x for n, x in enumerate(data) if (n % cycle in offsets) ^ inverse]
 
 
-def group_by_int(data: list[int]):
+def group_by_int(data: list[int]) -> list:
     """
     Group a list of integers into sub-lists.
     e.g. [1,2,3,5,6,7,9]: [[1,2,3],[5,6,7],[9]]
