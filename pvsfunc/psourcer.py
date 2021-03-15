@@ -153,6 +153,9 @@ class PSourcer:
                 # with the left-most (0) index and getting the most common number and adding 1 to it to be one-indexed.
                 # Getting the common number is needed as interlaced sections in variable scan-type (VST) content
                 # messes up the calculations where it enters and exits interlaced sections.
+                # todo; that can be avoided by doing this check sectioned to each interlaced section and ignore the
+                #       last subtraction. This would allow for Variable Pull Down computation, but from there a common
+                #       check would still be necessary unless all of them from all sections match (which is likely).
                 pulldown_cycle = pulldown_cycle[::2]  # skip every 2nd item: once per field
                 pulldown_cycle = list(zip(pulldown_cycle[::2], pulldown_cycle[1::2]))
                 pulldown_cycle = [right - left for left, right in pulldown_cycle]
