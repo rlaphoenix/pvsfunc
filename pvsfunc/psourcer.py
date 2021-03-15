@@ -170,83 +170,75 @@ class PSourcer:
             progressive_percent = (progressive_pictures / coded_pictures) * 100
             pulldown_count = int(sum(f["progressive_frame"] and f["rff"] for f in flags) / 2)  # / 2: once per field
 
-            # fix flag items if variable scan type
-            if not progressive_pictures == coded_pictures:
-                # video is not all progressive content, meaning it is either:
-                # - entirely interlaced
-                # - mix of progressive and interlaced sections
-                match_cycle, match_offsets = d2v_vst_vfr_mode
+            match_cycle, match_offsets = d2v_vst_vfr_mode
 
-                if not match_cycle:
-                    # Mode A (default): Match FPS by duplicating the progressive frames with RFF flags.
-                    progressive_rff_indexes = [n for n, f in enumerate(flags) if f["progressive_frame"] and f["rff"]]
-                    progressive_rff_indexes = progressive_rff_indexes[::2]  # skip every 2nd item: once per field
-                    if progressive_rff_indexes:
-                        self.clip = core.std.DuplicateFrames(clip=self.clip, frames=progressive_rff_indexes)
-                        flags = [(
-                            [f, dict(**{**f, **{"progressive_frame": True, "rff": False, "tff": False}})]
-                            if i in progressive_rff_indexes else [f]
-                        ) for i, f in enumerate(flags)]
-                        flags = list(itertools.chain.from_iterable(flags))
-                else:
-                    # Mode B: Match FPS by decimating only the interlaced sections (prior to deinterlacing).
-                    if match_cycle is True:
-                        match_cycle = pulldown_cycle  # True as cycle is a "symbol" for using pulldown_cycle
-                    if not isinstance(match_offsets, list) or not match_offsets:
-                        # offsets array that removes the last frame of the cycle
-                        match_offsets = list(range(match_cycle - 1))
-                    if len(match_offsets) < 1 or len(match_offsets) > match_cycle:
-                        raise ValueError("The length of offsets provided cannot be less than 1 or more than the cycle")
-
-                    progressive_frames = group_by_int([n for n, f in enumerate(flags) if f["progressive_frame"]])
-                    interlaced_frames = group_by_int([n for n, f in enumerate(flags) if not f["progressive_frame"]])
-
-                    wanted_fps_num = self.clip.fps.numerator - (self.clip.fps.numerator / match_cycle)
-
-                    self.clip = core.std.Splice([x for _, x in sorted(
-                        [
-                            # progressive sections:
-                            (
-                                x[0],  # first frame # of the section, used for sorting when splicing
-                                core.std.AssumeFPS(
-                                    self.clip[x[0]:x[-1] + 1],
-                                    fpsnum=wanted_fps_num,
-                                    fpsden=self.clip.fps.denominator
-                                )
-                            ) for x in progressive_frames
-                        ] + [
-                            # interlaced sections:
-                            (
-                                x[0],
-                                core.std.SelectEvery(
-                                    self.clip[x[0]:x[-1] + 1],
-                                    match_cycle,
-                                    match_offsets
-                                )
-                            ) for x in interlaced_frames
-                        ],
-                        key=lambda section: int(section[0])
-                    )])
-
-                    flags = [
-                        f for i, f in enumerate(flags) if i not in [
-                            n
-                            for s in interlaced_frames
-                            for n in list_select_every(s, match_cycle, match_offsets, inverse=True)
-                        ]
-                    ]
-            else:
-                # video is fully progressive, but the frame rate needs to be fixed.
-                # core.d2v.Source loads the video while ignoring pulldown flags, but
-                # it will still set the metadata frame rate of the clip to NTSC/PAL.
-                # but if Pulldown was used, then the frame rate would be wrong. Let's
-                # fix that ourselves.
+            if progressive_pictures == coded_pictures:
+                # Mode 0: The FPS doesn't need matching, however it may be set wrong by d2vsource if the
+                # video had any rff flags.
                 if pulldown_cycle:
                     self.clip = core.std.AssumeFPS(
                         self.clip,
                         fpsnum=self.clip.fps.numerator - (self.clip.fps.numerator / pulldown_cycle),
                         fpsden=self.clip.fps.denominator
                     )
+            elif not match_cycle:
+                # Mode A (default): Match FPS by duplicating the progressive frames with RFF flags.
+                progressive_rff_indexes = [n for n, f in enumerate(flags) if f["progressive_frame"] and f["rff"]]
+                progressive_rff_indexes = progressive_rff_indexes[::2]  # skip every 2nd item: once per field
+                if progressive_rff_indexes:
+                    self.clip = core.std.DuplicateFrames(clip=self.clip, frames=progressive_rff_indexes)
+                    flags = [(
+                        [f, dict(**{**f, **{"progressive_frame": True, "rff": False, "tff": False}})]
+                        if i in progressive_rff_indexes else [f]
+                    ) for i, f in enumerate(flags)]
+                    flags = list(itertools.chain.from_iterable(flags))
+            else:
+                # Mode B: Match FPS by decimating only the interlaced sections (prior to deinterlacing).
+                if match_cycle is True:
+                    match_cycle = pulldown_cycle  # True as cycle is a "symbol" for using pulldown_cycle
+                if not isinstance(match_offsets, list) or not match_offsets:
+                    # offsets array that removes the last frame of the cycle
+                    match_offsets = list(range(match_cycle - 1))
+                if len(match_offsets) < 1 or len(match_offsets) > match_cycle:
+                    raise ValueError("The length of offsets provided cannot be less than 1 or more than the cycle")
+
+                progressive_frames = group_by_int([n for n, f in enumerate(flags) if f["progressive_frame"]])
+                interlaced_frames = group_by_int([n for n, f in enumerate(flags) if not f["progressive_frame"]])
+
+                wanted_fps_num = self.clip.fps.numerator - (self.clip.fps.numerator / match_cycle)
+
+                self.clip = core.std.Splice([x for _, x in sorted(
+                    [
+                        # progressive sections:
+                        (
+                            x[0],  # first frame # of the section, used for sorting when splicing
+                            core.std.AssumeFPS(
+                                self.clip[x[0]:x[-1] + 1],
+                                fpsnum=wanted_fps_num,
+                                fpsden=self.clip.fps.denominator
+                            )
+                        ) for x in progressive_frames
+                    ] + [
+                        # interlaced sections:
+                        (
+                            x[0],
+                            core.std.SelectEvery(
+                                self.clip[x[0]:x[-1] + 1],
+                                match_cycle,
+                                match_offsets
+                            )
+                        ) for x in interlaced_frames
+                    ],
+                    key=lambda section: int(section[0])
+                )])
+
+                flags = [
+                    f for i, f in enumerate(flags) if i not in [
+                        n
+                        for s in interlaced_frames
+                        for n in list_select_every(s, match_cycle, match_offsets, inverse=True)
+                    ]
+                ]
 
             # ========================================================================= #
             #  Store flags in each frame's props                                        #
