@@ -129,15 +129,6 @@ class PSourcer:
                     raise
         # post sourcing preparations
         if self.sourcer == "core.d2v.Source":
-            # ========================================================================= #
-            #  Variable to Constant Frame-rate                                          #
-            # ------------------------------------------------------------------------- #
-            # Apply pulldown (if any) by duplicating frames rather than field to result #
-            # in a Constant frame rate. Apply any duplication done to the list of flags #
-            # as well.                                                                  #
-            # ========================================================================= #
-
-            # Parse d2v file with pyd2v
             self.d2v = D2V(self.file_path)
 
             # Get all flag data, this contains information on displaying frames/fields.
