@@ -2,7 +2,7 @@ import functools
 import itertools
 import mimetypes
 import os
-from typing import Union, Optional
+from typing import Union, Optional, List
 
 import vapoursynth as vs
 from pyd2v import D2V
@@ -48,7 +48,7 @@ class PSourcer:
     if DGDecNV ever gets linux support I will test it out and add support. Until then its dead to me.
     """
 
-    def __init__(self, file_path, d2v_vst_vfr_mode: ((int, bool), Optional[list[int]]) = False, debug=False):
+    def __init__(self, file_path, d2v_vst_vfr_mode: (Union[int, bool], Optional[List[int]]) = False, debug=False):
         """
         Convenience wrapper for loading video files to clip variables. It's purpose is to load an input file path
         with the most optimal clip source based on the file. For example for an MPEG-2 video file (e.g. DVD file) will
