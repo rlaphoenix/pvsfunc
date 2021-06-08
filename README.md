@@ -10,6 +10,51 @@ pvsfunc (PHOENiX's VapourSynth Functions) is my compilation of VapourSynth Scrip
 
 * * *
 
+## Projects Included
+
+### PSourcer (PHOENiX's Sourcer)
+
+Convenience wrapper for loading input file paths with an optimal clip sourcer based on the file or codec.
+This is mainly a wrapper function for my other classes and functions of pvsfunc.
+The sourcer (and it's arguments) are based on my own personal opinions.
+
+| Sourcer Used             | When or why it's used                                      |
+| ------------------------ | ---------------------------------------------------------- |
+| core.d2v.Source          | MPEG-1 and MPEG-2 for accurate frame indexing and serving. |
+| core.lsmas.LWLibavSource | Everything else.                                           |
+
+*Suggestions or additions are always welcome!*
+
+Notes:
+
+- FFMS2/FFmpeg is never used as I've come across various problems with it in relation to indexing and color accuracy.
+  It's also quite outdated and compiled against very old FFmpeg libs.
+- DGIndex (not DGIndexNV) is used whenever core.d2v.Source is used, and is enforced as it's required. You do not need
+  to run DGIndex yourself no provide your own D2V files. PSourcer will create them for you with important DGIndex
+  settings.
+
+### PDeinterlacer (PHOENiX's Deinterlacer)
+
+Convenience wrapper for deinterlacing a clip in an optimal way.
+The clip will need to be loaded from PSourcer to work as it needs Prop data set by PSourcer.
+
+### PDebox (PHOENiX's Deboxer)
+
+Lightweight class to apply deboxing based on the wanted output aspect ratio. Similar scripts would annoyingly want you
+to just crop in yourself, but that's incredibly annoying.
+
+### PDecimate (PHOENiX's Decimater)
+
+Decimate (delete) frames in a specified pattern using cycle and offsets. This is typically used for Inverse-Telecine
+purposes.
+
+### Helpers
+
+The helpers file has various small functions for given purposes. However, the availability of functions in this file is
+not guaranteed to be kept forever. These are functions kept only for internal re-use, they aren't created specifically
+for outside use, but while available feel free to. Just understand the projects that start with `P` are the foremost
+reasons for the pvsfunc project's existance, and not anything in this helpers file.
+
 ## Installation
 
 1. Install VapourSynth first! (this is different to the pypi/pip `vapoursynth` package!)
