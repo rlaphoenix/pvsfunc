@@ -236,7 +236,7 @@ class PSourcer:
                     for s in interlaced_frames
                     for n in list_select_every(s, match_cycle, match_offsets, inverse=True)
                 ]
-                flags = [f for f in flags if f["index"] not in interlaced_frames]
+                flags = [f for i, f in enumerate(flags) if i not in interlaced_frames]
 
             # ========================================================================= #
             #  Store flags in each frame's props                                        #
