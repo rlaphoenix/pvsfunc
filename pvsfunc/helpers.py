@@ -90,7 +90,7 @@ def get_d2v(file_path: str) -> str:
         # required to do it this way for whatever reason. Directly calling it sometimes fails.
         args.extend(["wine", "start", "/wait", "Z:" + dgindex_path])
     else:
-        args.extend([dgindex_path])
+        args.append(dgindex_path)
     args.extend([
         # all the following D2V settings are VERY important
         # please do not change these unless there's a good verifiable reason
