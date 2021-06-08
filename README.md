@@ -12,6 +12,13 @@ pvsfunc (PHOENiX's VapourSynth Functions) is my compilation of VapourSynth Scrip
 
 ## Projects Included
 
+The projects that start with `P` are the foremost reasons for the pvsfunc project's existance. However, there is a
+`pvsfunc.helpers` that can be used as well as the projects listed below.
+
+pvsfunc.helpers has various small functions for given purposes. The availability of it's functions is not guaranteed to
+be kept forever. These are functions kept only for internal re-use, they aren't created specifically for outside use,
+but while available feel free to.
+
 ### PSourcer (PHOENiX's Sourcer)
 
 Convenience wrapper for loading input file paths with an optimal clip sourcer based on the file or codec.
@@ -47,13 +54,6 @@ to just crop in yourself, but that's incredibly annoying.
 
 Decimate (delete) frames in a specified pattern using cycle and offsets. This is typically used for Inverse-Telecine
 purposes.
-
-### Helpers
-
-The helpers file has various small functions for given purposes. However, the availability of functions in this file is
-not guaranteed to be kept forever. These are functions kept only for internal re-use, they aren't created specifically
-for outside use, but while available feel free to. Just understand the projects that start with `P` are the foremost
-reasons for the pvsfunc project's existance, and not anything in this helpers file.
 
 ## Installation
 
