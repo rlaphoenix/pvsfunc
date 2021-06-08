@@ -145,6 +145,7 @@ class PSourcer:
             #        this math seems pretty far fetched, if we can somehow obtain the Pulldown x:x:...
             #        string that mediainfo can get, then calculating it can be much easier and more efficient.
             pulldown_cycle = [n for n, f in enumerate(flags) if f["rff"]]
+            pulldown_cycle = pulldown_cycle[::2]  # skip every 2nd item: once per field
             if len(pulldown_cycle) <= 1:
                 # no pulldown, or one strangler rff flag in the flags, only one rff index is useless
                 pulldown_cycle = 0  # so just use 0 and assume its a mistake/mastering error
@@ -156,7 +157,6 @@ class PSourcer:
                 # todo; that can be avoided by doing this check sectioned to each interlaced section and ignore the
                 #       last subtraction. This would allow for Variable Pull Down computation, but from there a common
                 #       check would still be necessary unless all of them from all sections match (which is likely).
-                pulldown_cycle = pulldown_cycle[::2]  # skip every 2nd item: once per field
                 pulldown_cycle = list(zip(pulldown_cycle[::2], pulldown_cycle[1::2]))
                 pulldown_cycle = [right - left for left, right in pulldown_cycle]
                 pulldown_cycle = max(set(pulldown_cycle), key=pulldown_cycle.count) + 1  # +1 to one-index it
