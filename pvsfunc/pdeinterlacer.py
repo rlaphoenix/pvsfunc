@@ -14,24 +14,24 @@ class PDeinterlacer:
 
     def __init__(self, clip, kernel, kernel_args=None, debug=False):
         if not kernel:
-            raise ValueError("pvsfunc.PDeinterlacer: A deinterlacing kernel is required")
+            raise ValueError("A deinterlacing kernel is required")
         self.clip = clip
         self.kernel = kernel
         self.kernel_args = kernel_args or {}
         self.debug = debug
         # validate arguments
         if not isinstance(self.clip, vs.VideoNode):
-            raise TypeError("pvsfunc.PDeinterlacer: This is not a clip")
+            raise TypeError("This is not a clip")
         # set handler func based on Sourcer
         sourcer = self.clip.get_frame(0).props["PVSSourcer"].decode("utf-8")
         if sourcer == "core.imwri.Read":
             # todo ; add support for deinterlacing image data (somehow)
-            print("pvsfunc.PDeinterlacer: Warning: This source is a clip of images and cannot be deinterlaced")
+            print("Warning: This source is a clip of images and cannot be deinterlaced")
         elif sourcer in ["core.lsmas.LWLibavSource"]:
             if "FPSDivisor" in kernel_args and kernel_args["FPSDivisor"] != 2:
                 # todo ; ideally make this unnecessary
                 raise ValueError(
-                    "pvsfunc.PDeinterlacer: %s only supports QTGMC single-rate output (FPSDivisor=2)" % sourcer
+                    "%s only supports QTGMC single-rate output (FPSDivisor=2)" % sourcer
                 )
         self.handler = {
             "core.d2v.Source": self._d2v,
@@ -39,7 +39,7 @@ class PDeinterlacer:
             "core.imwri.Read": lambda c: c  # NOP
         }.get(sourcer)
         if self.handler is None:
-            raise NotImplementedError("pvsfunc.PDeinterlacer: No sourcer is defined for the given media stream")
+            raise NotImplementedError("No sourcer is defined for the given media stream")
         self.clip = self.handler(self.clip)
 
     def _get_kernel(self, clip) -> tuple:
@@ -76,7 +76,7 @@ class PDeinterlacer:
         fps_factor = fps_factor / (clip.fps.numerator / clip.fps.denominator)
         if fps_factor not in (1.0, 2.0):
             raise ValueError(
-                "pvsfunc.PDeinterlacer: The deinterlacer kernel returned an unsupported frame-rate (%s). "
+                "The deinterlacer kernel returned an unsupported frame-rate (%s). "
                 "Only single-rate and double-rate is supported with PDeinterlacer at the moment." % deinterlaced_tff.fps
             )
         fps_factor = int(fps_factor)
@@ -84,7 +84,7 @@ class PDeinterlacer:
         # 2. ensure the color families between tff and bff kernel uses match
         if deinterlaced_tff.format.id != deinterlaced_bff.format.id:
             raise ValueError(
-                "pvsfunc.PDeinterlacer: The kernel supplied different color space outputs between TFF and BFF usage."
+                "The kernel supplied different color space outputs between TFF and BFF usage."
             )
 
         # 3. deinterlace whats interlaced
