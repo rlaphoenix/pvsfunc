@@ -267,7 +267,7 @@ class PD2V:
     def _get_pulldown(flags: List[dict]) -> Tuple[int, Optional[str]]:
         """
         Get most commonly used Pulldown cycle and syntax string.
-        Returns None if Pulldown is not used, tuple (pulldown, cycle) otherwise.
+        Returns tuple (pulldown, cycle), or (0, None) if Pulldown is not used.
         """
         # TODO: Find a safe way to get cycle, i.e. not resort to most common digit.
         #       Previously I would do this code on all progressive rff indexes, but when it entered and
@@ -281,6 +281,8 @@ class PD2V:
                 lambda flag: not flag["progressive_frame"]
             )
         ]))
+        if not sections:
+            return 0, None
         cycle = Counter([
             Counter([
                 (right - left)
