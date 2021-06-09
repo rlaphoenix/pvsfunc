@@ -164,7 +164,7 @@ class PDeinterlacer:
         """
         # colors
         # TODO: figure out a way to get this working without having to convert color-space at all
-        if clip.format.name != "RGB24":
+        if not clip.format or clip.format.name != "RGB24":
             clip = core.resize.Point(clip, format=vs.RGB24)
         # weave
         clip = core.std.SeparateFields(clip, tff=tff)

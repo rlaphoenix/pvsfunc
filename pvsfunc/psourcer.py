@@ -75,7 +75,7 @@ class PSourcer:
         elif self.sourcer == "core.lsmas.LWLibavSource":
             if not hasattr(core, "lsmas"):
                 raise RuntimeError(
-                    "pvsfunc.PSourcer: Required plugin lsmas for namespace 'lsmas' not found. "
+                    "Required plugin lsmas for namespace 'lsmas' not found. "
                     "https://github.com/VFR-maniac/L-SMASH-Works"
                 )
             self.file_path = fps_reset(self.file_path)  # destroy container-set FPS
