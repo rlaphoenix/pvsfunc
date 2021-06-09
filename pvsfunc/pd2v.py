@@ -7,7 +7,7 @@ import vapoursynth as vs
 from pyd2v import D2V
 from vapoursynth import core
 
-from pvsfunc.helpers import group_by_int, list_select_every, get_d2v
+from pvsfunc.helpers import group_by_int, list_select_every, get_d2v, calculate_aspect_ratio, calculate_par
 
 
 class PD2V:
@@ -47,6 +47,11 @@ class PD2V:
                 60000 / 1001: "NTSCi",
                 24000 / 1001: "NTSC (FILM)"
             }[self.clip.fps.numerator / self.clip.fps.denominator]
+            dar = self.d2v.settings["Aspect_Ratio"]
+            if isinstance(dar, list):
+                dar = dar[0]
+            sar = calculate_aspect_ratio(self.clip.width, self.clip.height)
+            par = calculate_par(self.clip.width, self.clip.height, *[int(x) for x in dar.split(":")])
             self.clip = core.text.Text(
                 self.clip,
                 text=" " + (" \n ".join([
@@ -55,7 +60,7 @@ class PD2V:
                         " - No Pulldown"
                     ),
                     f"Interlaced:  {100 - progressive_p:05.2f}% ({coded_f - progressive_f})",
-                    f"VFR? {progressive_f > 0}",
+                    f"VFR? {progressive_f > 0}  DAR: {dar}  SAR: {sar}  PAR: {par}",
                     standard
                 ])) + " ",
                 alignment=1,
