@@ -26,6 +26,11 @@ class PD2V:
 
         A lot of class variables are available to be used, like flags, pulldown, d2v data.
         """
+        if not hasattr(core, "d2v"):
+            raise RuntimeError(
+                "Required plugin d2v for namespace 'd2v' not found. "
+                "See https://github.com/dwbuiten/d2vsource"
+            )
         self.file = get_d2v(file)
         self.d2v = D2V(self.file)
         self.flags = self._get_flags(self.d2v)
