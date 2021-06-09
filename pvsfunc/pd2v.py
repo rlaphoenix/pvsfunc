@@ -73,7 +73,7 @@ class PD2V:
                 scale=1
             )
 
-    def deinterlace(self, kernel: Callable, fps_divisor=2, verbose=False):
+    def deinterlace(self, kernel: Callable, verbose=False):
         """
         Deinterlace clip using specified kernel in an optimal way.
 
@@ -92,22 +92,38 @@ class PD2V:
         if not callable(kernel):
             raise ValueError("Invalid kernel, must be a callable")
 
-        def _d(n, f, c):
+        deinterlaced_tff = kernel(self.clip, TFF=True)
+        deinterlaced_bff = kernel(self.clip, TFF=False)
+
+        fps_factor = deinterlaced_tff.fps.numerator / deinterlaced_tff.fps.denominator
+        fps_factor = fps_factor / (self.clip.fps.numerator / self.clip.fps.denominator)
+        if fps_factor not in (1.0, 2.0):
+            raise ValueError(
+                "The deinterlacer kernel returned an unsupported frame-rate (%s). " % deinterlaced_tff.fps +
+                "Only single-rate and double-rate is supported with PD2V at the moment."
+            )
+
+        def _d(n: int, f: vs.VideoFrame, c: vs.VideoNode, tff: vs.VideoNode, bff: vs.VideoNode, ff: int):
             # frame marked as progressive in flags by D2V, skip deinterlacing
             if f.props["PVSFlagProgressiveFrame"]:
-                return core.text.Text(c, "Progressive", alignment=3) if verbose else c
+                rc = core.std.Interleave([c] * ff) if ff > 1 else c  # duplicate if not a single-rate fps output
+                if rc.format and tff.format and rc.format.id != tff.format.id:
+                    rc = core.resize.Point(rc, format=tff.format.id)
+                return core.text.Text(rc, "Progressive", alignment=3) if verbose else rc
             # interlaced frame, deinterlace (if _FieldBased is > 0)
-            rc = {0: c, 1: kernel(c, TFF=False), 2: kernel(c, TFF=True)}[f.props["_FieldBased"]]
-            field_order = {0: "Progressive", 1: "BFF", 2: "TFF"}[f.props["_FieldBased"]]
+            rc = {0: c, 1: bff, 2: tff}[f.props["_FieldBased"]]  # type: ignore
+            field_order = {0: "Progressive <!>", 1: "BFF", 2: "TFF"}[f.props["_FieldBased"]]  # type: ignore
             return core.text.Text(rc, "Deinterlaced (%s)" % field_order, alignment=3) if verbose else rc
 
         self.clip = core.std.FrameEval(
-            core.std.BlankClip(
-                self.clip,
-                length=len(self.clip) * 2 / fps_divisor,
-                fpsnum=self.clip.fps.numerator * 2 / fps_divisor
+            deinterlaced_tff,
+            functools.partial(
+                _d,
+                c=self.clip,
+                tff=deinterlaced_tff,
+                bff=deinterlaced_bff,
+                ff=int(fps_factor)
             ),
-            functools.partial(_d, c=self.clip),
             prop_src=self.clip
         )
         return self
