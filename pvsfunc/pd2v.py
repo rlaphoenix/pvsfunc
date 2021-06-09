@@ -226,6 +226,13 @@ class PD2V:
                 }, prop="PVSFlag%s" % key.title().replace("_", ""))
             return c[n]
 
+        vob_indexes = [v for _, v in {f["vob"]: n for n, f in enumerate(flags)}.items()]
+        vob_indexes = [
+            "%s-%s" % ((0 if n == 0 else (vob_indexes[n - 1] + 1)), i)
+            for n, i in enumerate(vob_indexes)
+        ]
+        clip = core.std.SetFrameProp(clip, prop="PVSVobIdIndexes", data=" ".join(vob_indexes))
+
         return core.std.FrameEval(
             clip,
             functools.partial(
