@@ -4,6 +4,7 @@ from collections import Counter
 from typing import List, Optional, Tuple, Callable
 
 import vapoursynth as vs
+from more_itertools import split_at
 from pyd2v import D2V
 from vapoursynth import core
 
@@ -260,15 +261,27 @@ class PD2V:
     @staticmethod
     def _get_pulldown(flags: List[dict]) -> Tuple[int, Optional[str]]:
         """
-        Get commonly used Pulldown syntax string and cycle.
+        Get most commonly used Pulldown cycle and syntax string.
         Returns None if Pulldown is not used, tuple (pulldown, cycle) otherwise.
         """
-        rff = [n for n, f in enumerate(flags) if f["rff"]][::2]
-        if len(rff) <= 1:
-            return 0, None
+        # TODO: Find a safe way to get cycle, i.e. not resort to most common digit.
+        #       Previously I would do this code on all progressive rff indexes, but when it entered and
+        #       exited interlaced sections the right index vs left index were very far apart, messing up
+        #       the accuracy of the cycles. I cannot find out why my test source (Family Guy S01E01 USA
+        #       NTSC) is still having random different numbers in each (now progressive only) sections.
+        sections = list(filter(None, [
+            [flag["i"] for flag in split if flag["rff"] and flag["tff"]]
+            for split in split_at(
+                [dict(x, i=n) for n, x in enumerate(flags)],
+                lambda flag: not flag["progressive_frame"]
+            )
+        ]))
         cycle = Counter([
-            right - left for left, right
-            in zip(rff[::2], rff[1::2])
+            Counter([
+                (right - left)
+                for left, right in zip(indexes[::2], indexes[1::2])
+            ]).most_common(1)[0][0]
+            for indexes in sections
         ]).most_common(1)[0][0] + 1
         pulldown = ["2"] * math.floor(cycle / 2)
         if cycle % 2:
