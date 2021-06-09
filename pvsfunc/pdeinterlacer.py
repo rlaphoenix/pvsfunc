@@ -1,5 +1,4 @@
 import functools
-from typing import List, Union
 
 import vapoursynth as vs
 from vapoursynth import core
@@ -34,7 +33,6 @@ class PDeinterlacer:
                     "%s only supports QTGMC single-rate output (FPSDivisor=2)" % sourcer
                 )
         self.handler = {
-            "core.d2v.Source": self._d2v,
             "core.lsmas.LWLibavSource": self._lsmash,
             "core.imwri.Read": lambda c: c  # NOP
         }.get(sourcer)
@@ -60,63 +58,6 @@ class PDeinterlacer:
             )
         clip = self.kernel(clip, **self.kernel_args)
         return clip, clip
-
-    def _d2v(self, clip):
-        """
-        Deinterlace clips that are loaded with core.d2v.Source.
-        It only deinterlaces frames that need to be deinterlaced. It entirely skips frames marked as progressive.
-        It uses DGIndex internally to handle frame indexing as no other Frame indexer I have tested comes anywhere
-        as close as DGIndex's usability and accuracy.
-
-        Typically used for MPEG Format version 1 and 2 video sources.
-        """
-        # 1. create a clip from the output of the kernel deinterlacer
-        deinterlaced_tff, deinterlaced_bff = self._get_kernel(clip)
-        fps_factor = deinterlaced_tff.fps.numerator / deinterlaced_tff.fps.denominator
-        fps_factor = fps_factor / (clip.fps.numerator / clip.fps.denominator)
-        if fps_factor not in (1.0, 2.0):
-            raise ValueError(
-                "The deinterlacer kernel returned an unsupported frame-rate (%s). "
-                "Only single-rate and double-rate is supported with PDeinterlacer at the moment." % deinterlaced_tff.fps
-            )
-        fps_factor = int(fps_factor)
-
-        # 2. ensure the color families between tff and bff kernel uses match
-        if deinterlaced_tff.format.id != deinterlaced_bff.format.id:
-            raise ValueError(
-                "The kernel supplied different color space outputs between TFF and BFF usage."
-            )
-
-        # 3. deinterlace whats interlaced
-        def _d(n, f, c, d_tff, d_bff, ff):
-            # compile debug information to print if requested
-            debug_info = None
-            if self.debug:
-                debug_info = "VOB: {:,d}:{:,d} - Frame #{:,d}".format(f.props['PVSFlagVob'], f.props['PVSFlagCell'], n)
-            # progressive frame, simply skip deinterlacing
-            if f.props["PVSFlagProgressiveFrame"]:
-                rc = core.std.Interleave([c] * ff) if ff > 1 else c  # duplicate if not a single-rate fps output
-                if rc.format.id != d_tff.format.id:
-                    rc = core.resize.Point(rc, format=d_tff.format.id)
-                return core.text.Text(rc, " %s - Progressive " % debug_info, alignment=1) if self.debug else rc
-            # interlaced frame, use deinterlaced clip, d_tff if TFF (2) or d_bff if BFF (1)
-            rc = {0: c, 1: d_bff, 2: d_tff}[f.props["_FieldBased"]]
-            if self.debug:
-                field_order = {0: "Progressive", 1: "BFF", 2: "TFF"}[f.props["_FieldBased"]]
-                return core.text.Text(rc, " %s - Deinterlaced (%s) " % (debug_info, field_order), alignment=1)
-            return rc
-
-        return core.std.FrameEval(
-            deinterlaced_tff,
-            functools.partial(
-                _d,
-                c=clip,
-                d_tff=deinterlaced_tff,
-                d_bff=deinterlaced_bff,
-                ff=fps_factor
-            ),
-            prop_src=clip
-        )
 
     def _lsmash(self, clip):
         """
