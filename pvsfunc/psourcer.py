@@ -58,31 +58,3 @@ class PSourcer:
             # why the fuck is there no SetFrameProps, come on...
             # +1: https://github.com/vapoursynth/vapoursynth/issues/559
             self.clip = core.std.SetFrameProp(self.clip, prop="PVS" + k, data=v)
-
-    @classmethod
-    def change_chroma_loc(cls, clip: vs.VideoNode, new_loc: Union[int, str], verbose: bool = False):
-        """
-        Change the Chroma Location of the clip.
-        It's a possible case for the chroma location to be incorrect, you can use this to fix it's location
-        An incorrect chroma location value is often the reason for chroma bleed.
-        :param clip: Clip to change chroma location of
-        :param new_loc: New chroma location
-        :param verbose: Print the current and new locations that is changed on each frame
-        """
-        if new_loc is None:
-            return clip
-        if isinstance(new_loc, str):
-            new_loc = {
-                "top-left": 2, "top": 3,
-                "left": 0, "center": 1,
-                "bottom-left": 4, "bottom": 5
-            }.get(new_loc.replace(" ", "-").replace("_", "-"))
-        if not isinstance(new_loc, int) or (isinstance(new_loc, int) and 0 > new_loc > 5):
-            raise ValueError(
-                "pvsfunc.change_chroma_loc: new_loc must be an int between 0..5, "
-                "or a string denoting the location, e.g. top-left, center, bottom..."
-            )
-        clip = core.resize.Point(clip, chromaloc=new_loc)
-        if verbose:
-            return core.text.Text(clip, "ChromaLoc: %d" % new_loc, 3)
-        return clip
