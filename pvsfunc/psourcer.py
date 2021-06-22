@@ -4,7 +4,7 @@ from typing import Union
 import vapoursynth as vs
 from vapoursynth import core
 
-from pvsfunc.helpers import anti_file_prefix, get_video_codec, fps_reset
+from pvsfunc.helpers import get_video_codec, fps_reset
 
 
 class PSourcer:
@@ -31,7 +31,7 @@ class PSourcer:
         :param file_path: Input file path, can be any extension and can include `file://` prefix.
         :param debug: Print various information and metadata about the loaded clip.
         """
-        self.file_path = anti_file_prefix(file_path)
+        self.file_path = file_path
         self.debug = debug
         self.clip = None
 

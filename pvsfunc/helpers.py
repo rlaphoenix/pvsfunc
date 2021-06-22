@@ -8,16 +8,6 @@ from typing import Union, Iterable, List
 from pymediainfo import MediaInfo
 
 
-def anti_file_prefix(path: str) -> str:
-    """Remove prefixed 'file://' from path."""
-    if path.lower().startswith("file://"):
-        path = path[7:]
-        if os.name == "nt":
-            # windows sometimes adds an extra leading /
-            path = path.lstrip("/")
-    return path
-
-
 def get_video_codec(file_path: str) -> Union[str, int]:
     """
     Get video codec using MediaInfo.
