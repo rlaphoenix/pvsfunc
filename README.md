@@ -90,25 +90,8 @@ Information for Linux users:
 
 ## Building
 
-This project is firmly requiring the use of Python PIP with [PEP 517][pep517] support. This means you need `pip >= 19`
-[(ref)][pip19].
-
-Considering version `19.0` released on the 22nd of January 2019, it isn't much of an ask in my opinion, when you end up
-with an overall much smoother build experience.
-
-Once you have pip with PEP 517 support, it's as simple as 3 calls:
-
-    pip install build
-    git clone https://github.com/rlaPHOENiX/pvsfunc && cd pvsfunc
-    python -m build
-
-To install the built project, install the .whl file available in /dist, e.g. `pip install dist/*.whl`
-
-If you want to simply install from the source, instead of `python -m build` run `pip install .`
-
-[pep517]: https://www.python.org/dev/peps/pep-0517
-
-[pip19]: https://pip.pypa.io/en/stable/news/#id415
+Building from source requires [Poetry](https://python-poetry.org).
+Simply do `poetry install` or `poetry build`.
 
 * * *
 
