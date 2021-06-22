@@ -1,84 +1,10 @@
 import os
-import shutil
 import subprocess
 from itertools import groupby
 from operator import itemgetter
 from typing import Iterable, List
 
 from pymediainfo import MediaInfo
-
-
-def get_d2v(file_path: str) -> str:
-    """Demux video track and generate a D2V file for it if needed."""
-    is_vob = os.path.splitext(file_path)[-1].lower() == ".vob"
-    d2v_path = os.path.splitext(file_path)[0] + ".d2v"
-    if os.path.exists(d2v_path):
-        print("Skipping generation as a D2V file already exists")
-        return d2v_path
-    # demux the mpeg stream if not a .VOB or .MPEG file
-    demuxed_ext = [".mpeg", ".mpg", ".m2v", ".vob"]
-    vid_path = file_path
-    if os.path.splitext(file_path)[-1].lower() in demuxed_ext:
-        print("Skipping demuxing of raw MPEG stream as it already exists or is unnecessary")
-    else:
-        vid_path = None
-        for ext in demuxed_ext:
-            x = os.path.splitext(file_path)[0] + ext
-            if os.path.exists(x) and os.path.isfile(x):
-                vid_path = x
-                break
-        if not vid_path:
-            vid_path = os.path.splitext(file_path)[0] + demuxed_ext[0]
-            mkvextract_path = shutil.which("mkvextract")
-            if not mkvextract_path:
-                raise RuntimeError(
-                    "pvsfunc.PSourcer: Executable 'mkvextract' not found, but is needed for the provided file.\n"
-                    "Install MKVToolNix and make sure it's binaries are in the environment path."
-                )
-            subprocess.run([
-                mkvextract_path, os.path.basename(file_path),
-                # todo ; this assumes the track with track-id of 0 is the video, not ideal
-                "tracks", "0:" + os.path.basename(vid_path)
-            ], cwd=os.path.dirname(file_path), check=True)
-    # use dgindex to create a d2v file for the demuxed track
-    dgindex_path = shutil.which("DGIndex.exe") or shutil.which("dgindex.exe")
-    if not dgindex_path:
-        raise RuntimeError(
-            "pvsfunc.PSourcer: Executable 'DGIndex.exe' not found, but is needed for the provided file.\n"
-            "Add DGIndex.exe to your system path. Ensure the executable is named exactly `DGIndex.exe`.\n"
-            "Windows: Search Start Menu for 'Environment Variables', Add DGIndex's folder to the `PATH` variable.\n"
-            "Linux: Append to $PATH in /etc/profile.d, I recommend using `nano /etc/profile.d/env.sh`. Must reboot. " +
-            "Make sure DGIndex.exe is marked as executable (chmod +x)."
-        )
-    args = []
-    if dgindex_path.startswith("/"):
-        # required to do it this way for whatever reason. Directly calling it sometimes fails.
-        args.extend(["wine", "start", "/wait", "Z:" + dgindex_path])
-    else:
-        args.append(dgindex_path)
-    args.extend([
-        # all the following D2V settings are VERY important
-        # please do not change these unless there's a good verifiable reason
-        "-ai" if is_vob else "-i", os.path.basename(vid_path),
-        "-ia", "5",  # iDCT Algorithm, 5=IEEE-1180 Reference
-        "-fo", "2",  # Field Operation, 2=Ignore Pulldown Flags
-        "-yr", "1",  # YUV->RGB, 1=PC Scale
-        "-om", "0",  # Output Method, 0=None (just d2v)
-        "-hide", "-exit",  # start hidden and exit when saved
-        "-o", os.path.splitext(os.path.basename(file_path))[0]
-    ])
-    subprocess.run(args, cwd=os.path.dirname(file_path), check=True)
-    # Replace the Z:\bla\bla paths to /bla/bla unix paths, if on a unix system.
-    # This is needed simply due to how d2vsource loads the video files. On linux it doesn't use wine,
-    # so Z:\ paths obviously won't exist.
-    if dgindex_path.startswith("/"):
-        with open(d2v_path, "rt", encoding="utf-8") as f:
-            d2v_content = f.read().splitlines()
-        d2v_content = [(x[2:].replace("\\", "/") if x.startswith("Z:\\") else x) for x in d2v_content]
-        with open(d2v_path, "wt", encoding="utf-8") as f:
-            f.write("\n".join(d2v_content))
-    # return file path of the new d2v file
-    return d2v_path
 
 
 def fps_reset(file_path: str) -> str:
