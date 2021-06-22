@@ -1,9 +1,10 @@
 import functools
+import subprocess
+from pathlib import Path
 
 import vapoursynth as vs
+from pymediainfo import MediaInfo
 from vapoursynth import core
-
-from pvsfunc.helpers import fps_reset
 
 
 class PLS:
@@ -21,7 +22,7 @@ class PLS:
                 "Required plugin lsmas for namespace 'lsmas' not found. "
                 "See https://github.com/VFR-maniac/L-SMASH-Works"
             )
-        self.file = fps_reset(file)  # destroy container-set FPS (causes problems)
+        self.file = self._fps_reset(Path(file))  # destroy container-set FPS (causes problems)
         self.clip = core.lsmas.LWLibavSource(
             self.file,
             stream_index=-1,  # get best stream in terms of res
@@ -76,3 +77,29 @@ class PLS:
             prop_src=self.clip
         )
         return self
+
+    @staticmethod
+    def _fps_reset(file_path: Path) -> Path:
+        """Remove container-set FPS to only have the encoded FPS."""
+        video_tracks = [x for x in MediaInfo.parse(file_path).tracks if x.track_type == "Video"]
+        if not video_tracks:
+            raise Exception("File does not have a video track, removing container-set FPS isn't possible.")
+        video_track = video_tracks[0]
+        if video_track.original_frame_rate is None:
+            # no container-set FPS to remove, return unchanged
+            return file_path
+        out_path = file_path.with_stem(".pfpsreset.mkv")
+        if out_path.is_file():
+            # an fps reset was already run on this file, re-use
+            # TODO: could be untrusted, user might just make a file named this
+            return out_path
+        if video_track.framerate_original_num and video_track.framerate_original_den:
+            original_fps = "%s/%s" % (video_track.framerate_original_num, video_track.framerate_original_den)
+        else:
+            original_fps = video_track.original_frame_rate
+        subprocess.check_output([
+            "mkvmerge", "--output", out_path,
+            "--default-duration", "%d:%sfps" % (video_track.track_id - 1, original_fps),
+            file_path
+        ], cwd=file_path.parent)
+        return out_path
