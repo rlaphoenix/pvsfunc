@@ -18,27 +18,15 @@ class PDeinterlacer:
         self.kernel = kernel
         self.kernel_args = kernel_args or {}
         self.debug = debug
-        # validate arguments
+
         if not isinstance(self.clip, vs.VideoNode):
             raise TypeError("This is not a clip")
-        # set handler func based on Sourcer
-        sourcer = self.clip.get_frame(0).props["PVSSourcer"].decode("utf-8")
-        if sourcer == "core.imwri.Read":
-            # todo ; add support for deinterlacing image data (somehow)
-            print("Warning: This source is a clip of images and cannot be deinterlaced")
-        elif sourcer in ["core.lsmas.LWLibavSource"]:
-            if "FPSDivisor" in kernel_args and kernel_args["FPSDivisor"] != 2:
-                # todo ; ideally make this unnecessary
-                raise ValueError(
-                    "%s only supports QTGMC single-rate output (FPSDivisor=2)" % sourcer
-                )
-        self.handler = {
-            "core.lsmas.LWLibavSource": self._lsmash,
-            "core.imwri.Read": lambda c: c  # NOP
-        }.get(sourcer)
-        if self.handler is None:
-            raise NotImplementedError("No sourcer is defined for the given media stream")
-        self.clip = self.handler(self.clip)
+
+        if "FPSDivisor" in kernel_args and kernel_args["FPSDivisor"] != 2:
+            # todo ; ideally make this unnecessary
+            raise ValueError("LWLibavSource only supports QTGMC single-rate output (FPSDivisor=2)")
+
+        self.clip = self._lsmash(self.clip)
 
     def _get_kernel(self, clip) -> tuple:
         """
