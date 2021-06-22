@@ -1,6 +1,7 @@
 import functools
 import math
 from collections import Counter
+from pathlib import Path
 from typing import List, Optional, Tuple, Callable
 
 import vapoursynth as vs
@@ -32,7 +33,7 @@ class PD2V:
                 "See https://github.com/dwbuiten/d2vsource"
             )
         self.file = get_d2v(file)
-        self.d2v = D2V(self.file)
+        self.d2v = D2V.load(Path(self.file))
         self.flags = self._get_flags(self.d2v)
         self.pulldown, self.pulldown_str = self._get_pulldown(self.flags)
         self.vfr = any(f["progressive_frame"] and f["rff"] and f["tff"] for f in self.flags) and any(
