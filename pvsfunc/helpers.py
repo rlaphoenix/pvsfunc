@@ -8,31 +8,6 @@ from typing import Union, Iterable, List
 from pymediainfo import MediaInfo
 
 
-def get_video_codec(file_path: str) -> Union[str, int]:
-    """
-    Get video codec using MediaInfo.
-    :param file_path: Path to a video or image file
-    :returns: -1 if file does not exist,
-              -2 if no Video or Image track in the file exists
-              or finally a unique codec ID str
-    """
-    if not os.path.exists(file_path) or not os.path.isfile(file_path):
-        return -1
-    track = [t for t in MediaInfo.parse(
-        filename=file_path
-    ).tracks if t.track_type in ["Video", "Image"]]
-    if not track:
-        return -2
-    track = track[0]
-    # we try both as in some cases codec_id isn't set
-    codec = track.codec_id or track.commercial_name
-    # do some squashing to reduce amount of code repetition
-    return {
-        "MPEG-1 Video": "V_MPEG1",
-        "MPEG-2 Video": "V_MPEG2"
-    }.get(codec, codec)
-
-
 def get_d2v(file_path: str) -> str:
     """Demux video track and generate a D2V file for it if needed."""
     is_vob = os.path.splitext(file_path)[-1].lower() == ".vob"

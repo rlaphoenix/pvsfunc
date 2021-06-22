@@ -4,7 +4,7 @@ from typing import Union
 import vapoursynth as vs
 from vapoursynth import core
 
-from pvsfunc.helpers import get_video_codec, fps_reset
+from pvsfunc.helpers import fps_reset
 
 
 class PSourcer:
@@ -27,9 +27,6 @@ class PSourcer:
         """
         Load an input file path with the most optimal clip source based on the file.
         For example an MPEG-4/AVC/H.264 video will load using core.lsmas.LWLibavSource.
-
-        :param file_path: Input file path, can be any extension and can include `file://` prefix.
-        :param debug: Print various information and metadata about the loaded clip.
         """
         self.file_path = file_path
         self.debug = debug
@@ -39,12 +36,6 @@ class PSourcer:
         self.file_type = self.file_type.split("/")[0]
         if self.file_type != "video":
             raise ValueError("Only Video or Image files are supported. (%s)" % self.file_type)
-        self.video_codec = get_video_codec(self.file_path)
-
-        if self.video_codec == -1:
-            raise ValueError("File path supplied does not exist")
-        if self.video_codec == -2:
-            raise ValueError("File supplied does not have a Video or Image track")
 
         if not hasattr(core, "lsmas"):
             raise RuntimeError(
@@ -61,7 +52,7 @@ class PSourcer:
 
         for k, v in [
             ("FilePath", self.file_path),
-            ("Codec", self.video_codec),
+            ("Codec", "AVC"),
             ("Sourcer", "core.lsmas.LWLibavSource")
         ]:
             # why the fuck is there no SetFrameProps, come on...
