@@ -12,29 +12,29 @@ pvsfunc (PHOENiX's VapourSynth Functions) is my compilation of VapourSynth Scrip
 
 ## Projects Included
 
-The projects that start with `P` are the foremost reasons for the pvsfunc project's existance. However, there is a
+The projects that start with `P` are the foremost reasons for the pvsfunc project's existence. However, there is a
 `pvsfunc.helpers` that can be used as well as the projects listed below.
 
-pvsfunc.helpers has various small functions for given purposes. The availability of it's functions is not guaranteed to
+pvsfunc.helpers has various small functions for given purposes. The availability of its functions isn't guaranteed to
 be kept forever. These are functions kept only for internal re-use, they aren't created specifically for outside use,
 but while available feel free to.
 
 ### PD2V
 
-Convenience class for working with DGIndex D2V project files (MPEG-1/2 videos).
-Includes source loading, frame matching, deinterlacing, and more.
+Convenience class for working with DGIndex D2V project files (MPEG-1/2 videos). Includes source loading, frame
+matching, deinterlacing, and more.
 
-### PDeinterlacer (PHOENiX's Deinterlacer)
+### PDeinterlacer
 
-Convenience wrapper for deinterlacing a clip in an optimal way.
-The clip will need to be loaded from PSourcer to work as it needs Prop data set by PSourcer.
+Convenience wrapper for deinterlacing a clip optimally. The clip will need to be loaded from PSourcer to work as it
+needs Prop data set by PSourcer.
 
-### PDebox (PHOENiX's Deboxer)
+### PDebox
 
-Lightweight class to apply deboxing based on the wanted output aspect ratio. Similar scripts would annoyingly want you
-to just crop in yourself, but that's incredibly annoying.
+Lightweight class to apply de-boxing based on an output aspect-ratio. Similar scripts would annoyingly want you to
+just crop in yourself which is incredibly annoying.
 
-### PDecimate (PHOENiX's Decimater)
+### PDecimate
 
 Decimate (delete) frames in a specified pattern using cycle and offsets. This is typically used for Inverse-Telecine
 purposes.
@@ -61,14 +61,22 @@ Installation of the sourcer cores:
 
 Information for Linux users:
 
-- If any windows-only program is a dependency, then it is supported by wine and confirmed to be safe to use with full compatability.
-- Add DGIndex to path via `/etc/profile.d/` instead of `~/.profile`, `~/.bashrc` e.t.c as those are SHELL-exclusive PATH's, not global system-wide.
+- If any windows-only program is a dependency, then it is supported by wine and confirmed to be safe to use with full
+  compatibility.
+- Add DGIndex to path via `/etc/profile.d/` instead of `~/.profile`, `~/.bashrc` e.t.c as those are SHELL-exclusive
+  PATH's, not global system-wide.
 
-**†1** Only used if the file path is not to a .d2v file, or there's no corresponding .d2v file next to the input file. Please note that this script uses this to make specifically configured .d2v files with specific settings. Supplying you're own .d2v files is unsafe.
+**†1** Only used if the file path is not to a .d2v file, or there's no corresponding .d2v file next to the input file.
+Please note that this script uses this to make specifically configured .d2v files with specific settings. Supplying
+you're own .d2v files is unsafe.
 
-**†2** Only used if you're providing a file that isnt a .mpeg, .mpg, or .m2v (e.g. mkv, mp4) and there's no corresponding .d2v file. For efficiency and safety files are demuxed out of the container so DGIndex is reading a direct MPEG stream.
+**†2** Only used if you're providing a file that isnt a .mpeg, .mpg, or .m2v (e.g. mkv, mp4) and there's no
+corresponding .d2v file. For efficiency and safety files are demuxed out of the container so DGIndex is reading a
+direct MPEG stream.
 
-**†3** Will only be used if the container has a manual frame rate set that differs to the encoded frame rate. For L-SMASH-WORKS to index the file with the correct source frame rate. PSourcer uses mkvmerge to re-mux the file, with the container-set FPS removed.
+**†3** Will only be used if the container has a manual frame rate set that differs to the encoded frame rate. For
+L-SMASH-WORKS to index the file with the correct source frame rate. PSourcer uses mkvmerge to re-mux the file, with
+the container-set FPS removed.
 
 * * *
 
@@ -88,34 +96,14 @@ Please read and agree to the license before use, it can be found in the [LICENSE
 
 ## Documentation
 
+### OUT OF DATE! To be updated soon.
+
 | Class                                           | Import                              |
 | ----------------------------------------------- | ----------------------------------- |
 | [PSourcer](#psourcer-psourcerpy)                | `from pvsfunc import PSourcer`      |
 | [PDeinterlacer](#pdeinterlacer-pdeinterlacerpy) | `from pvsfunc import PDeinterlacer` |
 | [PDecimate](#pdecimate-pdecimatepy)             | `from pvsfunc import PDecimate`     |
 | [PDebox](#pdebox-pdeboxpy)                      | `from pvsfunc import PDebox`        |
-
-### PSourcer ([psourcer.py](/pvsfunc/psourcer.py))
-
-PSourcer (class) is a convenience wrapper for loading video files to clip variables. It's purpose is to load an input file path with the most optimal clip source based on the file. For example for an MPEG-2 video file (e.g. DVD file) will load using `core.d2v.Source` (and generate an optimized d2v if needed too!), whereas an MPEG-4/AVC/H.264 video will load using `core.lsmas.LWLibavSource`.
-
-`from pvsfunc import PSourcer`  
-`PSourcer(str file_path[, ((int, bool)[, list[int]]) d2v_vst_vfr_mode, bool debug=False])`
-
-- file_path: Path to a file to import. Don't worry about which type of container (if any) you use.
-- d2v_vst_vfr_mode: Mode to use when matching frame rates for VFR (specifically VST) input.
-    False : Duplicate the progressive frames that have `rff flags`, No frame drops. This is
-        the operation that was done prior to this parameter being added. This is the safest option, it wont
-        drop any frames, but you will end up with duplicate frames in the progressive sections.
-    True : Decimate interlaced sections with a Pulldown cycle that matches the one using by the Progressive RFF
-        sections. It's offsets will default to delete the middle (if cycle is an odd number, otherwise last)
-        frame number of every cycle. You can do: (True, [0, 1, 2, 3]) to use a custom offsets list.
-    tuple of (int/bool, list[int]) : Decimate interlaced sections with a manual (cycle, offsets list).
-        A value of (False, list[int]) is an error, but a value of (True, list[int]) is fine, see above.
-    NOTE: For the modes that decimate frames, it doesn't do any checks in regards to cycle resets when
-        entering a new VOB id/cell like PDecimate does. It also doesn't decimate using SelectEvery or cycles.
-        It decimates simply by deleting every nth frame where n is the value you chose (explained above).
-- debug: Use core.text to print verbose information about the file and how it has been loaded.
 
 ### PDeinterlacer ([pdeinterlacer.py](/pvsfunc/pdeinterlacer.py))
 
