@@ -1,7 +1,5 @@
 import mimetypes
-from typing import Union
 
-import vapoursynth as vs
 from vapoursynth import core
 
 from pvsfunc.helpers import fps_reset

@@ -3,7 +3,7 @@ import shutil
 import subprocess
 from itertools import groupby
 from operator import itemgetter
-from typing import Union, Iterable, List
+from typing import Iterable, List
 
 from pymediainfo import MediaInfo
 
