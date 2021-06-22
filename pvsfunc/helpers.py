@@ -1,16 +1,12 @@
+import math
 from itertools import groupby
 from operator import itemgetter
 from typing import Iterable, List
 
 
-def gcd(a, b):
-    """Calculate the GCD (greatest common divisor); the highest number that evenly divides both width and height."""
-    return a if b == 0 else gcd(b, a % b)
-
-
 def calculate_aspect_ratio(width: int, height: int) -> str:
     """Calculate the aspect-ratio gcd string from resolution."""
-    r = gcd(width, height)
+    r = math.gcd(width, height)
     return "%d:%d" % (int(width / r), int(height / r))
 
 
@@ -18,7 +14,7 @@ def calculate_par(width: int, height: int, aspect_ratio_w: int, aspect_ratio_h: 
     """Calculate the pixel-aspect-ratio string from resolution."""
     par_w = height * aspect_ratio_w
     par_h = width * aspect_ratio_h
-    par_gcd = gcd(par_w, par_h)
+    par_gcd = math.gcd(par_w, par_h)
     par_w = int(par_w / par_gcd)
     par_h = int(par_h / par_gcd)
     return "%d:%d" % (par_w, par_h)
