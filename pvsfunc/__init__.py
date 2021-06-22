@@ -4,3 +4,4 @@ from pvsfunc.pdecimate import PDecimate
 from pvsfunc.pdeinterlacer import PDeinterlacer
 from pvsfunc.psourcer import PSourcer
 from pvsfunc.pkernel import PKernel
+from pvsfunc.pls import PLS
