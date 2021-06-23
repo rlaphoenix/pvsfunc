@@ -49,12 +49,35 @@ It then deinterlaces the interlaced sections of the video with QTGMC as the kern
 
 Finally, it takes the clip and set's it for VapourSynth output.
 
+### Dependencies
+
+- [d2vsource] (core.d2v) VapourSynth plugin
+- [DGIndex] v1.5.8 or newer
+- [mkvextract] Only required if you plan on providing non demuxed streams (e.g., mp4, mkv)
+
+To install [d2vsource] it's as simple as `vsrepo install d2vsource` on Windows. Other Operating System user's know the
+drill, go check your package repository's or compile it yourself.
+
+Make sure [DGIndex] and [mkvextract] is available on your environment path and has execution permissions. Note Linux
+Users: Add to system profile path, not terminal/rc path. DGIndex is Windows-only but is supported if you install Wine.
+
 ## PLS
 
 Convenience class for working with L-SMASH-WORKS LWI project files. Includes source loading and deinterlacing.
 More features are to be implemented in the future once a Python-based LWI project parser is available.
 
 Refer to PD2Vs example usage as it's very similar to how PLS is used.
+
+### Dependencies
+
+- [lsmash] (core.lsmas) VapourSynth plugin
+- [mkvmerge] Only required if input file has a container-set frame rate that differs to the encoded frame rate
+
+To install [lsmash] it's as simple as `vsrepo install lsmas` on Windows. Other Operating System user's know the drill,
+go check your package repository's or compile it yourself.
+
+Make sure [mkvmerge] is available on your environment path and has execution permissions. Note Linux Users: Add to
+system profile path, not terminal/rc path.
 
 ## PDebox
 
@@ -94,38 +117,6 @@ learned Disney has also been working on it around the same tim, back in 2020 :P
 2. `pip install pvsfunc`
 3. Make sure you have the dependencies listed below installed for the file codec you will be working with.
 4. It's as simple as that!
-
-### Dependencies
-
-| Input File Codec | Sourcer Used                    | Dependencies                                               |
-| ---------------- | ------------------------------- | ---------------------------------------------------------- |
-| MPEG-1, MPEG-2   | [d2vsource][d2vs] (d2v)         | [DGIndex >=v1.5.8][dg] **†1**, [mkvextract][mkvnix] **†2** |
-| Any other codec  | [L-SMASH-WORKS][lsmash] (lsmas) | [mkvmerge][mkvnix] **†3**                                  |
-
-Installation of the sourcer cores:
-
-- Windows: `vsrepo install package_name` - You can get package names by searching for it on <https://vsdb.top>
-- Linux: You probably know the drill. Check your package repo's or compile it.
-- Mac: No idea how the python/vapoursynth eco-system works, sorry.
-
-Information for Linux users:
-
-- If any windows-only program is a dependency, then it is supported by wine and confirmed to be safe to use with full
-  compatibility.
-- Add DGIndex to path via `/etc/profile.d/` instead of `~/.profile`, `~/.bashrc` e.t.c as those are SHELL-exclusive
-  PATH's, not global system-wide.
-
-**†1** Only used if the file path is not to a .d2v file, or there's no corresponding .d2v file next to the input file.
-Please note that this script uses this to make specifically configured .d2v files with specific settings. Supplying
-you're own .d2v files is unsafe.
-
-**†2** Only used if you're providing a file that isnt a .mpeg, .mpg, or .m2v (e.g. mkv, mp4) and there's no
-corresponding .d2v file. For efficiency and safety files are demuxed out of the container so DGIndex is reading a
-direct MPEG stream.
-
-**†3** Will only be used if the container has a manual frame rate set that differs to the encoded frame rate. For
-L-SMASH-WORKS to index the file with the correct source frame rate. PSourcer uses mkvmerge to re-mux the file, with
-the container-set FPS removed.
 
 * * *
 
