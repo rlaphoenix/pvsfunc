@@ -9,7 +9,7 @@ from vapoursynth import core
 from pvsfunc.helpers import calculate_aspect_ratio, get_standard
 
 
-class PLS:
+class PLWI:
     """
     Apply operations related to L-SMASH-Works and it's indexer file format lwi.
 
