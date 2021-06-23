@@ -8,6 +8,25 @@ pvsfunc (PHOENiX's VapourSynth Functions) is my compilation of VapourSynth Scrip
 [![Issues](https://img.shields.io/github/issues/rlaPHOENiX/pvsfunc?style=flat)](https://github.com/rlaPHOENiX/pvsfunc/issues)
 [![PR's Accepted](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)](https://makeapullrequest.com)
 
+## Installation
+
+Install VapourSynth C libraries first! (this is different to the pypi/pip `vapoursynth` package!)
+
+    pip install --user pvsfunc
+
+Done! However, there are further dependencies listed below that you may need to install depending on the classes you
+intend to use, and your use-case. Don't forget to install them if needed!
+
+## Building
+
+Building from source requires [Poetry](https://python-poetry.org).  
+Simply run `poetry install` or `poetry build` for distribution wheel and source packages.
+
+## License
+
+This project is released under the GNU GENERAL PUBLIC LICENSE Version 3 (GPLv3) license.
+Please read and agree to the license before use, it can be found in the [LICENSE](LICENSE) file.
+
 * * *
 
 Below is information about the projects included in pvsfunc that are available to use. Don't take it as full
@@ -110,27 +129,6 @@ Cartoon/Animated sources as QTGMC does not do them well.
 
 It all still requires a lot more testing, but it looks like it could be a really nice method! Especially now that I've
 learned Disney has also been working on it around the same tim, back in 2020 :P
-
-## Installation
-
-1. Install VapourSynth first! (this is different to the pypi/pip `vapoursynth` package!)
-2. `pip install pvsfunc`
-3. Make sure you have the dependencies listed below installed for the file codec you will be working with.
-4. It's as simple as that!
-
-* * *
-
-## Building
-
-Building from source requires [Poetry](https://python-poetry.org).
-Simply do `poetry install` or `poetry build`.
-
-* * *
-
-## License
-
-This project is released under the GNU GENERAL PUBLIC LICENSE Version 3 (GPLv3) license.
-Please read and agree to the license before use, it can be found in the [LICENSE](LICENSE) file.
 
 * * *
 
