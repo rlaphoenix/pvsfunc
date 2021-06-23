@@ -10,40 +10,89 @@ pvsfunc (PHOENiX's VapourSynth Functions) is my compilation of VapourSynth Scrip
 
 * * *
 
-## Projects Included
+Below is information about the projects included in pvsfunc that are available to use. Don't take it as full
+documentation as that is being worked on.
 
-The projects that start with `P` are the foremost reasons for the pvsfunc project's existence. However, there is a
-`pvsfunc.helpers` that can be used as well as the projects listed below.
-
-pvsfunc.helpers has various small functions for given purposes. The availability of its functions isn't guaranteed to
-be kept forever. These are functions kept only for internal re-use, they aren't created specifically for outside use,
-but while available feel free to.
-
-### PD2V
+## PD2V
 
 Convenience class for working with DGIndex D2V project files (MPEG-1/2 videos). Includes source loading, frame
 matching, deinterlacing, and more.
 
-### PDeinterlacer
+### Example Usage
 
-Convenience wrapper for deinterlacing a clip optimally. The clip will need to be loaded from PSourcer to work as it
-needs Prop data set by PSourcer.
+```py
+from pvsfunc import PD2V
+from functools import partial
+from havsfunc import QTGMC
 
-### PDebox
+clip = PD2V(r"C:\Users\john\Videos\s01e01.d2v", verbose=True).\
+    ceil().\
+    deinterlace(
+        kernel=partial(QTGMC, FPSDivisor=2, Preset="Very Slow"),
+        verbose=True
+    ).\
+    clip
+
+# ... any manual changes to clip
+
+clip.set_output()
+```
+
+The above example will load a D2V project file located at `C:\Users\john\Videos\s01e01.d2v` in Verbose mode.
+Verbose mode will display extra information during the PD2V use.
+
+It then runs `ceil()` which frame-matches the progressive sections of the video with the interlaced sections by
+duplicating the progressive frames (instead of interlacing).
+
+It then deinterlaces the interlaced sections of the video with QTGMC as the kernel. The Kernel must have a `tff` or
+`TFF` argument to be compatible, but the field order should not be manually set by the user.
+
+Finally, it takes the clip and set's it for VapourSynth output.
+
+## PLS
+
+Convenience class for working with L-SMASH-WORKS LWI project files. Includes source loading and deinterlacing.
+More features are to be implemented in the future once a Python-based LWI project parser is available.
+
+Refer to PD2Vs example usage as it's very similar to how PLS is used.
+
+## PDebox
 
 Lightweight class to apply de-boxing based on an output aspect-ratio. Similar scripts would annoyingly want you to
 just crop in yourself which is incredibly annoying.
 
-### PDecimate
+## PDecimate
 
 Decimate (delete) frames in a specified pattern using cycle and offsets. This is typically used for Inverse-Telecine
 purposes.
+
+## PKernel
+
+Kernel storage class for any custom Deinterlacing kernels I'm working on or tinkering with that you may want to use.
+Just know that they are most likely not the type of deinterlacing you may expect, as it's generally a playground for
+looking into strange tactics of deinterlacing.
+
+### VoidWeave
+
+VoidWeave is a deinterlacing method involving in-painting with machine-learning.
+
+It takes footage and separates the weaved fields so that each field is full-height with the missing data of the field
+being 255 RGB green instead of empty/black. The in-painting machine-learning system would then in-paint the missing
+data wherever it finds the 255 RGB Green pixels. It works quite well as YUV 4:2:0 DVD data doesn't seem to ever reach
+255 green though it does get close, but never quite 255.
+
+I tested it on a Live Action DVD and the results were honestly outstanding! The time it took to run the in-painting
+was about the same as QTGMC on Very Slow, with similar results! I think where this method may really shine is with
+Cartoon/Animated sources as QTGMC does not do them well.
+
+It all still requires a lot more testing, but it looks like it could be a really nice method! Especially now that I've
+learned Disney has also been working on it around the same tim, back in 2020 :P
 
 ## Installation
 
 1. Install VapourSynth first! (this is different to the pypi/pip `vapoursynth` package!)
 2. `pip install pvsfunc`
-3. Make sure you have all the dependencies listed below installed.
+3. Make sure you have the dependencies listed below installed for the file codec you will be working with.
 4. It's as simple as that!
 
 ### Dependencies
