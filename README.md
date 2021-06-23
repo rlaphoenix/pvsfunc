@@ -10,12 +10,14 @@ pvsfunc (PHOENiX's VapourSynth Functions) is my compilation of VapourSynth Scrip
 
 ## Installation
 
-Install VapourSynth C libraries first! (this is different to the pypi/pip `vapoursynth` package!)
+Install [VapourSynth] first! (this is different to the pypi/pip `vapoursynth` python wrapper!)
 
     pip install --user pvsfunc
 
 Done! However, there are further dependencies listed below that you may need to install depending on the classes you
 intend to use, and your use-case. Don't forget to install them if needed!
+
+  [VapourSynth]: <https://www.vapoursynth.com/doc/installation.html>
 
 ## Building
 
