@@ -68,7 +68,7 @@ class PD2V:
                 scale=1
             )
 
-    def deinterlace(self, kernel: Callable, verbose=False):
+    def deinterlace(self, kernel: functools.partial, verbose=False):
         """
         Deinterlace clip using specified kernel in an optimal way.
 
@@ -86,6 +86,8 @@ class PD2V:
         """
         if not callable(kernel):
             raise ValueError("Invalid kernel, must be a callable")
+        if len(kernel.args) > 1:
+            raise ValueError("Invalid kernel, no positional arguments should be used")
 
         deinterlaced_tff = kernel(self.clip, TFF=True)
         deinterlaced_bff = kernel(self.clip, TFF=False)
