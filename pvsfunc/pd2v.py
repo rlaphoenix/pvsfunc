@@ -240,20 +240,20 @@ class PD2V:
     @staticmethod
     def _get_d2v(file_path: Path) -> Path:
         """Demux video track and generate a D2V file for it if needed."""
-        is_vob = file_path.stem.lower() == ".vob"
-        d2v_path = file_path.with_stem(".d2v")
+        is_vob = file_path.suffix.lower() == ".vob"
+        d2v_path = file_path.with_suffix(".d2v")
         if d2v_path.is_file():
             print("Skipping generation as a D2V file already exists")
             return d2v_path
         # demux the mpeg stream if not a .VOB or .MPEG file
         demuxed_ext = [".mpeg", ".mpg", ".m2v", ".vob"]
         vid_path = file_path
-        if file_path.stem.lower() in demuxed_ext:
+        if file_path.suffix.lower() in demuxed_ext:
             print("Skipping demuxing of raw MPEG stream as it already exists or is unnecessary")
         else:
-            vid_path = next((x for x in map(file_path.with_stem, demuxed_ext) if x.exists()), None)
+            vid_path = next((x for x in map(file_path.with_suffix, demuxed_ext) if x.exists()), None)
             if not vid_path:
-                vid_path = file_path.with_stem(demuxed_ext[0])
+                vid_path = file_path.with_suffix(demuxed_ext[0])
                 mkvextract_path = shutil.which("mkvextract")
                 if not mkvextract_path:
                     raise RuntimeError(
