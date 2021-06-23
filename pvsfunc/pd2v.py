@@ -84,6 +84,8 @@ class PD2V:
                 mess with the clip data manually after sending it to this class unless you also
                 update the changes on the flags. For an example of this see ceil() and floor().
         """
+        if not isinstance(self.clip, vs.VideoNode):
+            raise TypeError("This is not a clip")
         if not callable(kernel):
             raise ValueError("Invalid kernel, must be a callable")
         if len(kernel.args) > 1:
