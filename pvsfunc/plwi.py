@@ -75,8 +75,11 @@ class PLWI:
         def _d(n: int, f: vs.VideoFrame, c: vs.VideoNode, tff: vs.VideoNode, bff: vs.VideoNode):
             # deinterlace if _FieldBased > 0
             rc = {0: c, 1: bff, 2: tff}[f.props["_FieldBased"]]  # type: ignore
-            field_order = {0: "Progressive", 1: "BFF", 2: "TFF"}[f.props["_FieldBased"]]  # type: ignore
-            return core.text.Text(rc, "Deinterlaced (%s)" % field_order, alignment=3) if verbose else rc
+            return core.text.Text(
+                rc,
+                {0: "Progressive", 1: "Deinterlaced (BFF)", 2: "Deinterlaced (TFF)"}[f.props["_FieldBased"]],
+                alignment=3
+            ) if verbose else rc
 
         self.clip = core.std.FrameEval(
             self.clip,
