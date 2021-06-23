@@ -1,5 +1,9 @@
 # Release History
 
+## 4.0.3
+
+- Fix pathlib usage in `PD2V._get_d2v` and `PLWI._fps_reset`, stem and suffix was mixed up.
+
 ## 4.0.2
 
 - Fix `__ALL__` imports in `__init__`, was using old PLS name after it was renamed to PLWI.
