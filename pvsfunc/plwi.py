@@ -103,7 +103,7 @@ class PLWI:
         if video_track.original_frame_rate is None:
             # no container-set FPS to remove, return unchanged
             return file_path
-        out_path = file_path.with_stem(".pfpsreset.mkv")
+        out_path = file_path.with_suffix(".pfpsreset.mkv")
         if out_path.is_file():
             # an fps reset was already run on this file, re-use
             # TODO: could be untrusted, user might just make a file named this
