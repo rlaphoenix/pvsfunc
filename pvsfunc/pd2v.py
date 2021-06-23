@@ -11,7 +11,7 @@ from more_itertools import split_at
 from pyd2v import D2V
 from vapoursynth import core
 
-from pvsfunc.helpers import group_by_int, list_select_every, calculate_aspect_ratio, calculate_par
+from pvsfunc.helpers import group_by_int, list_select_every, calculate_aspect_ratio, calculate_par, get_standard
 
 
 class PD2V:
@@ -47,15 +47,7 @@ class PD2V:
             coded_f = len(self.flags)
             progressive_f = sum(f["progressive_frame"] for f in self.flags)
             progressive_p = (progressive_f / coded_f) * 100
-            standard = {
-                0: "?",
-                24 / 1: "FILM",
-                25 / 1: "PAL",
-                50 / 1: "PALi",
-                30000 / 1001: "NTSC",
-                60000 / 1001: "NTSCi",
-                24000 / 1001: "NTSC (FILM)"
-            }[self.clip.fps.numerator / self.clip.fps.denominator]
+            standard = get_standard(self.clip.fps.numerator / self.clip.fps.denominator)
             dar = self.d2v.settings["Aspect_Ratio"]
             if isinstance(dar, list):
                 dar = dar[0]

@@ -4,6 +4,19 @@ from operator import itemgetter
 from typing import Iterable, List
 
 
+def get_standard(aspect: float) -> str:
+    """Convert an aspect float to a standard string."""
+    return {
+        0: "?",
+        24 / 1: "FILM",
+        25 / 1: "PAL",
+        50 / 1: "PALi",
+        30000 / 1001: "NTSC",
+        60000 / 1001: "NTSCi",
+        24000 / 1001: "NTSC (FILM)"
+    }[aspect]
+
+
 def calculate_aspect_ratio(width: int, height: int) -> str:
     """Calculate the aspect-ratio gcd string from resolution."""
     r = math.gcd(width, height)

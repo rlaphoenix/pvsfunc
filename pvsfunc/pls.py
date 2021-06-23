@@ -6,7 +6,7 @@ import vapoursynth as vs
 from pymediainfo import MediaInfo
 from vapoursynth import core
 
-from pvsfunc.helpers import calculate_aspect_ratio
+from pvsfunc.helpers import calculate_aspect_ratio, get_standard
 
 
 class PLS:
@@ -32,15 +32,7 @@ class PLS:
         )
 
         if verbose:
-            standard = {
-                0: "?",
-                24 / 1: "FILM",
-                25 / 1: "PAL",
-                50 / 1: "PALi",
-                30000 / 1001: "NTSC",
-                60000 / 1001: "NTSCi",
-                24000 / 1001: "NTSC (FILM)"
-            }[self.clip.fps.numerator / self.clip.fps.denominator]
+            standard = get_standard(self.clip.fps.numerator / self.clip.fps.denominator)
             sar = calculate_aspect_ratio(self.clip.width, self.clip.height)
             self.clip = core.text.Text(
                 self.clip,
