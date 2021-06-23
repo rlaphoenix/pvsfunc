@@ -6,6 +6,8 @@ import vapoursynth as vs
 from pymediainfo import MediaInfo
 from vapoursynth import core
 
+from pvsfunc.helpers import calculate_aspect_ratio
+
 
 class PLS:
     """
@@ -15,7 +17,7 @@ class PLS:
         Once a parser for .lwi indexes is set-up, a lot more will be possible.
     """
 
-    def __init__(self, file: str):
+    def __init__(self, file: str, verbose=False):
         """Load a file using core.lsmas.LWLibavSource, prepare source for optimal use."""
         if not hasattr(core, "lsmas"):
             raise RuntimeError(
@@ -28,6 +30,24 @@ class PLS:
             stream_index=-1,  # get best stream in terms of res
             dr=False  # enabling this seemed to cause issues on Linux for me
         )
+
+        if verbose:
+            standard = {
+                0: "?",
+                24 / 1: "FILM",
+                25 / 1: "PAL",
+                50 / 1: "PALi",
+                30000 / 1001: "NTSC",
+                60000 / 1001: "NTSCi",
+                24000 / 1001: "NTSC (FILM)"
+            }[self.clip.fps.numerator / self.clip.fps.denominator]
+            sar = calculate_aspect_ratio(self.clip.width, self.clip.height)
+            self.clip = core.text.Text(
+                self.clip,
+                text=f" {standard}  SAR: {sar} ",
+                alignment=1,
+                scale=1
+            )
 
     def deinterlace(self, kernel: functools.partial, verbose=False):
         """
