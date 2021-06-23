@@ -4,7 +4,7 @@ import shutil
 import subprocess
 from collections import Counter
 from pathlib import Path
-from typing import List, Optional, Tuple, Callable
+from typing import List, Optional, Tuple
 
 import vapoursynth as vs
 from more_itertools import split_at
