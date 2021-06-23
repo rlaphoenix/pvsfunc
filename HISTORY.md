@@ -1,5 +1,13 @@
 # Release History
 
+## 4.0.2
+
+- Fix `__ALL__` imports in `__init__`, was using old PLS name after it was renamed to PLWI.
+
+### PLWI
+
+- State "Progressive" instead of "Deinterlaced (Progressive)" in deinterlace()'s verbose info.
+
 ## 4.0.1
 
 - Create HISTORY.md
