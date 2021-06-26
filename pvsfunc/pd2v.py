@@ -1,7 +1,5 @@
 import functools
 import math
-import shutil
-import subprocess
 from collections import Counter
 from pathlib import Path
 from typing import List, Optional, Tuple
@@ -34,8 +32,8 @@ class PD2V:
                 "Required plugin d2v for namespace 'd2v' not found. "
                 "See https://github.com/dwbuiten/d2vsource"
             )
-        self.file = self._get_d2v(Path(file))
-        self.d2v = D2V.load(self.file)
+        self.d2v = D2V.load(Path(file))
+        self.file = self.d2v.path
         self.flags = self._get_flags(self.d2v)
         self.pulldown, self.pulldown_str = self._get_pulldown(self.flags)
         self.vfr = any(f["progressive_frame"] and f["rff"] and f["tff"] for f in self.flags) and any(
@@ -236,72 +234,6 @@ class PD2V:
             self.flags = [f for i, f in enumerate(self.flags) if i not in interlaced_frames]
             self.vfr = False
         return self
-
-    @staticmethod
-    def _get_d2v(file_path: Path) -> Path:
-        """Demux video track and generate a D2V file for it if needed."""
-        is_vob = file_path.suffix.lower() == ".vob"
-        d2v_path = file_path.with_suffix(".d2v")
-        if d2v_path.is_file():
-            print("Skipping generation as a D2V file already exists")
-            return d2v_path
-        # demux the mpeg stream if not a .VOB or .MPEG file
-        demuxed_ext = [".mpeg", ".mpg", ".m2v", ".vob"]
-        vid_path = file_path
-        if file_path.suffix.lower() in demuxed_ext:
-            print("Skipping demuxing of raw MPEG stream as it already exists or is unnecessary")
-        else:
-            vid_path = next((x for x in map(file_path.with_suffix, demuxed_ext) if x.exists()), None)
-            if not vid_path:
-                vid_path = file_path.with_suffix(demuxed_ext[0])
-                mkvextract_path = shutil.which("mkvextract")
-                if not mkvextract_path:
-                    raise RuntimeError(
-                        "Executable 'mkvextract' not found, but is needed for the provided file.\n"
-                        "Install MKVToolNix and make sure it's binaries are in the environment path."
-                    )
-                subprocess.run([
-                    mkvextract_path,
-                    file_path.name,
-                    # todo ; this assumes the track with track-id of 0 is the video, not ideal
-                    "tracks", f"0:{vid_path.name}"
-                ], cwd=file_path.parent, check=True)
-        # use dgindex to create a d2v file for the demuxed track
-        dgindex_path = shutil.which("DGIndex") or shutil.which("dgindex")
-        if not dgindex_path:
-            raise RuntimeError(
-                "Executable 'DGIndex' not found, but is needed for the provided file.\n"
-                "Add DGIndex.exe to your environment path. Ensure the executable is named `DGIndex.exe`."
-            )
-        is_unix = dgindex_path.startswith("/")
-        if is_unix:
-            # required to do it this way for whatever reason. Directly calling it sometimes fails.
-            args = ["wine", "start", "/wait", "Z:" + dgindex_path]
-        else:
-            args = [dgindex_path]
-        args.extend([
-            # all the following D2V settings are VERY important
-            # please do not change these unless there's a good verifiable reason
-            "-ai" if is_vob else "-i", vid_path.name,
-            "-ia", "5",  # iDCT Algorithm, 5=IEEE-1180 Reference
-            "-fo", "2",  # Field Operation, 2=Ignore Pulldown Flags
-            "-yr", "1",  # YUV->RGB, 1=PC Scale
-            "-om", "0",  # Output Method, 0=None (just d2v)
-            "-hide", "-exit",  # start hidden and exit when saved
-            "-o", file_path.stem
-        ])
-        subprocess.run(args, cwd=file_path.parent, check=True)
-        # Replace the Z:\bla\bla paths to /bla/bla unix paths, if on a unix system.
-        # This is needed simply due to how d2vsource loads the video files. On linux it doesn't use wine,
-        # so Z:\ paths obviously won't exist.
-        if is_unix:
-            with open(d2v_path, "rt", encoding="utf8") as f:
-                d2v_content = f.read().splitlines()
-            d2v_content = [(x[2:].replace("\\", "/") if x.startswith("Z:\\") else x) for x in d2v_content]
-            with open(d2v_path, "wt", encoding="utf8") as f:
-                f.write("\n".join(d2v_content))
-        # return file path of the new d2v file
-        return d2v_path
 
     @staticmethod
     def _stamp_frames(clip: vs.VideoNode, flags: List[dict]) -> vs.VideoNode:
