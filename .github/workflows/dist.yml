@@ -30,9 +30,6 @@ jobs:
           poetry install
       - name: Build a wheel
         run: poetry build -f wheel
-      - name: Get version from pyproject
-        run: echo "::set-output name=version::$(poetry version | cut -d ' ' -f 2)"
-        id: ver
       - name: Upload wheel
         uses: actions/upload-artifact@v2.2.4
         with:
