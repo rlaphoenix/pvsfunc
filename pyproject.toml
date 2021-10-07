@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "pvsfunc"
-version = "4.0.3"
+version = "4.1.0"
 description = "PHOENiX's compilation of VapourSynth Script's and Functions"
 license = "GPL-3.0-or-later"
 authors = ["PHOENiX <rlaphoenix@pm.me>"]
@@ -22,7 +22,7 @@ classifiers = [
     "Operating System :: OS Independent",
     "Topic :: Multimedia",
     "Topic :: Multimedia :: Video",
-    "Topic :: Multimedia :: Video :: Conversion"
+    "Topic :: Multimedia :: Video :: Conversion",
 ]
 include = ["LICENSE", "README.md"]
 
