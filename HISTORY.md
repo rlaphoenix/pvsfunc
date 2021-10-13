@@ -1,5 +1,10 @@
 # Release History
 
+## 4.2.0
+
+- Add new `recover()` method to PD2V for recovering progressive frames with VFM optimally
+- Support VFM recovered input clips in PD2V `deinterlace()`
+
 ## 4.1.0
 
 - Update pyd2v to 1.3.0, remove PD2V._get_d2v
