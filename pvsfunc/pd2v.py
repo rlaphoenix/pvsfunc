@@ -106,7 +106,11 @@ class PD2V:
                 rc = core.std.Interleave([c] * ff) if ff > 1 else c  # duplicate if not a single-rate fps output
                 if rc.format and tff.format and rc.format.id != tff.format.id:
                     rc = core.resize.Point(rc, format=tff.format.id)
-                return core.text.Text(rc, "Progressive", alignment=3) if verbose else rc
+                return core.text.Text(
+                    rc,
+                    "Progressive" + ("_Combed" in f.props and "\n"),
+                    alignment=3
+                ) if verbose else rc
             # interlaced frame, deinterlace (if _FieldBased is > 0)
             order = f.props["_FieldBased"]
             if f.props["_Combed"] != 0:
@@ -115,7 +119,7 @@ class PD2V:
             field_order = {0: "Progressive <!>", 1: "BFF", 2: "TFF"}[order]  # type: ignore
             return core.text.Text(
                 rc,
-                "Deinterlaced (%s)" % field_order,
+                ("Deinterlaced (%s)" % field_order) + ("_Combed" in f.props and "\n"),
                 alignment=3
             ) if verbose else rc
 
