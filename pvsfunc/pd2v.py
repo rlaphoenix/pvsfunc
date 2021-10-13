@@ -108,7 +108,7 @@ class PD2V:
                     rc = core.resize.Point(rc, format=tff.format.id)
                 return core.text.Text(
                     rc,
-                    "Progressive" + ("_Combed" in f.props and "\n"),
+                    "Progressive" + ["", "\n"]["_Combed" in f.props],
                     alignment=3
                 ) if verbose else rc
             # interlaced frame, deinterlace (if _FieldBased is > 0)
@@ -119,7 +119,7 @@ class PD2V:
             field_order = {0: "Progressive <!>", 1: "BFF", 2: "TFF"}[order]  # type: ignore
             return core.text.Text(
                 rc,
-                ("Deinterlaced (%s)" % field_order) + ("_Combed" in f.props and "\n"),
+                ("Deinterlaced (%s)" % field_order) + ["", "\n"]["_Combed" in f.props],
                 alignment=3
             ) if verbose else rc
 
