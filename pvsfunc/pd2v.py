@@ -143,6 +143,9 @@ class PD2V:
         Do not provide `order` (TFF/BFF) argument manually unless you need to override the auto-detected
         order, or it could not be auto-detected. You also do not need to provide the clip argument.
 
+        For possible arguments, see the VIVTC docs here:
+        <https://github.com/vapoursynth/vivtc/blob/master/docs/vivtc.rst>
+
         <!> - It's recommend to use this before *any* frame rate, count, or visual adjustments.
             - Only use this on sources where the majority of combed frames are recoverable (e.g. Animation).
             - This may add irregular duplicate frames. Use something like VDecimate afterwards (not e.g. floor()).
