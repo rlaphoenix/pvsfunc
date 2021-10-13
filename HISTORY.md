@@ -1,5 +1,11 @@
 # Release History
 
+## 4.1.0
+
+- Update pyd2v to 1.3.0, remove PD2V._get_d2v
+- Remove explicit VapourSynth dependency (prevents annoying conflicts between vs users who are on non-pip-installs vs. those on pip-installs)
+- Rework release-packager workflow for releases
+
 ## 4.0.3
 
 - Fix pathlib usage in `PD2V._get_d2v` and `PLWI._fps_reset`, stem and suffix was mixed up.
