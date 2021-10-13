@@ -102,7 +102,7 @@ class PD2V:
 
         def _d(n: int, f: vs.VideoFrame, c: vs.VideoNode, tff: vs.VideoNode, bff: vs.VideoNode, ff: int):
             # frame marked as progressive in flags by D2V, skip deinterlacing
-            if f.props["PVSFlagProgressiveFrame"]:
+            if f.props["PVSFlagProgressiveFrame"] or f.props.get("_Combed") == 0:
                 rc = core.std.Interleave([c] * ff) if ff > 1 else c  # duplicate if not a single-rate fps output
                 if rc.format and tff.format and rc.format.id != tff.format.id:
                     rc = core.resize.Point(rc, format=tff.format.id)
