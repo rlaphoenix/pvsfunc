@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "pvsfunc"
-version = "4.2.0"
+version = "4.2.1"
 description = "PHOENiX's compilation of VapourSynth Script's and Functions"
 license = "GPL-3.0-or-later"
 authors = ["PHOENiX <rlaphoenix@pm.me>"]
