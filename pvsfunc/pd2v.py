@@ -101,16 +101,23 @@ class PD2V:
             )
 
         def _d(n: int, f: vs.VideoFrame, c: vs.VideoNode, tff: vs.VideoNode, bff: vs.VideoNode, ff: int):
-            # frame marked as progressive in flags by D2V, skip deinterlacing
+            # frame marked as progressive, skip deinterlacing
             if f.props["PVSFlagProgressiveFrame"] or f.props.get("_Combed") == 0:
                 rc = core.std.Interleave([c] * ff) if ff > 1 else c  # duplicate if not a single-rate fps output
                 if rc.format and tff.format and rc.format.id != tff.format.id:
                     rc = core.resize.Point(rc, format=tff.format.id)
                 return core.text.Text(rc, "Progressive", alignment=3) if verbose else rc
             # interlaced frame, deinterlace (if _FieldBased is > 0)
-            rc = {0: c, 1: bff, 2: tff}[f.props["_FieldBased"]]  # type: ignore
-            field_order = {0: "Progressive <!>", 1: "BFF", 2: "TFF"}[f.props["_FieldBased"]]  # type: ignore
-            return core.text.Text(rc, "Deinterlaced (%s)" % field_order, alignment=3) if verbose else rc
+            order = f.props["_FieldBased"]
+            if f.props["_Combed"] != 0:
+                order = 2  # TODO: Don't assume TFF
+            rc = {0: c, 1: bff, 2: tff}[order]  # type: ignore
+            field_order = {0: "Progressive <!>", 1: "BFF", 2: "TFF"}[order]  # type: ignore
+            return core.text.Text(
+                rc,
+                "Deinterlaced (%s)" % field_order,
+                alignment=3
+            ) if verbose else rc
 
         self.clip = core.std.FrameEval(
             deinterlaced_tff,
