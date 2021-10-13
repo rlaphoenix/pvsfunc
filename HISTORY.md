@@ -1,5 +1,9 @@
 # Release History
 
+## 4.2.1
+
+- Fix regressions from v4.2.0 in PD2Vs `deinterlace()` causing runtime errors if `recover()` was not used first.
+
 ## 4.2.0
 
 - Add new `recover()` method to PD2V for recovering progressive frames with VFM optimally
