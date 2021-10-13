@@ -132,6 +132,49 @@ class PD2V:
         )
         return self
 
+    def recover(self, verbose=False, **kwargs):
+        """
+        Recovers progressive frames from an interlaced clip using VIVTC's VFM.
+
+        Do not provide `order` (TFF/BFF) argument manually unless you need to override the auto-detected
+        order, or it could not be auto-detected. You also do not need to provide the clip argument.
+
+        <!> - It's recommend to use this before *any* frame rate, count, or visual adjustments.
+            - Only use this on sources where the majority of combed frames are recoverable (e.g. Animation).
+            - This may add irregular duplicate frames. Use something like VDecimate afterwards (not e.g. floor()).
+        """
+        if not isinstance(self.clip, vs.VideoNode):
+            raise TypeError("This is not a clip")
+
+        matched_tff = core.vivtc.VFM(self.clip, order=1, **kwargs)
+        matched_bff = core.vivtc.VFM(self.clip, order=0, **kwargs)
+
+        def _m(n: int, f: vs.VideoFrame, c: vs.VideoNode, tff: vs.VideoNode, bff: vs.VideoNode):
+            # frame marked as progressive, skip matching
+            if f.props["PVSFlagProgressiveFrame"] or f.props.get("_Combed") == 0:
+                if c.format and tff.format and c.format.id != tff.format.id:
+                    c = core.resize.Point(c, format=tff.format.id)
+                return core.text.Text(c, "Progressive", alignment=3) if verbose else c
+            # interlaced frame, match (if _FieldBased is > 0)
+            rc = {0: c, 1: bff, 2: tff}[f.props["_FieldBased"]]  # type: ignore
+            return core.text.Text(
+                rc,
+                "Matched (%s)" % {0: "Recovered", 1: "Combed <!>"}[rc.get_frame(n).props["_Combed"]],
+                alignment=3
+            ) if verbose else rc
+
+        self.clip = core.std.FrameEval(
+            matched_tff,
+            functools.partial(
+                _m,
+                c=self.clip,
+                tff=matched_tff,
+                bff=matched_bff
+            ),
+            prop_src=self.clip
+        )
+        return self
+
     def ceil(self):
         """
         VFR to CFR by applying RFF to progressive frames without interlacing.
@@ -191,6 +234,10 @@ class PD2V:
             It may or may not actually decimate anything. If you have not specified a cycle, and there's
                 no cycle found, then there's no progressive sections to decimate to. If this happens, it
                 will simply do nothing.
+            If you used `recover()` or manual VFM or other progressive field matching calls, then do not
+                use `floor()`! Even with a specified cycle and offsets, it has a good chance of alternating
+                which offsets it would need as VFM (and such) may add duplicate frames in an irregular
+                pattern so a static cycle and pattern wont work. Use VDecimate or such instead.
         """
         cycle = cycle or self.pulldown
         if cycle:
