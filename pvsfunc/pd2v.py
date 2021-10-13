@@ -113,7 +113,7 @@ class PD2V:
                 ) if verbose else rc
             # interlaced frame, deinterlace (if _FieldBased is > 0)
             order = f.props["_FieldBased"]
-            if f.props["_Combed"] != 0:
+            if f.props.get("_Combed", 0) != 0:
                 order = 2  # TODO: Don't assume TFF
             rc = {0: c, 1: bff, 2: tff}[order]  # type: ignore
             field_order = {0: "Progressive <!>", 1: "BFF", 2: "TFF"}[order]  # type: ignore
