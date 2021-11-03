@@ -45,7 +45,7 @@ class PD2V:
         # override the crappy _ColorRange set by core.d2v.Source with one obtained from
         # the container/stream if available, or fallback and assume limited/TV
         # this makes YUVRGB_Scale setting redundant for less possibility of mistakes
-        video_track = next(iter(MediaInfo.parse(self.file).video_tracks), None)
+        video_track = next(iter(MediaInfo.parse(self.d2v.videos[0]).video_tracks), None)
         if video_track and getattr(video_track, "color_range", None):
             color_range = {"Full": 0, "Limited": 1}[video_track.color_range]
         else:
