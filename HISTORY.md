@@ -1,5 +1,16 @@
 # Release History
 
+## 4.3.0
+
+Override the behaviour of d2v_source's _ColorRange set approach in PD2V. Instead, PD2V will try to obtain the color
+range of the original input video of the D2V file. This would be the demuxed MPEG stream since the input file path
+might not be a video container, but may be a D2V file instead.
+
+If no color range is found in the MPEG stream, then limited/TV range will be assumed as there's more of a chance
+that MPEG media will be limited/TV ranger over full/PC range.
+
+For more information on this, see https://github.com/dwbuiten/d2vsource/pull/41
+
 ## 4.2.1
 
 - Fix regressions from v4.2.0 in PD2Vs `deinterlace()` causing runtime errors if `recover()` was not used first.
