@@ -7,6 +7,7 @@ from typing import List, Optional, Tuple
 import vapoursynth as vs
 from more_itertools import split_at
 from pyd2v import D2V
+from pymediainfo import MediaInfo
 from vapoursynth import core
 
 from pvsfunc.helpers import group_by_int, list_select_every, calculate_aspect_ratio, calculate_par, get_standard
@@ -40,6 +41,16 @@ class PD2V:
             not f["progressive_frame"] for f in self.flags)
         self.clip = core.d2v.Source(self.file, rff=False)
         self.clip = self._stamp_frames(self.clip, self.flags)
+
+        # override the crappy _ColorRange set by core.d2v.Source with one obtained from
+        # the container/stream if available, or fallback and assume limited/TV
+        # this makes YUVRGB_Scale setting redundant for less possibility of mistakes
+        video_track = next(iter(MediaInfo.parse(self.file).video_tracks), None)
+        if video_track and getattr(video_track, "color_range", None):
+            color_range = {"Full": 0, "Limited": 1}[video_track.color_range]
+        else:
+            color_range = 1  # assume limited/TV as MPEGs most likely are
+        self.clip = core.std.SetFrameProp(self.clip, "_ColorRange", color_range)
 
         if verbose:
             coded_f = len(self.flags)
