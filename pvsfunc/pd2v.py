@@ -274,12 +274,23 @@ class PD2V:
             if not offsets or len(offsets) >= cycle:
                 raise ValueError("Invalid offsets, cannot be empty or have >= items of cycle")
 
-            if not self.vfr and self.i_frames:
-                self.clip = core.std.SelectEvery(self.clip, cycle, offsets)
-                return self
-
             wanted_fps_num = self.clip.fps.numerator - (self.clip.fps.numerator / cycle)
 
+            # -- CFR to CFR --
+            if not self.vfr:
+                if self.i_frames:
+                    # 100% interlaced
+                    self.clip = core.std.SelectEvery(self.clip, cycle, offsets)
+                else:
+                    # 100% progressive FPS fix
+                    self.clip = core.std.AssumeFPS(
+                        self.clip,
+                        fpsnum=wanted_fps_num,
+                        fpsden=self.clip.fps.denominator
+                    )
+                return self
+
+            # -- VFR to CFR (Slower) --
             progressive_frames = group_by_int([n for n, f in enumerate(self.flags) if f["progressive_frame"]])
             interlaced_frames = group_by_int([n for n, f in enumerate(self.flags) if not f["progressive_frame"]])
 
