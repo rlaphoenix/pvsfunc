@@ -42,15 +42,16 @@ class PD2V:
         self.total_frames = len(self.flags)
         self.p_frames = sum(f["progressive_frame"] for f in self.flags)
         self.i_frames = self.total_frames - self.p_frames
+
+        self.clip = core.d2v.Source(self.file, rff=False)
+        self.clip = self._stamp_frames(self.clip, self.flags)
+
         self.standard = get_standard(self.clip.fps.numerator / self.clip.fps.denominator)
         self.dar = self.d2v.settings["Aspect_Ratio"]
         if isinstance(self.dar, list):
             self.dar = self.dar[0]
         self.sar = calculate_aspect_ratio(self.clip.width, self.clip.height)
         self.par = calculate_par(self.clip.width, self.clip.height, *[int(x) for x in self.dar.split(":")])
-
-        self.clip = core.d2v.Source(self.file, rff=False)
-        self.clip = self._stamp_frames(self.clip, self.flags)
 
         # override the crappy _ColorRange set by core.d2v.Source with one obtained from
         # the container/stream if available, or fallback and assume limited/TV
