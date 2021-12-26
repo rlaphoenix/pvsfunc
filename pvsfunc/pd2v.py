@@ -73,7 +73,7 @@ class PD2V:
                         " - No Pulldown"
                     ),
                     f"Interlaced:  {100 - progressive_p:05.2f}% ({self.total_frames - self.p_frames})",
-                    f"VFR? {self.p_frames > 0}  DAR: {self.dar}  SAR: {self.sar}  PAR: {self.par}",
+                    f"VFR? {self.vfr}  DAR: {self.dar}  SAR: {self.sar}  PAR: {self.par}",
                     self.standard
                 ])) + " ",
                 alignment=1,
