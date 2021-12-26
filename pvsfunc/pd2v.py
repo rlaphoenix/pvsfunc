@@ -80,6 +80,12 @@ class PD2V:
                 scale=1
             )
 
+        if not self.vfr and not self.i_frames:
+            # fully progressive, may be loaded at wrong FPS, fix and remove pulldown
+            # if correct FPS, no change will be made, and should have no pulldown anyway
+            self.floor()
+            self.pulldown = None
+
     def deinterlace(self, kernel: functools.partial, verbose=False):
         """
         Deinterlace clip using specified kernel in an optimal way.
