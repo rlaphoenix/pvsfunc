@@ -268,7 +268,7 @@ class PD2V:
             if not offsets or len(offsets) >= cycle:
                 raise ValueError("Invalid offsets, cannot be empty or have >= items of cycle")
 
-            if not self.vfr:
+            if not self.vfr and self.i_frames:
                 self.clip = core.std.SelectEvery(self.clip, cycle, offsets)
                 return self
 
