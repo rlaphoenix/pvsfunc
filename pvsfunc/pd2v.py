@@ -39,6 +39,16 @@ class PD2V:
         self.pulldown, self.pulldown_str = self._get_pulldown(self.flags)
         self.vfr = any(f["progressive_frame"] and f["rff"] and f["tff"] for f in self.flags) and any(
             not f["progressive_frame"] for f in self.flags)
+        self.total_frames = len(self.flags)
+        self.p_frames = sum(f["progressive_frame"] for f in self.flags)
+        self.i_frames = self.total_frames - self.p_frames
+        self.standard = get_standard(self.clip.fps.numerator / self.clip.fps.denominator)
+        self.dar = self.d2v.settings["Aspect_Ratio"]
+        if isinstance(self.dar, list):
+            self.dar = self.dar[0]
+        self.sar = calculate_aspect_ratio(self.clip.width, self.clip.height)
+        self.par = calculate_par(self.clip.width, self.clip.height, *[int(x) for x in self.dar.split(":")])
+
         self.clip = core.d2v.Source(self.file, rff=False)
         self.clip = self._stamp_frames(self.clip, self.flags)
 
@@ -53,25 +63,17 @@ class PD2V:
         self.clip = core.std.SetFrameProp(self.clip, "_ColorRange", color_range)
 
         if verbose:
-            coded_f = len(self.flags)
-            progressive_f = sum(f["progressive_frame"] for f in self.flags)
-            progressive_p = (progressive_f / coded_f) * 100
-            standard = get_standard(self.clip.fps.numerator / self.clip.fps.denominator)
-            dar = self.d2v.settings["Aspect_Ratio"]
-            if isinstance(dar, list):
-                dar = dar[0]
-            sar = calculate_aspect_ratio(self.clip.width, self.clip.height)
-            par = calculate_par(self.clip.width, self.clip.height, *[int(x) for x in dar.split(":")])
+            progressive_p = (self.p_frames / self.total_frames) * 100
             self.clip = core.text.Text(
                 self.clip,
                 text=" " + (" \n ".join([
-                    f"Progressive: {progressive_p:05.2f}% ({progressive_f})" + (
+                    f"Progressive: {progressive_p:05.2f}% ({self.p_frames})" + (
                         f" w/ Pulldown {self.pulldown_str} (Cycle: {self.pulldown})" if self.pulldown else
                         " - No Pulldown"
                     ),
-                    f"Interlaced:  {100 - progressive_p:05.2f}% ({coded_f - progressive_f})",
-                    f"VFR? {progressive_f > 0}  DAR: {dar}  SAR: {sar}  PAR: {par}",
-                    standard
+                    f"Interlaced:  {100 - progressive_p:05.2f}% ({self.total_frames - self.p_frames})",
+                    f"VFR? {self.p_frames > 0}  DAR: {self.dar}  SAR: {self.sar}  PAR: {self.par}",
+                    self.standard
                 ])) + " ",
                 alignment=1,
                 scale=1
