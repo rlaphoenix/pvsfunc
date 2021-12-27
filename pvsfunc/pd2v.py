@@ -216,26 +216,22 @@ class PD2V:
         if not self.vfr:
             return self
 
-        def _ceil(n, f, c):
-            rc = core.std.SetFrameProp(c, intval=0, prop="PVSFlagRff")
-            if f.props["PVSFlagProgressiveFrame"] and f.props["PVSFlagRff"] and f.props["PVSFlagTff"]:
-                return [rc, rc]
-            return rc
-
         pf = [i for i, f in enumerate(self.flags) if f["progressive_frame"] and f["rff"] and f["tff"]]
-        self.clip = core.std.FrameEval(
-            core.std.BlankClip(
-                clip=self.clip,
-                length=len(self.clip) + len(pf),
-            ),
-            functools.partial(_ceil, c=self.clip),
-            prop_src=self.clip
-        )
+
+        self.clip = core.std.DuplicateFrames(self.clip, pf)
+
+        def disable_rff(n: int, f: vs.VideoFrame) -> vs.VideoFrame:
+            f = f.copy()
+            f.props["PVSFlagRff"] = 0
+            return f
+
+        self.clip = core.std.ModifyFrame(self.clip, self.clip, disable_rff)
         self.flags = [
-            x
+            flag
             for i, f in enumerate(self.flags)
-            for x in [dict(f, rff=False)] * (2 if i in pf else 1)
+            for flag in [dict(f, rff=False)] * (2 if i in pf else 1)
         ]
+
         self.vfr = False
         return self
 
