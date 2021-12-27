@@ -125,7 +125,7 @@ class PD2V:
             if f.props["PVSFlagProgressiveFrame"] or f.props.get("_Combed") == 0:
                 rc = core.std.Interleave([c] * ff) if ff > 1 else c  # duplicate if not a single-rate fps output
                 if rc.format and tff.format and rc.format.id != tff.format.id:
-                    rc = core.resize.Point(rc, format=tff.format.id)
+                    rc = core.resize.Spline16(rc, format=tff.format.id)
                 return core.text.Text(
                     rc,
                     "Progressive" + ["", "\n"]["_Combed" in f.props],
