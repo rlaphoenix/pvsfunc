@@ -282,6 +282,10 @@ class PD2V:
                             self.clip[x[0]:x[-1] + 1],
                             fpsnum=wanted_fps_num,
                             fpsden=self.clip.fps.denominator
+                        ) if self.vfr else core.std.SelectEvery(
+                            self.clip[x[0]:x[-1] + 1],
+                            cycle,
+                            offsets
                         )
                     ) for x in progressive_sections
                 ] + [
