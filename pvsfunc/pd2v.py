@@ -271,12 +271,11 @@ class PD2V:
                 raise ValueError("Invalid offsets, cannot be empty or have >= items of cycle")
 
             wanted_fps_num = self.clip.fps.numerator - (self.clip.fps.numerator / cycle)
-            progressive_frames = group_by_int([n for n, f in enumerate(self.flags) if f["progressive_frame"]])
-            interlaced_frames = group_by_int([n for n, f in enumerate(self.flags) if not f["progressive_frame"]])
+            progressive_sections = group_by_int([n for n, f in enumerate(self.flags) if f["progressive_frame"]])
+            interlaced_sections = group_by_int([n for n, f in enumerate(self.flags) if not f["progressive_frame"]])
 
             self.clip = core.std.Splice([x for _, x in sorted(
                 [
-                    # progressive sections:
                     (
                         x[0],  # first frame # of the section, used for sorting when splicing
                         core.std.AssumeFPS(
@@ -284,9 +283,8 @@ class PD2V:
                             fpsnum=wanted_fps_num,
                             fpsden=self.clip.fps.denominator
                         )
-                    ) for x in progressive_frames
+                    ) for x in progressive_sections
                 ] + [
-                    # interlaced sections:
                     (
                         x[0],
                         core.std.SelectEvery(
@@ -294,13 +292,13 @@ class PD2V:
                             cycle,
                             offsets
                         )
-                    ) for x in interlaced_frames
+                    ) for x in interlaced_sections
                 ],
                 key=lambda section: int(section[0])
             )])
             interlaced_frames = [
                 n
-                for s in interlaced_frames
+                for s in interlaced_sections
                 for n in list_select_every(s, cycle, offsets, inverse=True)
             ]
             self.flags = [f for i, f in enumerate(self.flags) if i not in interlaced_frames]
