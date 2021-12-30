@@ -361,15 +361,18 @@ class PD2V:
         #       exited interlaced sections the right index vs left index were very far apart, messing up
         #       the accuracy of the cycles. I cannot find out why my test source (Family Guy S01E01 USA
         #       NTSC) is still having random different numbers in each (now progressive only) sections.
-        sections = list(filter(None, [
-            [flag["i"] for flag in split if flag["rff"] and flag["tff"]]
+        sections = [
+            section
             for split in split_at(
                 [dict(x, i=n) for n, x in enumerate(flags)],
                 lambda flag: not flag["progressive_frame"]
             )
-        ]))
+            for section in [[flag["i"] for flag in split if flag["rff"] and flag["tff"]]]
+            if section and len(section) > 1
+        ]
         if not sections:
             return 0, None
+
         cycle = Counter([
             Counter([
                 (right - left)
@@ -377,8 +380,10 @@ class PD2V:
             ]).most_common(1)[0][0]
             for indexes in sections
         ]).most_common(1)[0][0] + 1
+
         pulldown = ["2"] * math.floor(cycle / 2)
         if cycle % 2:
             pulldown.pop()
             pulldown.append("3")
+
         return cycle, ":".join(pulldown)
