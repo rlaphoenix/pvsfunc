@@ -2,10 +2,10 @@
 
 pvsfunc (PHOENiX's VapourSynth Functions) is my compilation of VapourSynth Scripts, Functions, and Helpers.
 
-[![Build Tests](https://img.shields.io/github/workflow/status/rlaPHOENiX/pvsfunc/Version%20test?label=Python%203.6%2B%20builds)](https://github.com/rlaPHOENiX/pvsfunc/actions?query=workflow%3A%22Version+test%22)
-[![License](https://img.shields.io/github/license/rlaPHOENiX/pvsfunc?style=flat)](https://github.com/rlaPHOENiX/pvsfunc/blob/master/LICENSE)
-[![DeepSource](https://deepsource.io/gh/rlaPHOENiX/pvsfunc.svg)](https://deepsource.io/gh/rlaPHOENiX/pvsfunc)
-[![Issues](https://img.shields.io/github/issues/rlaPHOENiX/pvsfunc?style=flat)](https://github.com/rlaPHOENiX/pvsfunc/issues)
+[![Build Tests](https://img.shields.io/github/workflow/status/rlaphoenix/pvsfunc/ci?label=Python%203.7%2B%20builds)](https://github.com/rlaphoenix/pvsfunc/actions?query=workflow%3A%22ci%22)
+[![License](https://img.shields.io/github/license/rlaphoenix/pvsfunc?style=flat)](https://github.com/rlaphoenix/pvsfunc/blob/master/LICENSE)
+[![DeepSource](https://deepsource.io/gh/rlaphoenix/pvsfunc.svg)](https://deepsource.io/gh/rlaphoenix/pvsfunc)
+[![Issues](https://img.shields.io/github/issues/rlaphoenix/pvsfunc?style=flat)](https://github.com/rlaphoenix/pvsfunc/issues)
 [![PR's Accepted](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)](https://makeapullrequest.com)
 
 ## Installation
