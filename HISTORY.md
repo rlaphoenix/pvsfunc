@@ -1,5 +1,14 @@
 # Release History
 
+## 4.4.0
+
+This is generally an overall bug fix and cleanup release. Not much changes have been made.
+This version has dropped support for Python 3.6.
+
+- Spline16 will be used instead of Point when casting format if needed during deinterlacing.
+- Fully progressive CFR material will now have its FPS fixed by effectively ignoring repeat-fields.
+- ceil() now duplicates frames more efficiently.
+
 ## 4.3.0
 
 Override the behaviour of d2v_source's _ColorRange set approach in PD2V. Instead, PD2V will try to obtain the color
