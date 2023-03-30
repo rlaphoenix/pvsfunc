@@ -2,7 +2,7 @@
 
 pvsfunc (PHOENiX's VapourSynth Functions) is my compilation of VapourSynth Scripts, Functions, and Helpers.
 
-[![Build Tests](https://img.shields.io/github/workflow/status/rlaphoenix/pvsfunc/ci?label=Python%203.7%2B%20builds)](https://github.com/rlaphoenix/pvsfunc/actions?query=workflow%3A%22ci%22)
+[![Build Tests](https://github.com/rlaphoenix/pvsfunc/actions/workflows/ci.yml/badge.svg)](https://github.com/rlaphoenix/pvsfunc/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/rlaphoenix/pvsfunc?style=flat)](https://github.com/rlaphoenix/pvsfunc/blob/master/LICENSE)
 [![DeepSource](https://deepsource.io/gh/rlaphoenix/pvsfunc.svg)](https://deepsource.io/gh/rlaphoenix/pvsfunc)
 [![Issues](https://img.shields.io/github/issues/rlaphoenix/pvsfunc?style=flat)](https://github.com/rlaphoenix/pvsfunc/issues)
@@ -24,63 +24,9 @@ intend to use, and your use-case. Don't forget to install them if needed!
 Building from source requires [Poetry](https://python-poetry.org).  
 Simply run `poetry install` or `poetry build` for distribution wheel and source packages.
 
-## License
-
-This project is released under the GNU GENERAL PUBLIC LICENSE Version 3 (GPLv3) license.
-Please read and agree to the license before use, it can be found in the [LICENSE](LICENSE) file.
-
-* * *
-
-Below is information about the projects included in pvsfunc that are available to use. Don't take it as full
-documentation as that is being worked on.
-
 ## PD2V
 
-Convenience class for working with DGIndex D2V project files (MPEG-1/2 videos). Includes source loading, frame
-matching, deinterlacing, and more.
-
-### Example Usage
-
-```py
-from pvsfunc import PD2V
-from functools import partial
-from havsfunc import QTGMC
-
-clip = PD2V(r"C:\Users\john\Videos\s01e01.d2v", verbose=True).\
-    ceil().\
-    deinterlace(
-        kernel=partial(QTGMC, FPSDivisor=2, Preset="Very Slow"),
-        verbose=True
-    ).\
-    clip
-
-# ... any manual changes to clip
-
-clip.set_output()
-```
-
-The above example will load a D2V project file located at `C:\Users\john\Videos\s01e01.d2v` in Verbose mode.
-Verbose mode will display extra information during the PD2V use.
-
-It then runs `ceil()` which frame-matches the progressive sections of the video with the interlaced sections by
-duplicating the progressive frames (instead of interlacing).
-
-It then deinterlaces the interlaced sections of the video with QTGMC as the kernel. The Kernel must have a `tff` or
-`TFF` argument to be compatible, but the field order should not be manually set by the user.
-
-Finally, it takes the clip and set's it for VapourSynth output.
-
-### Dependencies
-
-- [d2vsource] (core.d2v) VapourSynth plugin
-- [DGIndex] v1.5.8 or newer
-- [mkvextract] Only required if you plan on providing non demuxed streams (e.g., mp4, mkv)
-
-To install [d2vsource] it's as simple as `vsrepo install d2vsource` on Windows. Other Operating System user's know the
-drill, go check your package repository's or compile it yourself.
-
-Make sure [DGIndex] and [mkvextract] is available on your environment path and has execution permissions. Note Linux
-Users: Add to system profile path, not terminal/rc path. DGIndex is Windows-only but is supported if you install Wine.
+PD2V has been moved to its own repository and renamed MPGG, <https://github.com/rlaphoenix/mpgg>.
 
 ## PLS
 
@@ -99,6 +45,9 @@ go check your package repository's or compile it yourself.
 
 Make sure [mkvmerge] is available on your environment path and has execution permissions. Note Linux Users: Add to
 system profile path, not terminal/rc path.
+
+  [mkvmerge]: https://mkvtoolnix.download
+  [lsmash]: https://github.com/VFR-maniac/L-SMASH-Works
 
 ## PDebox
 
@@ -134,8 +83,6 @@ Cartoon/Animated sources as QTGMC does not do them well.
 It all still requires a lot more testing, but it looks like it could be a really nice method! Especially now that I've
 learned Disney has also been working on it around the same tim, back in 2020 :P
 
-  [d2vsource]: https://github.com/dwbuiten/d2vsource
-  [DGIndex]: http://rationalqm.us/dgmpgdec/dgmpgdec.html
-  [mkvextract]: https://mkvtoolnix.download
-  [mkvmerge]: https://mkvtoolnix.download
-  [lsmash]: https://github.com/VFR-maniac/L-SMASH-Works
+## License
+
+© 2020-2023 rlaphoenix — [GNU General Public License, Version 3.0](LICENSE)
